@@ -1,0 +1,196 @@
+@use '@/styles/variables.scss' as *;
+
+// 遮罩层
+.mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  animation: maskFadeIn 0.25s ease-out;
+}
+
+@keyframes maskFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+// 粒子容器
+.particles {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+// 单个粒子（向外飞散）
+.particle {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 16rpx;
+  height: 16rpx;
+  border-radius: $radius-round;
+  background: $color-primary-light;
+  opacity: 0;
+  animation: particleBurst 1.2s ease-out forwards;
+
+  // 6个粒子分别飞向不同方向
+  &:nth-child(1) {
+    background: $color-primary;
+    animation-name: particle1;
+  }
+  &:nth-child(2) {
+    background: $color-primary-light;
+    animation-name: particle2;
+  }
+  &:nth-child(3) {
+    background: $color-warning;
+    animation-name: particle3;
+  }
+  &:nth-child(4) {
+    background: $color-primary;
+    animation-name: particle4;
+  }
+  &:nth-child(5) {
+    background: $color-primary-light;
+    animation-name: particle5;
+  }
+  &:nth-child(6) {
+    background: $color-warning;
+    animation-name: particle6;
+  }
+}
+
+@keyframes particle1 {
+  0% { transform: translate(0, 0) scale(0); opacity: 1; }
+  100% { transform: translate(-180rpx, -120rpx) scale(1.2); opacity: 0; }
+}
+@keyframes particle2 {
+  0% { transform: translate(0, 0) scale(0); opacity: 1; }
+  100% { transform: translate(180rpx, -120rpx) scale(1.2); opacity: 0; }
+}
+@keyframes particle3 {
+  0% { transform: translate(0, 0) scale(0); opacity: 1; }
+  100% { transform: translate(-200rpx, 60rpx) scale(1.2); opacity: 0; }
+}
+@keyframes particle4 {
+  0% { transform: translate(0, 0) scale(0); opacity: 1; }
+  100% { transform: translate(200rpx, 60rpx) scale(1.2); opacity: 0; }
+}
+@keyframes particle5 {
+  0% { transform: translate(0, 0) scale(0); opacity: 1; }
+  100% { transform: translate(-100rpx, 180rpx) scale(1.2); opacity: 0; }
+}
+@keyframes particle6 {
+  0% { transform: translate(0, 0) scale(0); opacity: 1; }
+  100% { transform: translate(100rpx, 180rpx) scale(1.2); opacity: 0; }
+}
+
+// 弹窗主体（缩放进入）
+.popup {
+  position: relative;
+  width: 560rpx;
+  background: $color-bg-card;
+  border-radius: $radius-xl;
+  padding: $spacing-xl $spacing-lg $spacing-lg;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: $shadow-popup;
+  animation: popupPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes popupPop {
+  0% {
+    transform: scale(0.3);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.05);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+// 图标容器（带光晕）
+.iconWrap {
+  width: 160rpx;
+  height: 160rpx;
+  border-radius: $radius-round;
+  background: linear-gradient(135deg, #FFF5F5 0%, #FFE8E8 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: $spacing-md;
+  animation: iconGlow 1.5s ease-in-out infinite;
+}
+
+@keyframes iconGlow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba($color-primary, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 24rpx rgba($color-primary, 0);
+  }
+}
+
+.icon {
+  font-size: 80rpx;
+  animation: iconBounce 0.8s ease-out;
+}
+
+@keyframes iconBounce {
+  0% { transform: scale(0) rotate(-30deg); }
+  60% { transform: scale(1.2) rotate(10deg); }
+  100% { transform: scale(1) rotate(0); }
+}
+
+.title {
+  font-size: $font-size-xl;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin-bottom: $spacing-sm;
+  text-align: center;
+}
+
+.desc {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  line-height: $line-height-loose;
+  text-align: center;
+  margin-bottom: $spacing-lg;
+}
+
+.badge {
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  border-radius: $radius-button;
+  padding: 12rpx $spacing-lg;
+  margin-bottom: $spacing-md;
+}
+
+.badgeText {
+  font-size: $font-size-sm;
+  color: $color-text-white;
+  font-weight: $font-weight-medium;
+}
+
+.closeHint {
+  margin-top: $spacing-xs;
+}
+
+.closeText {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}

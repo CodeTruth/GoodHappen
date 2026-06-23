@@ -1,0 +1,226 @@
+@use '@/styles/variables.scss' as *;
+
+.container {
+  min-height: 100vh;
+  background: $color-bg-page;
+  padding: $spacing-md $page-padding;
+  padding-bottom: 160rpx;
+}
+
+.card {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  margin-bottom: $spacing-md;
+  box-shadow: $shadow-card;
+}
+
+.avatarSection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: $spacing-lg 0;
+}
+
+.avatarWrap {
+  position: relative;
+  width: 160rpx;
+  height: 160rpx;
+  margin-bottom: $spacing-md;
+}
+
+.avatar {
+  width: 100%;
+  height: 100%;
+  border-radius: $radius-round;
+  border: 4rpx solid $color-border;
+}
+
+.avatarMask {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 48rpx;
+  height: 48rpx;
+  background: $color-primary;
+  border-radius: $radius-round;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 4rpx solid $color-bg-card;
+}
+
+.avatarMaskIcon {
+  font-size: $font-size-sm;
+  color: $color-text-white;
+}
+
+.avatarTip {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.formItem {
+  margin-bottom: $spacing-lg;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.label {
+  display: block;
+  font-size: $font-size-md;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+  margin-bottom: $spacing-sm;
+}
+
+.required {
+  color: $color-primary;
+  margin-left: 4rpx;
+}
+
+.input {
+  width: 100%;
+  height: 96rpx;
+  background: $color-bg-page;
+  border-radius: $radius-md;
+  padding: 0 $spacing-md;
+  font-size: $font-size-md;
+  color: $color-text-primary;
+  border: none;
+  box-sizing: border-box;
+}
+
+.textarea {
+  width: 100%;
+  min-height: 160rpx;
+  background: $color-bg-page;
+  border-radius: $radius-md;
+  padding: $spacing-md;
+  font-size: $font-size-md;
+  line-height: $line-height-normal;
+  color: $color-text-primary;
+  border: none;
+  box-sizing: border-box;
+}
+
+.bioWrap {
+  position: relative;
+}
+
+.bioCount {
+  position: absolute;
+  bottom: $spacing-sm;
+  right: $spacing-md;
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.genderSelector {
+  display: flex;
+  gap: $spacing-md;
+}
+
+.genderOption {
+  flex: 1;
+  height: 96rpx;
+  background: $color-bg-page;
+  border-radius: $radius-md;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2rpx solid transparent;
+  transition: all $transition-base;
+
+  &.active {
+    border-color: $color-primary;
+    background: linear-gradient(135deg, #FFF5F5 0%, #FFE8E8 100%);
+  }
+}
+
+.genderText {
+  font-size: $font-size-md;
+  color: $color-text-secondary;
+}
+
+.genderOption.active .genderText {
+  color: $color-primary;
+  font-weight: $font-weight-medium;
+}
+
+.pickerValue {
+  width: 100%;
+  height: 96rpx;
+  background: $color-bg-page;
+  border-radius: $radius-md;
+  padding: 0 $spacing-md;
+  font-size: $font-size-md;
+  color: $color-text-primary;
+  border: none;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+}
+
+.pickerPlaceholder {
+  color: $color-text-tertiary;
+}
+
+.minorTip {
+  background: rgba($color-warning, 0.1);
+  border-radius: $radius-md;
+  padding: $spacing-md;
+  margin-bottom: $spacing-md;
+  display: flex;
+  align-items: flex-start;
+  gap: $spacing-sm;
+}
+
+.minorTipIcon {
+  font-size: $font-size-lg;
+  flex-shrink: 0;
+}
+
+.minorTipText {
+  font-size: $font-size-sm;
+  color: $color-warning;
+  line-height: $line-height-normal;
+  flex: 1;
+}
+
+.footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: $color-bg-card;
+  padding: $spacing-md $page-padding;
+  padding-bottom: calc(#{$spacing-md} + env(safe-area-inset-bottom));
+  box-shadow: $shadow-float;
+}
+
+.saveBtn {
+  @include button-reset;
+  width: 100%;
+  height: $button-height-lg;
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  border-radius: $radius-button;
+  transition: all $transition-base;
+
+  &:active {
+    opacity: 0.9;
+    transform: scale(0.98);
+  }
+
+  &[disabled] {
+    opacity: 0.6;
+  }
+}
+
+.saveBtnText {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-medium;
+  color: $color-text-white;
+}

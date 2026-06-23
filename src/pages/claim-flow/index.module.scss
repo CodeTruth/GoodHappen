@@ -1,0 +1,629 @@
+@use '@/styles/variables.scss' as *;
+
+.container {
+  min-height: 100vh;
+  background: $color-bg-page;
+}
+
+/* 头部 */
+.header {
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  padding: $spacing-xl $page-padding $spacing-lg;
+}
+
+.headerTitle {
+  font-size: $font-size-xxl;
+  font-weight: $font-weight-semibold;
+  color: $color-text-white;
+  margin-bottom: $spacing-xs;
+  display: block;
+}
+
+.headerSubtitle {
+  font-size: $font-size-sm;
+  color: rgba(255, 255, 255, 0.9);
+  line-height: $line-height-normal;
+  display: block;
+  margin-bottom: $spacing-md;
+}
+
+/* 统计卡片 */
+.statsCard {
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: $radius-lg;
+  padding: $spacing-md $spacing-sm;
+}
+
+.statItem {
+  flex: 1;
+  text-align: center;
+}
+
+.statValue {
+  font-size: $font-size-xl;
+  font-weight: $font-weight-semibold;
+  color: $color-text-white;
+  display: block;
+  margin-bottom: 4rpx;
+}
+
+.statLabel {
+  font-size: $font-size-xs;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.statDivider {
+  width: 1rpx;
+  height: 48rpx;
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* 流程说明 */
+.flowGuide {
+  margin: -$spacing-sm $page-padding $spacing-md;
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  box-shadow: $shadow-card;
+}
+
+.flowGuideTitle {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin-bottom: $spacing-md;
+  display: block;
+}
+
+.flowSteps {
+  display: flex;
+  flex-direction: column;
+}
+
+.flowStepItem {
+  display: flex;
+  align-items: flex-start;
+}
+
+.flowStepLeft {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-right: $spacing-md;
+  flex-shrink: 0;
+}
+
+.flowStepIcon {
+  width: 48rpx;
+  height: 48rpx;
+  border-radius: $radius-round;
+  background: rgba(255, 107, 107, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.flowStepIconText {
+  font-size: 24rpx;
+}
+
+.flowStepLine {
+  width: 2rpx;
+  height: 32rpx;
+  background: $color-divider;
+}
+
+.flowStepContent {
+  flex: 1;
+  padding-bottom: $spacing-sm;
+  min-width: 0;
+}
+
+.flowStepLabel {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+  display: block;
+  margin-bottom: 2rpx;
+}
+
+.flowStepDesc {
+  font-size: 20rpx;
+  color: $color-text-tertiary;
+  line-height: $line-height-normal;
+}
+
+/* 标签切换 */
+.tabs {
+  display: flex;
+  background: $color-bg-card;
+  border-radius: $radius-button;
+  padding: 4rpx;
+  margin: 0 $page-padding $spacing-md;
+  box-shadow: $shadow-card;
+}
+
+.tab {
+  flex: 1;
+  text-align: center;
+  padding: $spacing-sm 0;
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  border-radius: $radius-button;
+  transition: all $transition-base;
+
+  &.active {
+    background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+    color: $color-text-white;
+    font-weight: $font-weight-medium;
+  }
+}
+
+/* 流程列表 */
+.flowList {
+  padding: 0 $page-padding $spacing-md;
+}
+
+.flowCard {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  margin-bottom: $spacing-md;
+  box-shadow: $shadow-card;
+
+  &:active {
+    transform: scale(0.99);
+  }
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: $spacing-sm;
+}
+
+.recipientInfo {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+}
+
+.recipientIcon {
+  font-size: 36rpx;
+  margin-right: $spacing-sm;
+  flex-shrink: 0;
+}
+
+.recipientText {
+  flex: 1;
+  min-width: 0;
+}
+
+.recipientAlias {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  display: block;
+  margin-bottom: 4rpx;
+}
+
+.recipientOrg {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  @include text-ellipsis;
+}
+
+.flowAmount {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-primary;
+  flex-shrink: 0;
+  margin-left: $spacing-sm;
+}
+
+/* 进度条 */
+.progressSection {
+  margin-bottom: $spacing-sm;
+}
+
+.progressHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: $spacing-xs;
+}
+
+.progressCurrentStep {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+}
+
+.progressPercent {
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+  color: $color-primary;
+}
+
+.progressBar {
+  height: 12rpx;
+  background: $color-bg-hover;
+  border-radius: $radius-round;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: linear-gradient(90deg, $color-primary 0%, $color-primary-light 100%);
+  border-radius: $radius-round;
+  transition: width 0.5s ease;
+}
+
+.progressFillDone {
+  background: linear-gradient(90deg, $color-success 0%, #73D13D 100%);
+}
+
+/* 时间信息 */
+.timeInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+  margin-bottom: $spacing-sm;
+  padding: $spacing-xs 0;
+  border-top: 1rpx solid $color-divider;
+}
+
+.timeText {
+  font-size: 20rpx;
+  color: $color-text-tertiary;
+}
+
+/* 卡片底部 */
+.cardFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.statusBadge {
+  border-radius: $radius-button;
+  padding: 4rpx $spacing-md;
+}
+
+.statusBadgeActive {
+  background: rgba(250, 173, 20, 0.1);
+}
+
+.statusBadgeDone {
+  background: rgba(82, 196, 26, 0.1);
+}
+
+.statusBadgeText {
+  font-size: 20rpx;
+  font-weight: $font-weight-medium;
+}
+
+.statusBadgeActive .statusBadgeText {
+  color: $color-warning;
+}
+
+.statusBadgeDone .statusBadgeText {
+  color: $color-success;
+}
+
+.detailHint {
+  font-size: $font-size-xs;
+  color: $color-primary;
+  font-weight: $font-weight-medium;
+}
+
+/* 空状态 */
+.empty {
+  text-align: center;
+  padding: $spacing-xl 0;
+}
+
+.emptyIcon {
+  font-size: 80rpx;
+  display: block;
+  margin-bottom: $spacing-md;
+}
+
+.emptyText {
+  font-size: $font-size-md;
+  color: $color-text-secondary;
+  display: block;
+  margin-bottom: $spacing-xs;
+}
+
+.emptySubText {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+}
+
+/* 透明度报告 */
+.transparencyCard {
+  margin: 0 $page-padding $spacing-md;
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  box-shadow: $shadow-card;
+}
+
+.transparencyTitle {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin-bottom: $spacing-md;
+  display: block;
+}
+
+.transparencyItem {
+  display: flex;
+  align-items: flex-start;
+  padding: $spacing-sm 0;
+
+  &:not(:last-child) {
+    border-bottom: 1rpx solid $color-divider;
+  }
+}
+
+.transparencyIcon {
+  font-size: 32rpx;
+  margin-right: $spacing-md;
+  flex-shrink: 0;
+}
+
+.transparencyContent {
+  flex: 1;
+}
+
+.transparencyLabel {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+  display: block;
+  margin-bottom: 4rpx;
+}
+
+.transparencyDesc {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+  line-height: $line-height-normal;
+}
+
+/* 底部说明 */
+.footerNote {
+  text-align: center;
+  padding: $spacing-lg $page-padding $spacing-xl;
+}
+
+.footerText {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  line-height: $line-height-normal;
+}
+
+/* 详情弹窗 */
+.detailMask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 100;
+  display: flex;
+  align-items: flex-end;
+}
+
+.detailPanel {
+  width: 100%;
+  background: $color-bg-card;
+  border-radius: $radius-xl $radius-xl 0 0;
+  overflow: hidden;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.detailHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: $spacing-lg $page-padding $spacing-sm;
+  border-bottom: 1rpx solid $color-divider;
+  flex-shrink: 0;
+}
+
+.detailTitle {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
+.detailClose {
+  font-size: $font-size-lg;
+  color: $color-text-tertiary;
+  padding: $spacing-xs;
+}
+
+.detailBody {
+  flex: 1;
+  overflow-y: auto;
+  padding: $spacing-lg $page-padding $spacing-xl;
+}
+
+/* 概览信息 */
+.detailOverview {
+  background: $color-bg-page;
+  border-radius: $radius-md;
+  padding: $spacing-md;
+  margin-bottom: $spacing-lg;
+}
+
+.overviewRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: $spacing-xs 0;
+}
+
+.overviewLabel {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+}
+
+.overviewValue {
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+  font-weight: $font-weight-medium;
+}
+
+.overviewValueHighlight {
+  font-size: $font-size-md;
+  color: $color-primary;
+  font-weight: $font-weight-semibold;
+}
+
+/* 时间线 */
+.timeline {
+  margin-bottom: $spacing-md;
+}
+
+.timelineTitle {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin-bottom: $spacing-md;
+  display: block;
+}
+
+.timelineItem {
+  display: flex;
+  align-items: flex-start;
+}
+
+.timelineLeft {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-right: $spacing-md;
+  flex-shrink: 0;
+}
+
+.timelineIcon {
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: $radius-round;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.timelineIconDone {
+  background: $color-success;
+}
+
+.timelineIconCurrent {
+  background: $color-primary;
+}
+
+.timelineIconPending {
+  background: $color-bg-hover;
+}
+
+.timelineIconText {
+  font-size: 28rpx;
+  color: $color-text-white;
+}
+
+.timelineIconPending .timelineIconText {
+  color: $color-text-tertiary;
+}
+
+.timelineLine {
+  width: 2rpx;
+  flex: 1;
+  min-height: 40rpx;
+  background: $color-divider;
+  margin: $spacing-xs 0;
+}
+
+.timelineLineDone {
+  background: $color-success;
+}
+
+.timelineContent {
+  flex: 1;
+  padding-bottom: $spacing-lg;
+  min-width: 0;
+}
+
+.timelineHeader {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  margin-bottom: 4rpx;
+}
+
+.timelineLabel {
+  font-size: $font-size-md;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+}
+
+.timelineLabelPending {
+  color: $color-text-tertiary;
+}
+
+.currentBadge {
+  background: $color-primary;
+  border-radius: $radius-button;
+  padding: 2rpx $spacing-sm;
+}
+
+.currentBadgeText {
+  font-size: 20rpx;
+  color: $color-text-white;
+  font-weight: $font-weight-medium;
+}
+
+.timelineDesc {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+  line-height: $line-height-normal;
+  display: block;
+  margin-bottom: $spacing-xs;
+}
+
+.timelineOperator {
+  font-size: 20rpx;
+  color: $color-text-tertiary;
+  display: block;
+  margin-bottom: $spacing-xs;
+}
+
+.timelineNote {
+  background: rgba(255, 107, 107, 0.04);
+  border-radius: $radius-sm;
+  padding: $spacing-xs $spacing-sm;
+  margin-bottom: $spacing-xs;
+}
+
+.timelineNoteText {
+  font-size: 20rpx;
+  color: $color-text-secondary;
+  line-height: $line-height-normal;
+}
+
+.timelineTime {
+  font-size: 20rpx;
+  color: $color-text-tertiary;
+  display: block;
+}

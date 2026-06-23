@@ -1,0 +1,381 @@
+@use '@/styles/variables.scss' as *;
+
+.container {
+  min-height: 100vh;
+  background: $color-bg-page;
+  padding-bottom: $spacing-xl;
+}
+
+/* 头部 */
+.header {
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  padding: $spacing-xl $page-padding $spacing-lg;
+}
+
+.headerTitle {
+  font-size: $font-size-xxl;
+  font-weight: $font-weight-semibold;
+  color: $color-text-white;
+  margin-bottom: $spacing-xs;
+  display: block;
+}
+
+.headerSubtitle {
+  font-size: $font-size-sm;
+  color: rgba(255, 255, 255, 0.9);
+  line-height: $line-height-normal;
+  display: block;
+}
+
+/* 保险状态卡片 */
+.statusCard {
+  margin: -$spacing-sm $page-padding $spacing-md;
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  box-shadow: $shadow-card;
+}
+
+.statusActive {
+  background: linear-gradient(135deg, #FFF5F5 0%, #FFE8E8 100%);
+  border-left: 4rpx solid $color-primary;
+}
+
+.statusInactive {
+  background: $color-bg-page;
+  border-left: 4rpx solid $color-text-tertiary;
+}
+
+.statusHeader {
+  display: flex;
+  align-items: center;
+  margin-bottom: $spacing-sm;
+}
+
+.statusIcon {
+  font-size: 48rpx;
+  margin-right: $spacing-sm;
+}
+
+.statusTitle {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  flex: 1;
+}
+
+.statusBadge {
+  font-size: $font-size-xs;
+  color: $color-text-white;
+  background: $color-success;
+  padding: 4rpx $spacing-sm;
+  border-radius: $radius-xs;
+}
+
+.statusBadgeInactive {
+  background: $color-text-tertiary;
+}
+
+.statusDesc {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  line-height: $line-height-normal;
+  display: block;
+  margin-bottom: $spacing-sm;
+}
+
+.statusProgress {
+  margin-top: $spacing-sm;
+}
+
+.progressLabel {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  display: block;
+  margin-bottom: $spacing-xs;
+}
+
+.progressBar {
+  height: 16rpx;
+  background: $color-bg-hover;
+  border-radius: $radius-round;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: linear-gradient(90deg, $color-primary 0%, $color-primary-light 100%);
+  border-radius: $radius-round;
+  transition: width 0.5s ease;
+}
+
+.progressInfo {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 4rpx;
+}
+
+.progressCurrent {
+  font-size: $font-size-xs;
+  color: $color-primary;
+  font-weight: $font-weight-medium;
+}
+
+.progressTarget {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+/* 保额展示 */
+.coverageCard {
+  margin: 0 $page-padding $spacing-md;
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  box-shadow: $shadow-card;
+}
+
+.coverageTitle {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin-bottom: $spacing-md;
+  display: block;
+}
+
+.coverageGrid {
+  display: flex;
+  gap: $spacing-md;
+}
+
+.coverageItem {
+  flex: 1;
+  background: linear-gradient(135deg, #FFF5F5 0%, #FFE8E8 100%);
+  border-radius: $radius-md;
+  padding: $spacing-md;
+  text-align: center;
+}
+
+.coverageIcon {
+  font-size: 40rpx;
+  display: block;
+  margin-bottom: $spacing-xs;
+}
+
+.coverageAmount {
+  font-size: $font-size-xl;
+  font-weight: $font-weight-semibold;
+  color: $color-primary;
+  display: block;
+  margin-bottom: 4rpx;
+}
+
+.coverageLabel {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+  display: block;
+}
+
+/* 通用 Section */
+.section {
+  margin: 0 $page-padding $spacing-md;
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  box-shadow: $shadow-card;
+}
+
+.sectionTitle {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin-bottom: $spacing-md;
+  display: block;
+}
+
+/* 保费来源 */
+.premiumInfo {
+  display: flex;
+  align-items: center;
+  padding: $spacing-md;
+  background: $color-bg-page;
+  border-radius: $radius-md;
+}
+
+.premiumIcon {
+  font-size: 36rpx;
+  margin-right: $spacing-md;
+  flex-shrink: 0;
+}
+
+.premiumContent {
+  flex: 1;
+}
+
+.premiumLabel {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+  display: block;
+  margin-bottom: 4rpx;
+}
+
+.premiumDesc {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+  line-height: $line-height-normal;
+}
+
+.premiumHighlight {
+  color: $color-primary;
+  font-weight: $font-weight-medium;
+}
+
+/* 赔付条件列表 */
+.conditionItem {
+  display: flex;
+  align-items: flex-start;
+  padding: $spacing-sm 0;
+  border-bottom: 1rpx solid $color-divider;
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.conditionIcon {
+  font-size: 32rpx;
+  margin-right: $spacing-sm;
+  flex-shrink: 0;
+}
+
+.conditionContent {
+  flex: 1;
+}
+
+.conditionLabel {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+  display: block;
+  margin-bottom: 4rpx;
+}
+
+.conditionDesc {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+  line-height: $line-height-normal;
+}
+
+/* 理赔入口 */
+.claimButton {
+  @include button-reset;
+  width: 100%;
+  height: $button-height-lg;
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  color: $color-text-white;
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  border-radius: $radius-button;
+  box-shadow: 0 4rpx 16rpx rgba(255, 107, 107, 0.3);
+  margin-top: $spacing-sm;
+}
+
+.claimButtonDisabled {
+  background: $color-bg-hover;
+  color: $color-text-tertiary;
+  box-shadow: none;
+}
+
+/* 理赔记录 */
+.claimItem {
+  padding: $spacing-md;
+  background: $color-bg-page;
+  border-radius: $radius-md;
+  margin-bottom: $spacing-sm;
+}
+
+.claimHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: $spacing-xs;
+}
+
+.claimType {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+}
+
+.claimStatus {
+  font-size: $font-size-xs;
+  padding: 4rpx $spacing-sm;
+  border-radius: $radius-xs;
+}
+
+.claimStatusPending {
+  color: $color-warning;
+  background: rgba(250, 173, 20, 0.1);
+}
+
+.claimStatusReview {
+  color: $color-info;
+  background: rgba(22, 93, 255, 0.1);
+}
+
+.claimStatusApproved {
+  color: $color-success;
+  background: rgba(82, 196, 26, 0.1);
+}
+
+.claimAmount {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-primary;
+  display: block;
+  margin-bottom: 4rpx;
+}
+
+.claimReason {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+  line-height: $line-height-normal;
+  display: block;
+  margin-bottom: 4rpx;
+}
+
+.claimDate {
+  font-size: 20rpx;
+  color: $color-text-tertiary;
+}
+
+.claimEvidence {
+  font-size: 20rpx;
+  color: $color-success;
+  margin-top: 4rpx;
+  display: block;
+}
+
+/* 底部说明 */
+.footerNote {
+  text-align: center;
+  padding: $spacing-lg $page-padding;
+}
+
+.footerText {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  line-height: $line-height-normal;
+}
+
+/* 空状态 */
+.empty {
+  text-align: center;
+  padding: $spacing-lg 0;
+}
+
+.emptyText {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+}

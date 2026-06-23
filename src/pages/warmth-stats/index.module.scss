@@ -1,0 +1,252 @@
+@use '@/styles/variables.scss' as *;
+
+.container {
+  min-height: 100vh;
+  background: $color-bg-page;
+}
+
+/* 头部渐变区域 */
+.header {
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  padding: $spacing-xl $page-padding 100rpx;
+}
+
+.headerTitle {
+  font-size: $font-size-xxl;
+  font-weight: $font-weight-semibold;
+  color: $color-text-white;
+  margin-bottom: $spacing-xs;
+}
+
+.headerSubtitle {
+  font-size: $font-size-sm;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* 今日温暖亮点卡片 */
+.highlightCard {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  margin: -72rpx $page-padding $spacing-md;
+  box-shadow: $shadow-card;
+  text-align: center;
+}
+
+.highlightText {
+  font-size: $font-size-lg;
+  color: $color-text-primary;
+  line-height: $line-height-loose;
+}
+
+.highlightNumber {
+  font-size: $font-size-xxl;
+  font-weight: $font-weight-semibold;
+  color: $color-primary;
+}
+
+.highlightSparkle {
+  font-size: $font-size-lg;
+}
+
+/* 全国统计卡片网格 */
+.statsGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-sm;
+  padding: 0 $page-padding;
+  margin-bottom: $spacing-lg;
+}
+
+.statCard {
+  width: calc(50% - #{$spacing-sm} / 2);
+  background: $color-bg-card;
+  border-radius: $radius-md;
+  padding: $spacing-md;
+  box-shadow: $shadow-card;
+  box-sizing: border-box;
+}
+
+.statLabel {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin-bottom: $spacing-xs;
+}
+
+.statValue {
+  font-size: $font-size-xl;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
+.statUnit {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  margin-left: $spacing-xs;
+}
+
+/* 区域温暖列表 */
+.section {
+  padding: 0 $page-padding;
+  margin-bottom: $spacing-lg;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: $spacing-md;
+}
+
+.sectionTitle {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
+.sectionTip {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.regionList {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-sm $spacing-lg;
+  box-shadow: $shadow-card;
+}
+
+.regionItem {
+  display: flex;
+  align-items: center;
+  padding: $spacing-md 0;
+  border-bottom: 1rpx solid $color-divider;
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.regionName {
+  font-size: $font-size-md;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+  width: 120rpx;
+}
+
+.regionDesc {
+  flex: 1;
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  @include text-ellipsis;
+}
+
+.regionCount {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-primary;
+  margin-left: $spacing-sm;
+}
+
+/* 话题统计 */
+.topicList {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-sm $spacing-lg;
+  box-shadow: $shadow-card;
+}
+
+.topicItem {
+  display: flex;
+  align-items: center;
+  padding: $spacing-md 0;
+  border-bottom: 1rpx solid $color-divider;
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.topicName {
+  font-size: $font-size-md;
+  color: $color-text-primary;
+  width: 160rpx;
+  font-weight: $font-weight-medium;
+}
+
+.topicBarWrap {
+  flex: 1;
+  height: 16rpx;
+  background: $color-bg-hover;
+  border-radius: $radius-round;
+  overflow: hidden;
+  margin: 0 $spacing-sm;
+}
+
+.topicBar {
+  height: 100%;
+  background: linear-gradient(90deg, $color-primary 0%, $color-primary-light 100%);
+  border-radius: $radius-round;
+}
+
+.topicCount {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  width: 100rpx;
+  text-align: right;
+}
+
+.topicTrend {
+  font-size: $font-size-sm;
+  margin-left: $spacing-xs;
+  width: 40rpx;
+  text-align: center;
+}
+
+.trendUp {
+  color: $color-success;
+}
+
+.trendDown {
+  color: $color-error;
+}
+
+.trendStable {
+  color: $color-text-tertiary;
+}
+
+/* 更新提示 */
+.updateTip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: $spacing-lg $page-padding;
+  gap: $spacing-xs;
+}
+
+.updateDot {
+  width: 12rpx;
+  height: 12rpx;
+  border-radius: $radius-round;
+  background: $color-success;
+}
+
+.updateText {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+/* 隐私保护说明 */
+.privacyNote {
+  margin: 0 $page-padding $spacing-lg;
+  padding: $spacing-md;
+  background: rgba(255, 107, 107, 0.06);
+  border-radius: $radius-md;
+  border-left: 4rpx solid $color-primary;
+}
+
+.privacyText {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+  line-height: $line-height-normal;
+}

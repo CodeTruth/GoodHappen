@@ -1,0 +1,96 @@
+@use '@/styles/variables.scss' as *;
+
+// 温暖伙伴卡片样式（独立于善行卡片，有明显的视觉区分）
+.card {
+  background: linear-gradient(135deg, #FFFBF0 0%, #FFF5F5 100%);
+  border: 2rpx solid rgba(255, 107, 107, 0.15);
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  margin-bottom: $spacing-md;
+  box-shadow: $shadow-card;
+  position: relative;
+  transition: all $transition-base;
+
+  &:active {
+    opacity: 0.95;
+    transform: scale(0.99);
+  }
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  background: linear-gradient(135deg, $color-warning 0%, #FFD666 100%);
+  border-radius: $radius-button;
+  padding: 6rpx $spacing-md;
+  margin-bottom: $spacing-md;
+}
+
+.badgeText {
+  font-size: $font-size-xs;
+  color: $color-text-white;
+  font-weight: $font-weight-semibold;
+  white-space: nowrap;
+}
+
+.brandHeader {
+  display: flex;
+  align-items: center;
+  margin-bottom: $spacing-md;
+}
+
+.brandLogo {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: $radius-md;
+  margin-right: $spacing-md;
+}
+
+.brandInfo {
+  flex: 1;
+}
+
+.brandName {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  display: block;
+  margin-bottom: 4rpx;
+}
+
+.brandTag {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.content {
+  margin-bottom: $spacing-md;
+}
+
+.title {
+  font-size: $font-size-md;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+  display: block;
+  margin-bottom: $spacing-sm;
+  line-height: $line-height-tight;
+}
+
+.textContent {
+  font-size: $font-size-sm;
+  line-height: $line-height-loose;
+  color: $color-text-secondary;
+}
+
+.footer {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: $spacing-sm;
+  border-top: 1rpx solid rgba(255, 107, 107, 0.1);
+}
+
+.actionText {
+  font-size: $font-size-sm;
+  color: $color-primary;
+  font-weight: $font-weight-medium;
+}

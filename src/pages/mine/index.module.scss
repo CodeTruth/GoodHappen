@@ -1,0 +1,299 @@
+@use '@/styles/variables.scss' as *;
+
+.container {
+  min-height: 100vh;
+  background: $color-bg-page;
+}
+
+.header {
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  padding: $spacing-xl $page-padding;
+  padding-bottom: 80rpx;
+}
+
+.userInfo {
+  display: flex;
+  align-items: center;
+  margin-bottom: $spacing-lg;
+}
+
+.avatar {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: $radius-round;
+  margin-right: $spacing-lg;
+  border: 4rpx solid rgba(255, 255, 255, 0.3);
+}
+
+.info {
+  flex: 1;
+}
+
+.name {
+  font-size: $font-size-xl;
+  font-weight: $font-weight-semibold;
+  color: $color-text-white;
+  margin-bottom: $spacing-xs;
+}
+
+.bio {
+  font-size: $font-size-sm;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.nameRow {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  margin-bottom: $spacing-xs;
+}
+
+.minorBadge {
+  display: inline-block;
+  font-size: $font-size-xs;
+  color: $color-warning;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: $radius-button;
+  padding: 2rpx $spacing-sm;
+  font-weight: $font-weight-medium;
+}
+
+.loginBtn {
+  flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: $radius-button;
+  padding: 12rpx $spacing-lg;
+  border: 2rpx solid rgba(255, 255, 255, 0.4);
+  transition: all $transition-base;
+
+  &:active {
+    opacity: 0.8;
+    transform: scale(0.98);
+  }
+}
+
+.loginBtnText {
+  font-size: $font-size-sm;
+  color: $color-text-white;
+  font-weight: $font-weight-medium;
+  white-space: nowrap;
+}
+
+.logoutBtn {
+  flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: $radius-button;
+  padding: 12rpx $spacing-lg;
+  border: 2rpx solid rgba(255, 255, 255, 0.3);
+  transition: all $transition-base;
+
+  &:active {
+    opacity: 0.8;
+    transform: scale(0.98);
+  }
+}
+
+.logoutBtnText {
+  font-size: $font-size-sm;
+  color: rgba(255, 255, 255, 0.9);
+  white-space: nowrap;
+}
+
+.stats {
+  display: flex;
+  gap: $spacing-xl;
+}
+
+.stat {
+  text-align: center;
+}
+
+.statValue {
+  font-size: $font-size-xxl;
+  font-weight: $font-weight-semibold;
+  color: $color-text-white;
+  margin-bottom: $spacing-xs;
+}
+
+.statLabel {
+  font-size: $font-size-sm;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.badges {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  margin: -40rpx $page-padding $spacing-md;
+  box-shadow: $shadow-card;
+}
+
+.sectionTitle {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin-bottom: $spacing-md;
+}
+
+.badgeList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-sm;
+}
+
+.badge {
+  background: linear-gradient(135deg, #FFF5F5 0%, #FFE8E8 100%);
+  border-radius: $radius-button;
+  padding: 12rpx $spacing-md;
+  border: 1rpx solid rgba(255, 107, 107, 0.2);
+}
+
+.badgeText {
+  font-size: $font-size-sm;
+  color: $color-primary;
+  font-weight: $font-weight-medium;
+}
+
+.menu {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  margin: 0 $page-padding $spacing-md;
+  box-shadow: $shadow-card;
+}
+
+.menuItem {
+  display: flex;
+  align-items: center;
+  padding: $spacing-lg;
+  border-bottom: 1rpx solid $color-border;
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.menuIcon {
+  font-size: $font-size-xl;
+  margin-right: $spacing-md;
+}
+
+.menuText {
+  flex: 1;
+  font-size: $font-size-md;
+  color: $color-text-primary;
+}
+
+.menuArrow {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+}
+
+.version {
+  text-align: center;
+  padding: $spacing-lg 0;
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+}
+
+.titleSection {
+  margin-bottom: $spacing-lg;
+}
+
+.currentTitle {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: $radius-md;
+  padding: $spacing-sm $spacing-md;
+  margin-bottom: $spacing-sm;
+}
+
+.titleName {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-white;
+  margin-right: $spacing-sm;
+}
+
+.titleDesc {
+  font-size: $font-size-sm;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.highestTitleBadge {
+  display: inline-block;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: $radius-button;
+  padding: 4rpx $spacing-sm;
+}
+
+.highestTitleText {
+  font-size: $font-size-xs;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.progressSection {
+  margin-top: $spacing-md;
+}
+
+.progressBar {
+  height: 12rpx;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: $radius-round;
+  overflow: hidden;
+  margin-bottom: $spacing-xs;
+}
+
+.progressFill {
+  height: 100%;
+  background: $color-text-white;
+  border-radius: $radius-round;
+  transition: width 0.5s ease;
+}
+
+.progressText {
+  font-size: $font-size-xs;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.streakCard {
+  display: flex;
+  align-items: center;
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  margin: 0 $page-padding $spacing-md;
+  box-shadow: $shadow-card;
+}
+
+.streakIcon {
+  font-size: 48rpx;
+  margin-right: $spacing-md;
+}
+
+.streakInfo {
+  flex: 1;
+  display: flex;
+  align-items: baseline;
+  gap: $spacing-xs;
+}
+
+.streakNumber {
+  font-size: $font-size-xxl;
+  font-weight: $font-weight-semibold;
+  color: $color-primary;
+}
+
+.streakLabel {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+}
+
+.streakBest {
+  background: rgba($color-primary, 0.08);
+  border-radius: $radius-button;
+  padding: 4rpx $spacing-sm;
+}
+
+.streakBestText {
+  font-size: $font-size-xs;
+  color: $color-primary;
+}

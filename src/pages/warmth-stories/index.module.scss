@@ -1,0 +1,201 @@
+@use '@/styles/variables.scss' as *;
+
+.container {
+  min-height: 100vh;
+  background: $color-bg-page;
+}
+
+/* 头部 */
+.header {
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  padding: $spacing-xl $page-padding $spacing-lg;
+}
+
+.headerTitle {
+  font-size: $font-size-xxl;
+  font-weight: $font-weight-semibold;
+  color: $color-text-white;
+  margin-bottom: $spacing-xs;
+}
+
+.headerSubtitle {
+  font-size: $font-size-sm;
+  color: rgba(255, 255, 255, 0.9);
+  line-height: $line-height-normal;
+}
+
+/* 周期切换标签 */
+.tabs {
+  @include scroll-x-container;
+  padding: $spacing-md $page-padding;
+  background: $color-bg-card;
+  box-shadow: $shadow-float;
+}
+
+.tab {
+  @include scroll-x-item(auto);
+  margin-right: $spacing-sm;
+  padding: 12rpx $spacing-lg;
+  border-radius: $radius-button;
+  background: $color-bg-hover;
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  transition: all $transition-base;
+  text-align: center;
+
+  &:last-child {
+    margin-right: 0;
+  }
+
+  &.active {
+    background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+    color: $color-text-white;
+    font-weight: $font-weight-medium;
+  }
+}
+
+/* 故事列表 */
+.storyList {
+  padding: $spacing-md $page-padding $spacing-xl;
+}
+
+/* 故事卡片 */
+.storyCard {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  overflow: hidden;
+  margin-bottom: $spacing-md;
+  box-shadow: $shadow-card;
+}
+
+.storyImage {
+  width: 100%;
+  height: 320rpx;
+  display: block;
+}
+
+.storyBody {
+  padding: $spacing-lg;
+}
+
+.storyTypeTag {
+  display: inline-block;
+  background: rgba(255, 107, 107, 0.1);
+  border-radius: $radius-button;
+  padding: 4rpx $spacing-md;
+  margin-bottom: $spacing-sm;
+}
+
+.storyTypeText {
+  font-size: $font-size-xs;
+  color: $color-primary;
+  font-weight: $font-weight-medium;
+}
+
+.storyTitle {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin-bottom: $spacing-sm;
+  line-height: $line-height-tight;
+}
+
+.storySummary {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  line-height: $line-height-loose;
+  margin-bottom: $spacing-md;
+}
+
+/* AI共鸣金句 */
+.aiQuote {
+  background: linear-gradient(135deg, #FFF5F5 0%, #FFE8E8 100%);
+  border-radius: $radius-md;
+  padding: $spacing-md;
+  margin-bottom: $spacing-md;
+  border-left: 4rpx solid $color-primary;
+}
+
+.aiQuoteHeader {
+  display: flex;
+  align-items: center;
+  margin-bottom: $spacing-xs;
+}
+
+.aiQuoteIcon {
+  font-size: $font-size-md;
+  margin-right: $spacing-xs;
+}
+
+.aiQuotePersona {
+  font-size: $font-size-xs;
+  color: $color-primary;
+  font-weight: $font-weight-medium;
+}
+
+.aiQuoteText {
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+  line-height: $line-height-loose;
+  font-style: italic;
+}
+
+/* 发布者信息 */
+.publisher {
+  display: flex;
+  align-items: center;
+  padding-top: $spacing-sm;
+  border-top: 1rpx solid $color-divider;
+}
+
+.publisherIcon {
+  font-size: $font-size-md;
+  margin-right: $spacing-xs;
+}
+
+.publisherText {
+  flex: 1;
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  @include text-ellipsis;
+}
+
+.storyWarmth {
+  font-size: $font-size-xs;
+  color: $color-primary;
+  font-weight: $font-weight-medium;
+}
+
+/* 空状态 */
+.empty {
+  text-align: center;
+  padding: $spacing-xl 0;
+}
+
+.emptyIcon {
+  font-size: 80rpx;
+  margin-bottom: $spacing-md;
+}
+
+.emptyText {
+  font-size: $font-size-md;
+  color: $color-text-tertiary;
+  margin-bottom: $spacing-xs;
+}
+
+.emptySubText {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+/* 底部说明 */
+.footerNote {
+  text-align: center;
+  padding: $spacing-lg $page-padding;
+}
+
+.footerText {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  line-height: $line-height-normal;
+}

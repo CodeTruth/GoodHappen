@@ -1,0 +1,294 @@
+@use '@/styles/variables.scss' as *;
+
+.container {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #FF6B6B 0%, #FFA07A 30%, #F7F8FA 60%);
+  padding: $page-padding;
+  padding-bottom: $spacing-xl * 2;
+}
+
+// 顶部封面
+.cover {
+  text-align: center;
+  padding: $spacing-xl 0;
+  margin-bottom: $spacing-lg;
+}
+
+.coverYear {
+  font-size: 96rpx;
+  font-weight: $font-weight-bold;
+  color: $color-text-white;
+  display: block;
+  line-height: 1.1;
+  letter-spacing: 8rpx;
+}
+
+.coverTitle {
+  font-size: $font-size-xl;
+  font-weight: $font-weight-medium;
+  color: $color-text-white;
+  display: block;
+  margin-top: $spacing-sm;
+}
+
+.coverSub {
+  font-size: $font-size-sm;
+  color: rgba(255, 255, 255, 0.85);
+  display: block;
+  margin-top: $spacing-xs;
+}
+
+// 通用卡片
+.card {
+  background: $color-bg-card;
+  border-radius: $radius-xl;
+  padding: $spacing-lg;
+  margin-bottom: $spacing-lg;
+  box-shadow: $shadow-card;
+}
+
+.cardTitle {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-secondary;
+  margin-bottom: $spacing-md;
+  display: block;
+}
+
+// 核心数据卡片
+.heroStats {
+  display: flex;
+  justify-content: space-around;
+  padding: $spacing-lg 0;
+}
+
+.heroStat {
+  text-align: center;
+  flex: 1;
+}
+
+.heroStatValue {
+  font-size: 72rpx;
+  font-weight: $font-weight-bold;
+  color: $color-primary;
+  display: block;
+  line-height: 1.1;
+  font-family: 'DIN Alternate', sans-serif;
+}
+
+.heroStatLabel {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  display: block;
+  margin-top: $spacing-xs;
+}
+
+// 善行类型分布
+.typeList {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+}
+
+.typeItem {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+}
+
+.typeIcon {
+  font-size: 32rpx;
+  width: 56rpx;
+  text-align: center;
+}
+
+.typeInfo {
+  flex: 1;
+}
+
+.typeHeader {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 4rpx;
+}
+
+.typeName {
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+}
+
+.typeCount {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.typeBar {
+  height: 12rpx;
+  background: $color-bg-hover;
+  border-radius: $radius-round;
+  overflow: hidden;
+}
+
+.typeBarFill {
+  height: 100%;
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  border-radius: $radius-round;
+  transition: width 1s ease;
+}
+
+// 月度趋势
+.monthChart {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  height: 200rpx;
+  padding: $spacing-sm 0;
+  gap: 4rpx;
+}
+
+.monthBar {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4rpx;
+  height: 100%;
+  justify-content: flex-end;
+}
+
+.monthBarFill {
+  width: 80%;
+  background: linear-gradient(180deg, $color-primary 0%, $color-primary-light 100%);
+  border-radius: $radius-sm $radius-sm 0 0;
+  min-height: 8rpx;
+  transition: height 1s ease;
+}
+
+.monthLabel {
+  font-size: 18rpx;
+  color: $color-text-tertiary;
+}
+
+// 最温暖记录回顾
+.warmestCard {
+  background: linear-gradient(135deg, #FFF5F5 0%, #FFE8E8 100%);
+  border-radius: $radius-xl;
+  padding: $spacing-lg;
+  margin-bottom: $spacing-lg;
+  border-left: 8rpx solid $color-primary;
+}
+
+.warmestLabel {
+  font-size: $font-size-xs;
+  color: $color-primary;
+  font-weight: $font-weight-medium;
+  display: block;
+  margin-bottom: $spacing-sm;
+}
+
+.warmestContent {
+  font-size: $font-size-md;
+  color: $color-text-primary;
+  line-height: $line-height-loose;
+  display: block;
+  margin-bottom: $spacing-md;
+}
+
+.warmestQuote {
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: $radius-md;
+  padding: $spacing-md;
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  font-style: italic;
+  display: block;
+  line-height: $line-height-normal;
+}
+
+.warmestDate {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  display: block;
+  margin-top: $spacing-sm;
+  text-align: right;
+}
+
+// 年度称号
+.titleCard {
+  background: linear-gradient(135deg, #FFFBE6 0%, #FFF1B8 100%);
+  border-radius: $radius-xl;
+  padding: $spacing-xl $spacing-lg;
+  margin-bottom: $spacing-lg;
+  text-align: center;
+  border: 2rpx solid rgba($color-warning, 0.3);
+}
+
+.titleIcon {
+  font-size: 96rpx;
+  display: block;
+  margin-bottom: $spacing-sm;
+}
+
+.titleName {
+  font-size: $font-size-xxl;
+  font-weight: $font-weight-bold;
+  color: $color-warning;
+  display: block;
+  margin-bottom: $spacing-xs;
+}
+
+.titleDesc {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  display: block;
+  line-height: $line-height-normal;
+}
+
+// 分享引导
+.shareGuide {
+  text-align: center;
+  padding: $spacing-lg 0;
+}
+
+.shareGuideText {
+  font-size: $font-size-md;
+  color: $color-text-primary;
+  font-weight: $font-weight-medium;
+  display: block;
+  margin-bottom: $spacing-xs;
+}
+
+.shareGuideSub {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+  display: block;
+}
+
+// 底部分享按钮
+.shareBtn {
+  width: 100%;
+  height: $button-height-lg;
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  border-radius: $radius-button;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: $spacing-lg;
+  box-shadow: 0 8rpx 24rpx rgba($color-primary, 0.3);
+
+  &:active {
+    opacity: 0.9;
+    transform: scale(0.98);
+  }
+}
+
+.shareBtnText {
+  font-size: $font-size-lg;
+  color: $color-text-white;
+  font-weight: $font-weight-medium;
+}
+
+// 数字滚动动画容器
+.animatedNumber {
+  display: inline-block;
+}

@@ -1,0 +1,533 @@
+@use '@/styles/variables.scss' as *;
+
+.container {
+  min-height: 100vh;
+  background: $color-bg-page;
+  padding-bottom: $spacing-xl * 2;
+}
+
+// 顶部统计头部
+.header {
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  padding: $spacing-lg;
+  padding-top: $spacing-xl;
+}
+
+.headerTitle {
+  font-size: $font-size-xxl;
+  font-weight: $font-weight-bold;
+  color: $color-text-white;
+  margin-bottom: $spacing-sm;
+  display: block;
+}
+
+.headerDesc {
+  font-size: $font-size-sm;
+  color: rgba(255, 255, 255, 0.85);
+  margin-bottom: $spacing-md;
+  display: block;
+}
+
+.headerStats {
+  display: flex;
+  gap: $spacing-md;
+}
+
+.headerStat {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: $radius-md;
+  padding: $spacing-sm $spacing-md;
+}
+
+.headerStatValue {
+  font-size: $font-size-xl;
+  font-weight: $font-weight-bold;
+  color: $color-text-white;
+  display: block;
+}
+
+.headerStatLabel {
+  font-size: $font-size-xs;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+// 搜索栏
+.searchBar {
+  background: $color-bg-card;
+  padding: $spacing-sm $spacing-md;
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  border-bottom: 1rpx solid $color-divider;
+}
+
+.searchInput {
+  flex: 1;
+  height: 64rpx;
+  background: $color-bg-page;
+  border-radius: $radius-button;
+  padding: 0 $spacing-md;
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+}
+
+.searchBtn {
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  border-radius: $radius-button;
+  padding: 8rpx $spacing-md;
+}
+
+.searchBtnText {
+  font-size: $font-size-sm;
+  color: $color-text-white;
+  font-weight: $font-weight-medium;
+}
+
+// 状态标签栏
+.tabBar {
+  white-space: nowrap;
+  background: $color-bg-card;
+  padding: $spacing-sm $spacing-md;
+  border-bottom: 1rpx solid $color-divider;
+}
+
+.tabItem {
+  display: inline-block;
+  padding: 8rpx $spacing-md;
+  margin-right: $spacing-sm;
+  background: $color-bg-hover;
+  border-radius: $radius-button;
+  border: 2rpx solid transparent;
+  transition: all $transition-base;
+
+  &.active {
+    border-color: $color-primary;
+    background: linear-gradient(135deg, #FFF5F5 0%, #FFE8E8 100%);
+
+    .tabText {
+      color: $color-primary;
+      font-weight: $font-weight-medium;
+    }
+  }
+}
+
+.tabText {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+}
+
+.tabBadge {
+  font-size: $font-size-xs;
+  color: $color-text-white;
+  background: $color-primary;
+  border-radius: $radius-round;
+  padding: 2rpx 8rpx;
+  margin-left: $spacing-xs;
+}
+
+// 批量操作栏
+.batchBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: $spacing-sm $spacing-md;
+  background: linear-gradient(135deg, #FFF5F5 0%, #FFE8E8 100%);
+  border-bottom: 1rpx solid $color-divider;
+}
+
+.batchInfo {
+  display: flex;
+  align-items: center;
+  gap: $spacing-xs;
+}
+
+.batchCheckbox {
+  width: 32rpx;
+  height: 32rpx;
+  border: 2rpx solid $color-primary;
+  border-radius: $radius-xs;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.batchCheckboxChecked {
+  background: $color-primary;
+}
+
+.batchCheckboxText {
+  font-size: $font-size-sm;
+  color: $color-primary;
+  font-weight: $font-weight-medium;
+}
+
+.batchActions {
+  display: flex;
+  gap: $spacing-sm;
+}
+
+.batchBtn {
+  padding: 8rpx $spacing-md;
+  border-radius: $radius-button;
+  font-size: $font-size-sm;
+}
+
+.batchApprove {
+  background: $color-success;
+}
+
+.batchReject {
+  background: $color-error;
+}
+
+.batchBtnText {
+  font-size: $font-size-sm;
+  color: $color-text-white;
+  font-weight: $font-weight-medium;
+}
+
+// 内容区域
+.content {
+  padding: $spacing-md $page-padding;
+}
+
+// 审核任务卡片
+.taskCard {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-md;
+  margin-bottom: $spacing-md;
+  box-shadow: $shadow-card;
+}
+
+.taskCardHeader {
+  display: flex;
+  align-items: flex-start;
+  gap: $spacing-sm;
+  margin-bottom: $spacing-sm;
+}
+
+.taskCheckbox {
+  width: 36rpx;
+  height: 36rpx;
+  border: 2rpx solid $color-border;
+  border-radius: $radius-xs;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 4rpx;
+
+  &.checked {
+    background: $color-primary;
+    border-color: $color-primary;
+  }
+}
+
+.taskUserInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.taskUserName {
+  font-size: $font-size-md;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+  display: block;
+}
+
+.taskUserMeta {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  display: block;
+  margin-top: 2rpx;
+}
+
+.statusTag {
+  padding: 4rpx $spacing-sm;
+  border-radius: $radius-button;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+  flex-shrink: 0;
+}
+
+.statusPending {
+  background: rgba($color-warning, 0.1);
+  color: $color-warning;
+}
+
+.statusReviewing {
+  background: rgba($color-info, 0.1);
+  color: $color-info;
+}
+
+.statusApproved {
+  background: rgba($color-success, 0.1);
+  color: $color-success;
+}
+
+.statusReturned {
+  background: rgba($color-warning, 0.1);
+  color: $color-warning;
+}
+
+.statusRejected {
+  background: rgba($color-error, 0.1);
+  color: $color-error;
+}
+
+// 善行内容
+.taskContent {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  line-height: $line-height-normal;
+  margin-bottom: $spacing-sm;
+  display: block;
+}
+
+.taskImages {
+  display: flex;
+  gap: $spacing-xs;
+  margin-bottom: $spacing-sm;
+  flex-wrap: wrap;
+}
+
+.taskImage {
+  width: 160rpx;
+  height: 160rpx;
+  border-radius: $radius-sm;
+}
+
+.taskTags {
+  display: flex;
+  gap: $spacing-xs;
+  flex-wrap: wrap;
+  margin-bottom: $spacing-sm;
+}
+
+.taskTag {
+  font-size: $font-size-xs;
+  color: $color-primary;
+  background: rgba($color-primary, 0.1);
+  padding: 4rpx $spacing-sm;
+  border-radius: $radius-button;
+}
+
+// AI 审核结果
+.aiResult {
+  background: linear-gradient(135deg, #F0F5FF 0%, #E8F3FF 100%);
+  border-radius: $radius-md;
+  padding: $spacing-sm $spacing-md;
+  margin-bottom: $spacing-sm;
+  border-left: 6rpx solid $color-info;
+}
+
+.aiResultHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: $spacing-xs;
+}
+
+.aiResultTitle {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $color-info;
+}
+
+.aiConfidence {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.aiReason {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+  line-height: $line-height-normal;
+}
+
+// 操作按钮
+.taskActions {
+  display: flex;
+  gap: $spacing-sm;
+  margin-top: $spacing-sm;
+  padding-top: $spacing-sm;
+  border-top: 1rpx solid $color-divider;
+}
+
+.actionBtn {
+  flex: 1;
+  height: $button-height-sm;
+  border-radius: $radius-button;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all $transition-base;
+
+  &:active {
+    opacity: 0.9;
+    transform: scale(0.98);
+  }
+}
+
+.actionApprove {
+  background: $color-success;
+}
+
+.actionReturn {
+  background: $color-warning;
+}
+
+.actionReject {
+  background: $color-error;
+}
+
+.actionDetail {
+  background: $color-bg-hover;
+}
+
+.actionBtnText {
+  font-size: $font-size-sm;
+  color: $color-text-white;
+  font-weight: $font-weight-medium;
+}
+
+.actionDetailText {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  font-weight: $font-weight-medium;
+}
+
+// 详情弹窗
+.detailMask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  display: flex;
+  align-items: flex-end;
+}
+
+.detailPanel {
+  width: 100%;
+  max-height: 85vh;
+  background: $color-bg-card;
+  border-radius: $radius-xl $radius-xl 0 0;
+  overflow-y: auto;
+}
+
+.detailHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: $spacing-md $spacing-lg;
+  border-bottom: 1rpx solid $color-divider;
+}
+
+.detailTitle {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
+.detailClose {
+  font-size: $font-size-xl;
+  color: $color-text-tertiary;
+  padding: $spacing-xs;
+}
+
+.detailBody {
+  padding: $spacing-lg;
+}
+
+.detailSection {
+  margin-bottom: $spacing-lg;
+}
+
+.detailSectionTitle {
+  font-size: $font-size-md;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+  margin-bottom: $spacing-sm;
+  display: block;
+}
+
+.detailUserInfo {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  padding: $spacing-md;
+  background: $color-bg-page;
+  border-radius: $radius-md;
+}
+
+.detailAvatar {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: $radius-round;
+}
+
+.detailUserName {
+  font-size: $font-size-md;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+  display: block;
+}
+
+.detailUserMeta {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  display: block;
+}
+
+.detailContent {
+  font-size: $font-size-md;
+  color: $color-text-primary;
+  line-height: $line-height-loose;
+  padding: $spacing-md;
+  background: $color-bg-page;
+  border-radius: $radius-md;
+}
+
+// 退回/拒绝原因输入
+.reasonInput {
+  width: 100%;
+  min-height: 120rpx;
+  background: $color-bg-page;
+  border-radius: $radius-md;
+  padding: $spacing-sm $spacing-md;
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+  margin-bottom: $spacing-md;
+}
+
+.detailFooter {
+  display: flex;
+  gap: $spacing-sm;
+  padding: $spacing-md $spacing-lg;
+  border-top: 1rpx solid $color-divider;
+  position: sticky;
+  bottom: 0;
+  background: $color-bg-card;
+}
+
+// 空状态
+.empty {
+  text-align: center;
+  padding: $spacing-xl * 2 0;
+}
+
+.emptyIcon {
+  font-size: 80rpx;
+  display: block;
+  margin-bottom: $spacing-md;
+}
+
+.emptyText {
+  font-size: $font-size-md;
+  color: $color-text-tertiary;
+}

@@ -1,0 +1,277 @@
+@use '@/styles/variables.scss' as *;
+
+.container {
+  min-height: 100vh;
+  background: $color-bg-page;
+  padding: $page-padding;
+  display: flex;
+  flex-direction: column;
+}
+
+// 搜索框
+.searchBar {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  margin-bottom: $spacing-md;
+}
+
+.searchInputWrapper {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  background: $color-bg-card;
+  border-radius: $radius-button;
+  padding: 0 $spacing-md;
+  height: 80rpx;
+  box-shadow: $shadow-card;
+}
+
+.searchIcon {
+  font-size: $font-size-md;
+  margin-right: $spacing-sm;
+}
+
+.searchInput {
+  flex: 1;
+  font-size: $font-size-md;
+  color: $color-text-primary;
+  height: 100%;
+}
+
+.clearIcon {
+  font-size: $font-size-md;
+  color: $color-text-tertiary;
+  padding: $spacing-xs;
+}
+
+.searchBtn {
+  font-size: $font-size-md;
+  color: $color-primary;
+  font-weight: $font-weight-medium;
+  white-space: nowrap;
+  padding: 0 $spacing-sm;
+}
+
+// 错误提示
+.errorBanner {
+  background: rgba(255, 77, 79, 0.08);
+  border-radius: $radius-sm;
+  padding: $spacing-sm $spacing-md;
+  margin-bottom: $spacing-md;
+}
+
+.errorText {
+  font-size: $font-size-xs;
+  color: $color-error;
+}
+
+// 结果区域
+.resultSection {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.filterSection {
+  margin-bottom: $spacing-md;
+}
+
+.tagScroll {
+  white-space: nowrap;
+  margin-bottom: $spacing-sm;
+}
+
+.tagScrollInner {
+  display: inline-flex;
+  gap: $spacing-sm;
+}
+
+.regionScroll {
+  white-space: nowrap;
+}
+
+.regionScrollInner {
+  display: inline-flex;
+  gap: $spacing-sm;
+}
+
+.filterTag,
+.filterRegion {
+  display: inline-block;
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+  background: $color-bg-card;
+  border-radius: $radius-button;
+  padding: 8rpx $spacing-md;
+  white-space: nowrap;
+  box-shadow: $shadow-card;
+  transition: all $transition-base;
+}
+
+.filterTagActive,
+.filterRegionActive {
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  color: $color-text-white;
+  font-weight: $font-weight-medium;
+}
+
+.resultCount {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin-bottom: $spacing-md;
+  display: block;
+}
+
+.resultList {
+  flex: 1;
+  padding-bottom: $spacing-xl;
+}
+
+// 空状态
+.empty {
+  text-align: center;
+  padding: $spacing-xl 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: $spacing-sm;
+}
+
+.emptyIcon {
+  font-size: 80rpx;
+}
+
+.emptyText {
+  font-size: $font-size-md;
+  color: $color-text-secondary;
+}
+
+.emptySubtext {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+}
+
+// 建议区域（未搜索时）
+.suggestionSection {
+  flex: 1;
+}
+
+// 区块通用
+.historySection,
+.hotSection,
+.quickSection {
+  margin-bottom: $spacing-lg;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: $spacing-md;
+}
+
+.sectionTitle {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
+.clearBtn {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+// 搜索历史
+.historyList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-sm;
+}
+
+.historyItem {
+  display: inline-block;
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+  background: $color-bg-card;
+  border-radius: $radius-button;
+  padding: 8rpx $spacing-md;
+  white-space: nowrap;
+  box-shadow: $shadow-card;
+  transition: all $transition-base;
+
+  &:active {
+    opacity: 0.8;
+    transform: scale(0.96);
+  }
+}
+
+// 热门搜索
+.hotList {
+  background: $color-bg-card;
+  border-radius: $radius-md;
+  padding: $spacing-sm $spacing-md;
+  box-shadow: $shadow-card;
+}
+
+.hotItem {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  padding: $spacing-sm 0;
+  border-bottom: 1rpx solid $color-divider;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &:active {
+    opacity: 0.8;
+  }
+}
+
+.hotRank {
+  width: 40rpx;
+  font-size: $font-size-md;
+  font-weight: $font-weight-bold;
+  color: $color-text-tertiary;
+  text-align: center;
+
+  &.hotRankTop {
+    color: $color-primary;
+  }
+}
+
+.hotKeyword {
+  flex: 1;
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+}
+
+.hotTrend {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+// 快捷标签
+.quickList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-sm;
+}
+
+.quickTag {
+  display: inline-block;
+  font-size: $font-size-xs;
+  color: $color-primary;
+  background: rgba(255, 107, 107, 0.08);
+  border-radius: $radius-button;
+  padding: 8rpx $spacing-md;
+  white-space: nowrap;
+  transition: all $transition-base;
+
+  &:active {
+    opacity: 0.8;
+    transform: scale(0.96);
+  }
+}

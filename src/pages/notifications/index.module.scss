@@ -1,0 +1,376 @@
+@use '@/styles/variables.scss' as *;
+
+.container {
+  min-height: 100vh;
+  background: $color-bg-page;
+  padding: $page-padding;
+  display: flex;
+  flex-direction: column;
+}
+
+// 顶部操作栏
+.topBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: $spacing-md;
+}
+
+.topBarTitle {
+  font-size: $font-size-xl;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
+.topBarActions {
+  display: flex;
+  align-items: center;
+}
+
+.topBarAction {
+  font-size: $font-size-sm;
+  color: $color-primary;
+  white-space: nowrap;
+}
+
+// 免打扰提示横幅
+.dndBanner {
+  background: linear-gradient(135deg, #F0F0F0 0%, #E8E8E8 100%);
+  border-radius: $radius-md;
+  padding: $spacing-sm $spacing-md;
+  margin-bottom: $spacing-md;
+}
+
+.dndBannerText {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+}
+
+// 分类Tab
+.categoryTabs {
+  white-space: nowrap;
+  margin-bottom: $spacing-md;
+}
+
+.categoryTabsInner {
+  display: inline-flex;
+  gap: $spacing-sm;
+}
+
+.categoryTab {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4rpx;
+  background: $color-bg-card;
+  border-radius: $radius-md;
+  padding: $spacing-sm $spacing-md;
+  min-width: 140rpx;
+  position: relative;
+  box-shadow: $shadow-card;
+  transition: all $transition-base;
+
+  &.categoryTabActive {
+    background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+
+    .categoryIcon,
+    .categoryLabel {
+      color: $color-text-white;
+    }
+  }
+}
+
+.categoryIcon {
+  font-size: $font-size-lg;
+}
+
+.categoryLabel {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+  white-space: nowrap;
+}
+
+.unreadDot {
+  position: absolute;
+  top: 4rpx;
+  right: 4rpx;
+  min-width: 32rpx;
+  height: 32rpx;
+  border-radius: $radius-round;
+  background: $color-error;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 8rpx;
+}
+
+.unreadDotText {
+  font-size: 20rpx;
+  color: $color-text-white;
+  font-weight: $font-weight-medium;
+  white-space: nowrap;
+}
+
+// 操作栏
+.actionBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: $spacing-md;
+  padding: $spacing-sm $spacing-md;
+  background: $color-bg-card;
+  border-radius: $radius-sm;
+}
+
+.actionBarText {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.actionBtn {
+  font-size: $font-size-xs;
+  color: $color-primary;
+  font-weight: $font-weight-medium;
+  white-space: nowrap;
+}
+
+// 消息列表
+.messageList {
+  flex: 1;
+}
+
+.messageItem {
+  display: flex;
+  align-items: flex-start;
+  gap: $spacing-md;
+  background: $color-bg-card;
+  border-radius: $radius-md;
+  padding: $spacing-md;
+  margin-bottom: $spacing-sm;
+  box-shadow: $shadow-card;
+  transition: all $transition-base;
+  position: relative;
+  overflow: hidden;
+
+  &.messageUnread {
+    background: linear-gradient(135deg, #FFFBF5 0%, $color-bg-card 100%);
+  }
+
+  &:active {
+    opacity: 0.9;
+    transform: scale(0.99);
+  }
+}
+
+// 左侧主题色条（消息模板配色）
+.messageAccent {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 6rpx;
+}
+
+.messageIcon {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: $radius-round;
+  background: $color-bg-hover;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-left: $spacing-xs;
+}
+
+.iconText {
+  font-size: $font-size-lg;
+}
+
+.messageBody {
+  flex: 1;
+  min-width: 0;
+}
+
+.messageHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: $spacing-xs;
+}
+
+.messageTitle {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.messageTime {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  white-space: nowrap;
+  margin-left: $spacing-sm;
+}
+
+.messageContent {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  line-height: $line-height-normal;
+}
+
+// 公益消息不可删除标签
+.unclosableTag {
+  display: inline-block;
+  margin-top: $spacing-xs;
+  padding: 2rpx $spacing-sm;
+  background: rgba(255, 107, 107, 0.1);
+  border-radius: $radius-xs;
+}
+
+.unclosableTagText {
+  font-size: 20rpx;
+  color: $color-primary;
+}
+
+// 消息操作区（未读指示 + 删除按钮）
+.messageActions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: $spacing-sm;
+  flex-shrink: 0;
+  padding-top: $spacing-xs;
+}
+
+.unreadIndicator {
+  width: 16rpx;
+  height: 16rpx;
+  border-radius: $radius-round;
+  background: $color-error;
+}
+
+.deleteBtn {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  white-space: nowrap;
+  padding: $spacing-xs $spacing-sm;
+
+  &:active {
+    color: $color-error;
+  }
+}
+
+// 空状态
+.empty {
+  text-align: center;
+  padding: $spacing-xl 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: $spacing-sm;
+}
+
+.emptyIcon {
+  font-size: 80rpx;
+}
+
+.emptyText {
+  font-size: $font-size-md;
+  color: $color-text-tertiary;
+}
+
+// 设置面板
+.settingsScroll {
+  flex: 1;
+}
+
+.settingsPanel {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  box-shadow: $shadow-card;
+}
+
+.settingsTitle {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin-bottom: $spacing-lg;
+  display: block;
+}
+
+.settingItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: $spacing-md 0;
+  border-bottom: 1rpx solid $color-divider;
+}
+
+.settingInfo {
+  flex: 1;
+}
+
+.settingLabel {
+  font-size: $font-size-md;
+  color: $color-text-primary;
+  display: block;
+  margin-bottom: 4rpx;
+}
+
+.settingDesc {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.timeRange {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: $spacing-lg 0;
+  gap: $spacing-md;
+}
+
+.timePicker {
+  flex: 1;
+  background: $color-bg-hover;
+  border-radius: $radius-md;
+  padding: $spacing-md;
+  text-align: center;
+}
+
+.timeLabel {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  display: block;
+  margin-bottom: $spacing-xs;
+}
+
+.timeValue {
+  font-size: $font-size-xl;
+  font-weight: $font-weight-semibold;
+  color: $color-primary;
+}
+
+.timeSeparator {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+}
+
+.settingTip {
+  margin-top: $spacing-lg;
+  padding: $spacing-md;
+  background: $color-bg-hover;
+  border-radius: $radius-sm;
+}
+
+.settingTipText {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  line-height: $line-height-normal;
+}

@@ -1,0 +1,303 @@
+@use '@/styles/variables.scss' as *;
+
+.container {
+  min-height: 100vh;
+  background: $color-bg-page;
+  padding: $page-padding;
+  padding-bottom: $spacing-xl;
+}
+
+// 头部
+.header {
+  margin-bottom: $spacing-lg;
+}
+
+.title {
+  font-size: $font-size-xxl;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  display: block;
+  margin-bottom: $spacing-xs;
+}
+
+.subtitle {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+}
+
+// 福气信息条
+.fortuneInfo {
+  display: flex;
+  align-items: center;
+  background: linear-gradient(135deg, #FFF5F5 0%, #FFE8E8 100%);
+  border-radius: $radius-lg;
+  padding: $spacing-md $spacing-lg;
+  margin-bottom: $spacing-lg;
+}
+
+.fortuneItem {
+  flex: 1;
+  text-align: center;
+}
+
+.fortuneLabel {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+  display: block;
+  margin-bottom: 4rpx;
+}
+
+.fortuneValue {
+  font-size: $font-size-xl;
+  font-weight: $font-weight-semibold;
+  color: $color-primary;
+}
+
+.fortuneDivider {
+  width: 2rpx;
+  height: 48rpx;
+  background: rgba($color-primary, 0.2);
+  margin: 0 $spacing-sm;
+}
+
+// 表单
+.form {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  margin-bottom: $spacing-lg;
+  box-shadow: $shadow-card;
+}
+
+.formItem {
+  margin-bottom: $spacing-lg;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.labelRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: $spacing-sm;
+}
+
+.label {
+  font-size: $font-size-md;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+}
+
+.counter {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.input {
+  width: 100%;
+  height: 80rpx;
+  padding: 0 $spacing-md;
+  background: $color-bg-page;
+  border-radius: $radius-md;
+  font-size: $font-size-md;
+  color: $color-text-primary;
+  border: none;
+  box-sizing: border-box;
+}
+
+.textarea {
+  width: 100%;
+  min-height: 200rpx;
+  padding: $spacing-md;
+  background: $color-bg-page;
+  border-radius: $radius-md;
+  font-size: $font-size-md;
+  line-height: $line-height-loose;
+  color: $color-text-primary;
+  border: none;
+  box-sizing: border-box;
+}
+
+.hint {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin-top: $spacing-xs;
+  display: block;
+}
+
+.hintWarn {
+  font-size: $font-size-xs;
+  color: $color-warning;
+  font-weight: $font-weight-medium;
+}
+
+// 需求类型网格
+.typeGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-sm;
+}
+
+.typeOption {
+  width: calc((100% - #{$spacing-sm} * 2) / 3);
+  background: $color-bg-page;
+  border-radius: $radius-md;
+  padding: $spacing-md 0;
+  text-align: center;
+  border: 2rpx solid transparent;
+  transition: all $transition-base;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4rpx;
+
+  &.active {
+    border-color: $color-primary;
+    background: linear-gradient(135deg, #FFF5F5 0%, #FFE8E8 100%);
+  }
+}
+
+.typeIcon {
+  font-size: 40rpx;
+}
+
+.typeName {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+}
+
+.typeOption.active .typeName {
+  color: $color-primary;
+  font-weight: $font-weight-medium;
+}
+
+// 时间选择器
+.timePicker {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 80rpx;
+  padding: 0 $spacing-md;
+  background: $color-bg-page;
+  border-radius: $radius-md;
+}
+
+.timeText {
+  font-size: $font-size-md;
+  color: $color-text-primary;
+}
+
+.arrow {
+  font-size: $font-size-lg;
+  color: $color-text-tertiary;
+}
+
+// 福气悬赏
+.rewardPresets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-sm;
+  margin-bottom: $spacing-sm;
+}
+
+.rewardOption {
+  background: $color-bg-page;
+  border-radius: $radius-button;
+  padding: 12rpx $spacing-md;
+  border: 2rpx solid transparent;
+  transition: all $transition-base;
+
+  &.active {
+    border-color: $color-primary;
+    background: linear-gradient(135deg, #FFF5F5 0%, #FFE8E8 100%);
+  }
+
+  &.disabled {
+    opacity: 0.5;
+  }
+}
+
+.rewardText {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+}
+
+.rewardOption.active .rewardText {
+  color: $color-primary;
+  font-weight: $font-weight-medium;
+}
+
+.customReward {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  margin-top: $spacing-sm;
+}
+
+.rewardInput {
+  flex: 1;
+  height: 72rpx;
+  padding: 0 $spacing-md;
+  background: $color-bg-page;
+  border-radius: $radius-md;
+  font-size: $font-size-md;
+  color: $color-text-primary;
+  border: none;
+  box-sizing: border-box;
+}
+
+.rewardUnit {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+}
+
+.rewardRules {
+  margin-top: $spacing-sm;
+  background: rgba($color-primary, 0.04);
+  border-radius: $radius-md;
+  padding: $spacing-sm $spacing-md;
+}
+
+.ruleText {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  line-height: $line-height-loose;
+}
+
+// 提交按钮
+.submitBtn {
+  width: 100%;
+  height: $button-height-lg;
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  border-radius: $radius-button;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: $spacing-lg;
+  transition: all $transition-base;
+
+  &:active {
+    opacity: 0.9;
+    transform: scale(0.98);
+  }
+}
+
+.submitText {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-medium;
+  color: $color-text-white;
+}
+
+// 底部说明
+.footerNote {
+  text-align: center;
+  padding: $spacing-md 0;
+}
+
+.footerText {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  line-height: $line-height-loose;
+}

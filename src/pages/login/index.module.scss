@@ -1,0 +1,218 @@
+@use '@/styles/variables.scss' as *;
+
+.container {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #FFF5F5 0%, $color-bg-page 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 $page-padding;
+}
+
+.header {
+  width: 100%;
+  text-align: center;
+  padding: 120rpx 0 $spacing-xl;
+}
+
+.logo {
+  display: block;
+  font-size: 64rpx;
+  font-weight: $font-weight-bold;
+  color: $color-primary;
+  margin-bottom: $spacing-md;
+  letter-spacing: 4rpx;
+}
+
+.slogan {
+  display: block;
+  font-size: $font-size-md;
+  color: $color-text-secondary;
+}
+
+.card {
+  width: 100%;
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  box-shadow: $shadow-card;
+  margin-bottom: $spacing-xl;
+}
+
+.tabs {
+  display: flex;
+  background: $color-bg-page;
+  border-radius: $radius-button;
+  padding: 6rpx;
+  margin-bottom: $spacing-lg;
+}
+
+.tab {
+  flex: 1;
+  text-align: center;
+  padding: $spacing-sm 0;
+  border-radius: $radius-button;
+  transition: all $transition-base;
+
+  &.active {
+    background: $color-bg-card;
+    box-shadow: $shadow-card;
+  }
+}
+
+.tabText {
+  font-size: $font-size-md;
+  color: $color-text-secondary;
+  font-weight: $font-weight-medium;
+}
+
+.tab.active .tabText {
+  color: $color-primary;
+  font-weight: $font-weight-semibold;
+}
+
+.wechatSection {
+  padding: $spacing-lg 0;
+  text-align: center;
+}
+
+.desc {
+  display: block;
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+  margin-bottom: $spacing-xl;
+}
+
+.wechatBtn {
+  @include button-reset;
+  width: 100%;
+  height: $button-height-lg;
+  background: linear-gradient(135deg, #07C160 0%, #06AD56 100%);
+  border-radius: $radius-button;
+  transition: all $transition-base;
+
+  &:active {
+    opacity: 0.9;
+    transform: scale(0.98);
+  }
+
+  &[disabled] {
+    opacity: 0.6;
+  }
+}
+
+.wechatBtnText {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-medium;
+  color: $color-text-white;
+}
+
+.phoneSection {
+  padding: $spacing-sm 0;
+}
+
+.inputGroup {
+  margin-bottom: $spacing-lg;
+}
+
+.inputLabel {
+  display: block;
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  margin-bottom: $spacing-sm;
+}
+
+.input {
+  width: 100%;
+  height: 96rpx;
+  background: $color-bg-page;
+  border-radius: $radius-md;
+  padding: 0 $spacing-md;
+  font-size: $font-size-md;
+  color: $color-text-primary;
+  border: none;
+  box-sizing: border-box;
+}
+
+.codeRow {
+  display: flex;
+  gap: $spacing-sm;
+  align-items: center;
+}
+
+.codeInput {
+  flex: 1;
+  height: 96rpx;
+  background: $color-bg-page;
+  border-radius: $radius-md;
+  padding: 0 $spacing-md;
+  font-size: $font-size-md;
+  color: $color-text-primary;
+  border: none;
+  box-sizing: border-box;
+}
+
+.codeBtn {
+  flex-shrink: 0;
+  height: 96rpx;
+  min-width: 200rpx;
+  background: rgba($color-primary, 0.1);
+  border-radius: $radius-md;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 $spacing-md;
+  transition: all $transition-base;
+
+  &:active {
+    opacity: 0.8;
+  }
+
+  &.disabled {
+    opacity: 0.5;
+  }
+}
+
+.codeBtnText {
+  font-size: $font-size-sm;
+  color: $color-primary;
+  font-weight: $font-weight-medium;
+  white-space: nowrap;
+}
+
+.loginBtn {
+  @include button-reset;
+  width: 100%;
+  height: $button-height-lg;
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  border-radius: $radius-button;
+  margin-top: $spacing-md;
+  transition: all $transition-base;
+
+  &:active {
+    opacity: 0.9;
+    transform: scale(0.98);
+  }
+
+  &[disabled] {
+    opacity: 0.6;
+  }
+}
+
+.loginBtnText {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-medium;
+  color: $color-text-white;
+}
+
+.footer {
+  margin-top: auto;
+  padding-bottom: $spacing-xl;
+  text-align: center;
+}
+
+.agreement {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  line-height: $line-height-normal;
+}

@@ -1,0 +1,419 @@
+@use '@/styles/variables.scss' as *;
+
+.container {
+  min-height: 100vh;
+  background: $color-bg-page;
+}
+
+/* 头部 */
+.header {
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  padding: $spacing-xl $page-padding $spacing-lg;
+}
+
+.headerTitle {
+  font-size: $font-size-xxl;
+  font-weight: $font-weight-semibold;
+  color: $color-text-white;
+  margin-bottom: $spacing-xs;
+  display: block;
+}
+
+.headerSubtitle {
+  font-size: $font-size-sm;
+  color: rgba(255, 255, 255, 0.9);
+  line-height: $line-height-normal;
+  display: block;
+}
+
+/* 分配规则卡片 */
+.ruleCard {
+  margin: -$spacing-sm $page-padding $spacing-md;
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  box-shadow: $shadow-card;
+}
+
+.ruleTitle {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin-bottom: $spacing-md;
+  display: block;
+}
+
+.ruleFlow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.ruleItem {
+  flex: 1;
+  text-align: center;
+}
+
+.ruleIcon {
+  font-size: 40rpx;
+  display: block;
+  margin-bottom: $spacing-xs;
+}
+
+.ruleLabel {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+  display: block;
+  margin-bottom: 4rpx;
+}
+
+.ruleAmount {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  color: $color-primary;
+  display: block;
+}
+
+.rulePercent {
+  font-size: 20rpx;
+  color: $color-text-tertiary;
+  display: block;
+}
+
+.ruleArrow {
+  font-size: $font-size-md;
+  color: $color-text-tertiary;
+  padding: 0 $spacing-xs;
+}
+
+/* 季度切换 */
+.tabs {
+  @include scroll-x-container;
+  padding: $spacing-md $page-padding;
+  background: $color-bg-card;
+  box-shadow: $shadow-float;
+  margin-bottom: $spacing-md;
+}
+
+.tab {
+  @include scroll-x-item(auto);
+  margin-right: $spacing-sm;
+  padding: 12rpx $spacing-lg;
+  border-radius: $radius-button;
+  background: $color-bg-hover;
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  transition: all $transition-base;
+  text-align: center;
+
+  &:last-child {
+    margin-right: 0;
+  }
+
+  &.active {
+    background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+    color: $color-text-white;
+    font-weight: $font-weight-medium;
+  }
+}
+
+/* 季度报告卡片 */
+.reportCard {
+  margin: 0 $page-padding $spacing-md;
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  box-shadow: $shadow-card;
+}
+
+.reportTitle {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin-bottom: $spacing-md;
+  display: block;
+}
+
+.reportStats {
+  display: flex;
+  justify-content: space-around;
+  margin-bottom: $spacing-md;
+}
+
+.reportStat {
+  text-align: center;
+}
+
+.reportStatValue {
+  font-size: $font-size-xl;
+  font-weight: $font-weight-semibold;
+  color: $color-primary;
+  display: block;
+  margin-bottom: 4rpx;
+}
+
+.reportStatLabel {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.highlightBox {
+  display: flex;
+  align-items: flex-start;
+  background: linear-gradient(135deg, #FFF5F5 0%, #FFE8E8 100%);
+  border-radius: $radius-md;
+  padding: $spacing-md;
+  border-left: 4rpx solid $color-primary;
+}
+
+.highlightIcon {
+  font-size: $font-size-md;
+  margin-right: $spacing-xs;
+  flex-shrink: 0;
+}
+
+.highlightText {
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+  line-height: $line-height-loose;
+  flex: 1;
+}
+
+/* 通用 Section */
+.section {
+  margin: 0 $page-padding $spacing-md;
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  box-shadow: $shadow-card;
+}
+
+.sectionTitle {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin-bottom: $spacing-md;
+  display: block;
+}
+
+/* 收入列表 */
+.incomeItem {
+  display: flex;
+  align-items: center;
+  padding: $spacing-sm 0;
+  border-bottom: 1rpx solid $color-divider;
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.incomeIcon {
+  font-size: 36rpx;
+  margin-right: $spacing-md;
+  flex-shrink: 0;
+}
+
+.incomeInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.incomeName {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+  display: block;
+  margin-bottom: 4rpx;
+}
+
+.incomeDesc {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+  display: block;
+  margin-bottom: 4rpx;
+  @include text-ellipsis;
+}
+
+.incomeDate {
+  font-size: 20rpx;
+  color: $color-text-tertiary;
+}
+
+.incomeAmount {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-primary;
+  flex-shrink: 0;
+  margin-left: $spacing-sm;
+}
+
+/* 收入来源占比 */
+.sourceBars {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+}
+
+.sourceBar {
+  width: 100%;
+}
+
+.sourceBarHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: $spacing-xs;
+}
+
+.sourceBarLabel {
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+}
+
+.sourceBarAmount {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+}
+
+.barWrap {
+  height: 16rpx;
+  background: $color-bg-hover;
+  border-radius: $radius-round;
+  overflow: hidden;
+}
+
+.barFill {
+  height: 100%;
+  background: linear-gradient(90deg, $color-primary 0%, $color-primary-light 100%);
+  border-radius: $radius-round;
+  transition: width 0.5s ease;
+}
+
+/* 分配去向 */
+.allocationSummary {
+  display: flex;
+  gap: $spacing-md;
+}
+
+.allocationCard {
+  flex: 1;
+  background: $color-bg-page;
+  border-radius: $radius-md;
+  padding: $spacing-md;
+  text-align: center;
+}
+
+.allocationHeader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: $spacing-xs;
+  margin-bottom: $spacing-sm;
+}
+
+.allocationIcon {
+  font-size: $font-size-lg;
+}
+
+.allocationName {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+}
+
+.allocationAmount {
+  font-size: $font-size-xl;
+  font-weight: $font-weight-semibold;
+  color: $color-primary;
+  display: block;
+  margin-bottom: 4rpx;
+}
+
+.allocationPercent {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  display: block;
+  margin-bottom: $spacing-xs;
+}
+
+.allocationDesc {
+  font-size: 20rpx;
+  color: $color-text-tertiary;
+  line-height: $line-height-normal;
+  display: block;
+}
+
+/* 人数波动应对 */
+.strategyCard {
+  margin: 0 $page-padding $spacing-md;
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  box-shadow: $shadow-card;
+}
+
+.strategyTitle {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin-bottom: $spacing-md;
+  display: block;
+}
+
+.strategyItem {
+  display: flex;
+  align-items: flex-start;
+  padding: $spacing-sm 0;
+
+  &:not(:last-child) {
+    border-bottom: 1rpx solid $color-divider;
+  }
+}
+
+.strategyIcon {
+  font-size: 32rpx;
+  margin-right: $spacing-md;
+  flex-shrink: 0;
+}
+
+.strategyContent {
+  flex: 1;
+}
+
+.strategyLabel {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+  display: block;
+  margin-bottom: 4rpx;
+}
+
+.strategyDesc {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+  line-height: $line-height-normal;
+}
+
+/* 空状态 */
+.empty {
+  text-align: center;
+  padding: $spacing-lg 0;
+}
+
+.emptyText {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+}
+
+/* 底部说明 */
+.footerNote {
+  text-align: center;
+  padding: $spacing-lg $page-padding $spacing-xl;
+}
+
+.footerText {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  line-height: $line-height-normal;
+}

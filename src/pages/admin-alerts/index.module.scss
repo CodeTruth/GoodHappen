@@ -1,0 +1,296 @@
+@use '@/styles/variables.scss' as *;
+
+.container {
+  min-height: 100vh;
+  background: $color-bg-page;
+  padding: $page-padding;
+  display: flex;
+  flex-direction: column;
+}
+
+// 统计概览
+.statsGrid {
+  display: flex;
+  gap: $spacing-sm;
+  margin-bottom: $spacing-md;
+}
+
+.statCard {
+  flex: 1;
+  background: $color-bg-card;
+  border-radius: $radius-md;
+  padding: $spacing-md $spacing-sm;
+  text-align: center;
+  box-shadow: $shadow-card;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4rpx;
+
+  &.statCritical {
+    background: linear-gradient(135deg, #FFF1F0 0%, $color-bg-card 100%);
+  }
+
+  &.statWarning {
+    background: linear-gradient(135deg, #FFFBE6 0%, $color-bg-card 100%);
+  }
+
+  &.statInfo {
+    background: linear-gradient(135deg, #E6F4FF 0%, $color-bg-card 100%);
+  }
+}
+
+.statValue {
+  font-size: $font-size-xl;
+  font-weight: $font-weight-bold;
+  color: $color-text-primary;
+}
+
+.statCritical .statValue {
+  color: $color-error;
+}
+
+.statWarning .statValue {
+  color: $color-warning;
+}
+
+.statInfo .statValue {
+  color: $color-info;
+}
+
+.statLabel {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+// 操作栏
+.actionBar {
+  display: flex;
+  gap: $spacing-sm;
+  margin-bottom: $spacing-md;
+}
+
+.actionBtn {
+  flex: 1;
+  text-align: center;
+  font-size: $font-size-sm;
+  color: $color-primary;
+  background: $color-bg-card;
+  border-radius: $radius-md;
+  padding: $spacing-sm $spacing-md;
+  box-shadow: $shadow-card;
+  font-weight: $font-weight-medium;
+
+  &:active {
+    opacity: 0.8;
+  }
+}
+
+// 筛选行
+.filterRow {
+  margin-bottom: $spacing-sm;
+}
+
+.filterGroup {
+  display: flex;
+  gap: $spacing-xs;
+  flex-wrap: wrap;
+}
+
+.filterChip {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+  background: $color-bg-card;
+  border-radius: $radius-round;
+  padding: $spacing-xs $spacing-md;
+  border: 1rpx solid $color-border;
+  white-space: nowrap;
+
+  &.filterChipActive {
+    background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+    color: $color-text-white;
+    border-color: $color-primary;
+  }
+
+  &.filterChipCritical {
+    background: rgba(255, 77, 79, 0.1);
+    color: $color-error;
+    border-color: $color-error;
+  }
+
+  &.filterChipWarning {
+    background: rgba(250, 173, 20, 0.1);
+    color: $color-warning;
+    border-color: $color-warning;
+  }
+
+  &.filterChipInfo {
+    background: rgba(22, 93, 255, 0.1);
+    color: $color-info;
+    border-color: $color-info;
+  }
+}
+
+// 告警列表
+.alertList {
+  flex: 1;
+}
+
+// 告警卡片
+.alertCard {
+  display: flex;
+  background: $color-bg-card;
+  border-radius: $radius-md;
+  margin-bottom: $spacing-sm;
+  box-shadow: $shadow-card;
+  overflow: hidden;
+  position: relative;
+  transition: all $transition-base;
+
+  &.alertResolved {
+    opacity: 0.6;
+  }
+
+  &:active {
+    transform: scale(0.99);
+  }
+
+  // 级别特定样式（卡片背景微调）
+  &.level_critical {
+    background: linear-gradient(135deg, #FFF5F5 0%, $color-bg-card 100%);
+  }
+
+  &.level_warning {
+    background: linear-gradient(135deg, #FFFDF5 0%, $color-bg-card 100%);
+  }
+
+  &.level_info {
+    background: linear-gradient(135deg, #F5F9FF 0%, $color-bg-card 100%);
+  }
+}
+
+// 左侧级别色条
+.alertAccent {
+  width: 6rpx;
+  flex-shrink: 0;
+}
+
+.alertBody {
+  flex: 1;
+  padding: $spacing-md;
+  min-width: 0;
+}
+
+.alertHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: $spacing-xs;
+}
+
+.alertTitleRow {
+  display: flex;
+  align-items: center;
+  gap: $spacing-xs;
+  flex: 1;
+  min-width: 0;
+}
+
+.alertIcon {
+  font-size: $font-size-md;
+  flex-shrink: 0;
+}
+
+.alertTitle {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.alertTime {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  white-space: nowrap;
+  margin-left: $spacing-sm;
+  flex-shrink: 0;
+}
+
+.alertDesc {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  line-height: $line-height-normal;
+  margin-bottom: $spacing-sm;
+  display: block;
+}
+
+// 告警元信息标签
+.alertMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-xs;
+}
+
+.alertTag {
+  display: inline-flex;
+  align-items: center;
+  background: $color-bg-hover;
+  border-radius: $radius-xs;
+  padding: 2rpx $spacing-sm;
+}
+
+.alertTagText {
+  font-size: 20rpx;
+  color: $color-text-secondary;
+}
+
+.resolvedTag {
+  background: rgba(82, 196, 26, 0.1);
+
+  .alertTagText {
+    color: $color-success;
+  }
+}
+
+// 告警操作
+.alertActions {
+  margin-top: $spacing-sm;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.resolveBtn {
+  font-size: $font-size-xs;
+  color: $color-primary;
+  padding: $spacing-xs $spacing-md;
+  border: 1rpx solid $color-primary;
+  border-radius: $radius-round;
+
+  &:active {
+    background: $color-primary;
+    color: $color-text-white;
+  }
+}
+
+// 空状态
+.empty {
+  text-align: center;
+  padding: $spacing-xl 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: $spacing-sm;
+}
+
+.emptyIcon {
+  font-size: 80rpx;
+}
+
+.emptyText {
+  font-size: $font-size-md;
+  color: $color-text-tertiary;
+}

@@ -1,0 +1,720 @@
+@use '@/styles/variables.scss' as *;
+
+.container {
+  min-height: 100vh;
+  background: $color-bg-page;
+  padding-bottom: $spacing-xl * 2;
+}
+
+.header {
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  padding: $spacing-lg;
+  padding-top: $spacing-xl;
+}
+
+.circleName {
+  font-size: $font-size-xxl;
+  font-weight: $font-weight-bold;
+  color: $color-text-white;
+  margin-bottom: $spacing-xs;
+  display: block;
+}
+
+.circleDesc {
+  font-size: $font-size-sm;
+  color: rgba(255, 255, 255, 0.85);
+  margin-bottom: $spacing-md;
+  display: block;
+}
+
+.headerStats {
+  display: flex;
+  gap: $spacing-xl;
+}
+
+.headerStat {
+  display: flex;
+  flex-direction: column;
+}
+
+.headerStatValue {
+  font-size: $font-size-xl;
+  font-weight: $font-weight-bold;
+  color: $color-text-white;
+}
+
+.headerStatLabel {
+  font-size: $font-size-xs;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+// 标签页导航
+.tabNav {
+  white-space: nowrap;
+  background: $color-bg-card;
+  padding: $spacing-sm $spacing-md;
+  border-bottom: 1rpx solid $color-divider;
+}
+
+.tabItem {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  padding: $spacing-sm $spacing-md;
+  margin-right: $spacing-sm;
+  border-radius: $radius-md;
+  transition: all $transition-base;
+  vertical-align: top;
+
+  &.active {
+    background: linear-gradient(135deg, #FFF5F5 0%, #FFE8E8 100%);
+
+    .tabName {
+      color: $color-primary;
+      font-weight: $font-weight-medium;
+    }
+  }
+}
+
+.tabIcon {
+  font-size: 32rpx;
+  margin-bottom: 4rpx;
+}
+
+.tabName {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+}
+
+.content {
+  padding: $spacing-md $page-padding;
+}
+
+.card {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  margin-bottom: $spacing-md;
+  box-shadow: $shadow-card;
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: $spacing-md;
+}
+
+.cardTitle {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin-bottom: $spacing-md;
+  display: block;
+}
+
+.cardDesc {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+  margin-bottom: $spacing-md;
+  display: block;
+}
+
+// 统计网格
+.statsGrid {
+  display: flex;
+  gap: $spacing-md;
+}
+
+.statBox {
+  flex: 1;
+  background: $color-bg-page;
+  border-radius: $radius-md;
+  padding: $spacing-md;
+  text-align: center;
+}
+
+.statValue {
+  font-size: $font-size-xl;
+  font-weight: $font-weight-bold;
+  color: $color-primary;
+  display: block;
+  margin-bottom: $spacing-xs;
+}
+
+.statLabel {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+}
+
+// 饼图
+.pieChartContainer {
+  display: flex;
+  align-items: center;
+  gap: $spacing-lg;
+}
+
+.pieChart {
+  width: 200rpx;
+  height: 200rpx;
+  border-radius: $radius-round;
+  flex-shrink: 0;
+}
+
+.pieLegend {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: $spacing-xs;
+}
+
+.legendDot {
+  width: 20rpx;
+  height: 20rpx;
+  border-radius: $radius-round;
+}
+
+.legendText {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  flex: 1;
+}
+
+.legendValue {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+}
+
+// 需关注列表
+.attentionItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: $spacing-md;
+  background: $color-bg-page;
+  border-radius: $radius-md;
+  margin-bottom: $spacing-sm;
+  border-left: 6rpx solid $color-warning;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.attentionInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.attentionName {
+  font-size: $font-size-md;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+  margin-bottom: 4rpx;
+  display: block;
+}
+
+.attentionMeta {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin-bottom: 4rpx;
+  display: block;
+}
+
+.attentionLast {
+  font-size: $font-size-xs;
+  color: $color-warning;
+  display: block;
+}
+
+.attentionBtn {
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  border-radius: $radius-button;
+  padding: $spacing-xs $spacing-md;
+  margin-left: $spacing-md;
+}
+
+.attentionBtnText {
+  font-size: $font-size-sm;
+  color: $color-text-white;
+  font-weight: $font-weight-medium;
+}
+
+// 筛选栏
+.filterBar {
+  white-space: nowrap;
+  margin-bottom: $spacing-md;
+}
+
+.filterTag {
+  display: inline-block;
+  padding: 8rpx $spacing-md;
+  margin-right: $spacing-sm;
+  background: $color-bg-hover;
+  border-radius: $radius-button;
+  border: 2rpx solid transparent;
+  transition: all $transition-base;
+
+  &.active {
+    border-color: $color-primary;
+    background: linear-gradient(135deg, #FFF5F5 0%, #FFE8E8 100%);
+
+    .filterText {
+      color: $color-primary;
+      font-weight: $font-weight-medium;
+    }
+  }
+}
+
+.filterText {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+}
+
+// 动态流
+.feedItem {
+  padding: $spacing-md 0;
+  border-bottom: 1rpx solid $color-divider;
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.feedHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: $spacing-xs;
+}
+
+.feedUser {
+  font-size: $font-size-md;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+}
+
+.feedCategory {
+  font-size: $font-size-xs;
+  color: $color-primary;
+  background: rgba($color-primary, 0.1);
+  padding: 4rpx $spacing-sm;
+  border-radius: $radius-button;
+}
+
+.feedContent {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  line-height: $line-height-normal;
+  margin-bottom: $spacing-xs;
+  display: block;
+}
+
+.feedAISummary {
+  background: linear-gradient(135deg, #FFF5F5 0%, #FFE8E8 100%);
+  border-radius: $radius-sm;
+  padding: $spacing-xs $spacing-sm;
+  margin-bottom: $spacing-xs;
+}
+
+.feedAISummaryText {
+  font-size: $font-size-xs;
+  color: $color-primary;
+}
+
+.feedTime {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+// 打卡任务
+.taskItem {
+  padding: $spacing-md;
+  background: $color-bg-page;
+  border-radius: $radius-md;
+  margin-bottom: $spacing-sm;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.taskHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: $spacing-xs;
+}
+
+.taskTitle {
+  font-size: $font-size-md;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+  flex: 1;
+}
+
+.taskStatus {
+  padding: 4rpx $spacing-sm;
+  border-radius: $radius-button;
+
+  &.active {
+    background: rgba($color-success, 0.1);
+    .taskStatusText {
+      color: $color-success;
+    }
+  }
+
+  &.closed {
+    background: $color-bg-hover;
+    .taskStatusText {
+      color: $color-text-tertiary;
+    }
+  }
+}
+
+.taskStatusText {
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+}
+
+.taskDesc {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+  margin-bottom: $spacing-xs;
+  display: block;
+}
+
+.taskMeta {
+  display: flex;
+  gap: $spacing-md;
+  margin-bottom: $spacing-sm;
+}
+
+.taskCategory {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+}
+
+.taskFreq {
+  font-size: $font-size-xs;
+  color: $color-primary;
+  background: rgba($color-primary, 0.1);
+  padding: 4rpx $spacing-sm;
+  border-radius: $radius-button;
+}
+
+// 完成率进度条
+.completionBar {
+  margin-top: $spacing-sm;
+}
+
+.completionInfo {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: $spacing-xs;
+}
+
+.completionLabel {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.completionValue {
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+  color: $color-primary;
+}
+
+.progressBar {
+  height: 16rpx;
+  background: $color-bg-hover;
+  border-radius: $radius-round;
+  overflow: hidden;
+  margin-bottom: $spacing-xs;
+}
+
+.progressFill {
+  height: 100%;
+  border-radius: $radius-round;
+  transition: width $transition-slow;
+}
+
+.completionDetail {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  display: block;
+}
+
+.taskActions {
+  display: flex;
+  gap: $spacing-sm;
+  margin-top: $spacing-sm;
+}
+
+.taskActionBtn {
+  padding: 8rpx $spacing-md;
+  background: $color-bg-card;
+  border-radius: $radius-button;
+  border: 2rpx solid $color-border;
+}
+
+.taskActionText {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+}
+
+// 创建按钮
+.createBtn {
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  border-radius: $radius-button;
+  padding: 8rpx $spacing-md;
+}
+
+.createBtnText {
+  font-size: $font-size-sm;
+  color: $color-text-white;
+  font-weight: $font-weight-medium;
+}
+
+// 月度汇总表
+.tableHeader {
+  display: flex;
+  align-items: center;
+  padding: $spacing-sm 0;
+  border-bottom: 2rpx solid $color-border;
+  margin-bottom: $spacing-sm;
+}
+
+.tableHeader {
+  .colNumber,
+  .colName,
+  .colCategory {
+    font-size: $font-size-xs;
+    color: $color-text-tertiary;
+    font-weight: $font-weight-medium;
+  }
+}
+
+.tableRow {
+  display: flex;
+  align-items: center;
+  padding: $spacing-sm 0;
+  border-bottom: 1rpx solid $color-divider;
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.colNumber {
+  width: 80rpx;
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+  flex-shrink: 0;
+}
+
+.colName {
+  width: 120rpx;
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+  flex-shrink: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.colCategory {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx;
+  min-width: 0;
+}
+
+.categoryBar {
+  display: flex;
+  align-items: center;
+  gap: $spacing-xs;
+}
+
+.categoryBarLabel {
+  font-size: $font-size-xs;
+  width: 32rpx;
+  flex-shrink: 0;
+}
+
+.barTrack {
+  flex: 1;
+  height: 12rpx;
+  background: $color-bg-hover;
+  border-radius: $radius-round;
+  overflow: hidden;
+}
+
+.barFill {
+  height: 100%;
+  border-radius: $radius-round;
+  transition: width $transition-slow;
+}
+
+// 表尾：班级总计
+.tableFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: $spacing-md;
+  margin-top: $spacing-sm;
+  background: linear-gradient(135deg, #FFF5F5 0%, #FFE8E8 100%);
+  border-radius: $radius-md;
+}
+
+.footerLabel {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-primary;
+}
+
+.footerValue {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-bold;
+  color: $color-primary;
+}
+
+.footerHint {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin-top: $spacing-xs;
+  display: block;
+  text-align: center;
+}
+
+// 热力图
+.heatmap {
+  display: grid;
+  grid-template-columns: repeat(15, 1fr);
+  gap: 4rpx;
+  margin: $spacing-md 0;
+}
+
+.heatmapCell {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 2rpx;
+}
+
+.heatmapLegend {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4rpx;
+}
+
+.heatmapLegendCell {
+  width: 24rpx;
+  height: 24rpx;
+  border-radius: 2rpx;
+}
+
+.heatmapLegendText {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin: 0 $spacing-xs;
+}
+
+// 环形图
+.ringChartContainer {
+  display: flex;
+  align-items: center;
+  gap: $spacing-lg;
+}
+
+.ringChart {
+  width: 240rpx;
+  height: 240rpx;
+  border-radius: $radius-round;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.ringInner {
+  width: 160rpx;
+  height: 160rpx;
+  background: $color-bg-card;
+  border-radius: $radius-round;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.ringTotal {
+  font-size: $font-size-xl;
+  font-weight: $font-weight-bold;
+  color: $color-primary;
+}
+
+.ringLabel {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.ringLegend {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+}
+
+// AI 成长寄语
+.aiMessageHeader {
+  display: flex;
+  align-items: center;
+  gap: $spacing-xs;
+  margin-bottom: $spacing-md;
+}
+
+.aiMessageIcon {
+  font-size: $font-size-xl;
+}
+
+.aiMessageTitle {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-primary;
+}
+
+.aiMessageContent {
+  font-size: $font-size-md;
+  line-height: $line-height-loose;
+  color: $color-text-secondary;
+  background: linear-gradient(135deg, #FFF5F5 0%, #FFE8E8 100%);
+  padding: $spacing-md;
+  border-radius: $radius-md;
+  border-left: 6rpx solid $color-primary;
+}
+
+// 空状态
+.empty {
+  text-align: center;
+  padding: $spacing-xl 0;
+}
+
+.emptyIcon {
+  font-size: 64rpx;
+  display: block;
+  margin-bottom: $spacing-md;
+}
+
+.emptyText {
+  font-size: $font-size-md;
+  color: $color-text-tertiary;
+}

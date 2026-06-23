@@ -1,0 +1,490 @@
+@use '@/styles/variables.scss' as *;
+
+.container {
+  min-height: 100vh;
+  background: $color-bg-page;
+}
+
+/* 头部 */
+.header {
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  padding: $spacing-xl $page-padding $spacing-lg;
+}
+
+.headerTitle {
+  font-size: $font-size-xxl;
+  font-weight: $font-weight-semibold;
+  color: $color-text-white;
+  margin-bottom: $spacing-xs;
+  display: block;
+}
+
+.headerSubtitle {
+  font-size: $font-size-sm;
+  color: rgba(255, 255, 255, 0.9);
+  line-height: $line-height-normal;
+  display: block;
+  margin-bottom: $spacing-md;
+}
+
+/* 福气信息条 */
+.fortuneBar {
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: $radius-button;
+  padding: 12rpx $spacing-lg;
+}
+
+.fortuneText {
+  font-size: $font-size-sm;
+  color: $color-text-white;
+  font-weight: $font-weight-medium;
+}
+
+.fortuneDivider {
+  font-size: $font-size-sm;
+  color: rgba(255, 255, 255, 0.6);
+  margin: 0 $spacing-sm;
+}
+
+/* 地图入口 */
+.mapEntry {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: -$spacing-sm $page-padding $spacing-md;
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-md $spacing-lg;
+  box-shadow: $shadow-card;
+
+  &:active {
+    transform: scale(0.99);
+  }
+}
+
+.mapInfo {
+  display: flex;
+  align-items: center;
+}
+
+.mapIcon {
+  font-size: 40rpx;
+  margin-right: $spacing-md;
+}
+
+.mapText {
+  flex: 1;
+}
+
+.mapTitle {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  display: block;
+  margin-bottom: 4rpx;
+}
+
+.mapDesc {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.mapArrow {
+  font-size: $font-size-lg;
+  color: $color-text-tertiary;
+}
+
+/* 筛选标签 */
+.tabs {
+  @include scroll-x-container;
+  padding: $spacing-md $page-padding;
+  background: $color-bg-card;
+  box-shadow: $shadow-float;
+  margin-bottom: $spacing-md;
+}
+
+.tab {
+  @include scroll-x-item(auto);
+  margin-right: $spacing-sm;
+  padding: 12rpx $spacing-lg;
+  border-radius: $radius-button;
+  background: $color-bg-hover;
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  transition: all $transition-base;
+  text-align: center;
+
+  &:last-child {
+    margin-right: 0;
+  }
+
+  &.active {
+    background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+    color: $color-text-white;
+    font-weight: $font-weight-medium;
+  }
+}
+
+/* 商家列表 */
+.merchantList {
+  padding: 0 $page-padding $spacing-lg;
+}
+
+.merchantCard {
+  display: flex;
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  overflow: hidden;
+  margin-bottom: $spacing-md;
+  box-shadow: $shadow-card;
+  padding: $spacing-md;
+
+  &:active {
+    transform: scale(0.99);
+  }
+}
+
+.merchantLogo {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: $radius-md;
+  flex-shrink: 0;
+  margin-right: $spacing-md;
+}
+
+.merchantBody {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.merchantHeader {
+  display: flex;
+  align-items: center;
+  margin-bottom: 4rpx;
+}
+
+.merchantName {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  flex: 1;
+  @include text-ellipsis;
+}
+
+.annualTag {
+  background: linear-gradient(135deg, #FFF5F5 0%, #FFE8E8 100%);
+  border-radius: $radius-button;
+  padding: 2rpx $spacing-sm;
+  margin-left: $spacing-xs;
+}
+
+.annualText {
+  font-size: 20rpx;
+  color: $color-primary;
+  font-weight: $font-weight-medium;
+}
+
+.merchantCategory {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin-bottom: $spacing-xs;
+  @include text-ellipsis;
+}
+
+.merchantFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.benefitPreview {
+  display: flex;
+  align-items: center;
+  gap: $spacing-xs;
+  background: rgba(255, 107, 107, 0.06);
+  border-radius: $radius-sm;
+  padding: 4rpx $spacing-sm;
+}
+
+.benefitIcon {
+  font-size: 20rpx;
+}
+
+.benefitName {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+}
+
+.benefitCost {
+  font-size: $font-size-xs;
+  color: $color-primary;
+  font-weight: $font-weight-medium;
+}
+
+.distance {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+/* 底部说明 */
+.footerNote {
+  text-align: center;
+  padding: $spacing-lg $page-padding $spacing-xl;
+}
+
+.footerText {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  line-height: $line-height-normal;
+}
+
+/* 详情弹窗 */
+.detailMask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 100;
+  display: flex;
+  align-items: flex-end;
+}
+
+.detailPanel {
+  width: 100%;
+  background: $color-bg-card;
+  border-radius: $radius-xl $radius-xl 0 0;
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+.detailHeader {
+  display: flex;
+  padding: $spacing-lg $page-padding $spacing-md;
+  border-bottom: 1rpx solid $color-divider;
+}
+
+.detailLogo {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: $radius-md;
+  margin-right: $spacing-md;
+  flex-shrink: 0;
+}
+
+.detailInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.detailName {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  display: block;
+  margin-bottom: 4rpx;
+}
+
+.detailCategory {
+  font-size: $font-size-xs;
+  color: $color-primary;
+  display: block;
+  margin-bottom: $spacing-xs;
+}
+
+.detailAddress {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+  display: block;
+  margin-bottom: 4rpx;
+}
+
+.detailHours {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  display: block;
+  margin-bottom: 4rpx;
+}
+
+.detailDistance {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  display: block;
+}
+
+.detailClose {
+  font-size: $font-size-lg;
+  color: $color-text-tertiary;
+  padding: $spacing-xs;
+  flex-shrink: 0;
+}
+
+/* 权益列表 */
+.benefitSection {
+  padding: $spacing-md $page-padding;
+}
+
+.benefitSectionTitle {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin-bottom: $spacing-md;
+  display: block;
+}
+
+.benefitItem {
+  background: $color-bg-page;
+  border-radius: $radius-md;
+  padding: $spacing-md;
+  margin-bottom: $spacing-sm;
+  border: 2rpx solid transparent;
+  transition: all $transition-base;
+
+  &:active {
+    background: $color-bg-hover;
+  }
+}
+
+.benefitItemActive {
+  border-color: $color-primary;
+  background: rgba(255, 107, 107, 0.04);
+}
+
+.benefitItemHeader {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: $spacing-sm;
+}
+
+.benefitItemIcon {
+  font-size: 36rpx;
+  margin-right: $spacing-sm;
+  flex-shrink: 0;
+}
+
+.benefitItemInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.benefitItemName {
+  font-size: $font-size-md;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+  display: block;
+  margin-bottom: 4rpx;
+}
+
+.benefitItemDesc {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+  line-height: $line-height-normal;
+}
+
+.benefitItemPrice {
+  text-align: right;
+  flex-shrink: 0;
+  margin-left: $spacing-sm;
+}
+
+.benefitItemCost {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-primary;
+  display: block;
+}
+
+.benefitItemUnit {
+  font-size: 20rpx;
+  color: $color-primary;
+}
+
+.benefitItemFooter {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  flex-wrap: wrap;
+}
+
+.benefitTypeTag {
+  background: $color-bg-card;
+  border-radius: $radius-button;
+  padding: 2rpx $spacing-sm;
+}
+
+.benefitTypeText {
+  font-size: 20rpx;
+  color: $color-text-secondary;
+}
+
+.benefitRequire {
+  font-size: 20rpx;
+  color: $color-text-tertiary;
+}
+
+.benefitStatus {
+  margin-left: auto;
+  border-radius: $radius-button;
+  padding: 2rpx $spacing-sm;
+}
+
+.statusOk {
+  background: rgba(82, 196, 26, 0.1);
+}
+
+.statusLock {
+  background: rgba(153, 153, 153, 0.1);
+}
+
+.benefitStatusText {
+  font-size: 20rpx;
+}
+
+.statusOk .benefitStatusText {
+  color: $color-success;
+}
+
+.statusLock .benefitStatusText {
+  color: $color-text-tertiary;
+}
+
+/* 兑换按钮 */
+.redeemSection {
+  padding: $spacing-md $page-padding $spacing-xl;
+}
+
+.redeemBtn {
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  border-radius: $radius-button;
+  height: $button-height-lg;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all $transition-base;
+
+  &:active {
+    opacity: 0.85;
+    transform: scale(0.98);
+  }
+}
+
+.redeemBtnDisabled {
+  background: $color-bg-hover;
+}
+
+.redeemBtnText {
+  font-size: $font-size-md;
+  font-weight: $font-weight-medium;
+  color: $color-text-white;
+  text-align: center;
+}
+
+.redeemBtnDisabled .redeemBtnText {
+  color: $color-text-tertiary;
+}

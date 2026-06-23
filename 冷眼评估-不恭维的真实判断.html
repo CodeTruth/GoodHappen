@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>好事发生 · 冷眼评估：不恭维、不回避、不自我欺骗</title>
+<style>
+  :root {
+    --bg: #0d1117; --card: #161b22; --border: #30363d;
+    --text: #c9d1d9; --dim: #8b949e; --accent: #58a6ff;
+    --green: #3fb950; --yellow: #d29922; --red: #f85149;
+    --purple: #a371f7;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    line-height: 1.7; padding: 32px 24px; max-width: 920px; margin: 0 auto;
+  }
+  h1 {
+    font-size: 26px; margin-bottom: 4px;
+    background: linear-gradient(135deg, #f85149, #d29922);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  h2 { font-size: 19px; margin: 36px 0 14px; color: #e6edf3; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+  h3 { font-size: 15px; margin: 20px 0 8px; color: var(--accent); }
+  .subtitle { color: var(--dim); font-size: 13px; margin-bottom: 28px; }
+  .card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 10px; padding: 24px; margin-bottom: 20px;
+  }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 14px; }
+  th, td { padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--border); }
+  th { color: var(--dim); font-weight: 600; font-size: 12px; text-transform: uppercase; }
+  .tag {
+    display: inline-block; padding: 2px 8px; border-radius: 4px;
+    font-size: 11px; font-weight: 600; margin-right: 4px;
+  }
+  .tag-r { background: rgba(248,81,73,0.15); color: var(--red); }
+  .tag-y { background: rgba(210,153,34,0.15); color: var(--yellow); }
+  .tag-g { background: rgba(63,185,80,0.15); color: var(--green); }
+  .prob-bar { display: flex; height: 20px; border-radius: 4px; overflow: hidden; margin: 4px 0; }
+  .pb-h { display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: #fff; background: #3fb950; }
+  .pb-m { background: #d29922; }
+  .pb-l { background: #f85149; }
+  .knife {
+    border-left: 4px solid var(--red); padding: 14px 18px;
+    margin: 14px 0; background: rgba(248,81,73,0.06);
+  }
+  .cold {
+    border-left: 4px solid var(--yellow); padding: 14px 18px;
+    margin: 14px 0; background: rgba(210,153,34,0.06);
+  }
+  .signal {
+    border-left: 4px solid var(--green); padding: 14px 18px;
+    margin: 14px 0; background: rgba(63,185,80,0.06);
+  }
+  .verdict-box {
+    background: linear-gradient(135deg, rgba(248,81,73,0.08), rgba(210,153,34,0.08));
+    border: 1px solid rgba(210,153,34,0.3); border-radius: 10px;
+    padding: 24px; margin: 24px 0;
+  }
+  ol, ul { padding-left: 22px; margin: 6px 0; }
+  li { margin: 1px 0; }
+</style>
+</head>
+<body>
+
+<h1>好事发生 · 冷眼评估</h1>
+<div class="subtitle">规则：不准恭维。不准因为是你做的就找补。假设Demo完美实现的前提下，回答三个问题：真的有用吗？评委会被打动吗？能走多远？</div>
+
+<h2>一、先捅自己一刀：产品最薄弱的地方在哪？</h2>
+
+<div class="knife">
+  <strong>核心命题的脆弱性</strong>：产品声称解决的是"帮了人但不好意思说"。问题是——<strong>这是一个真实存在、人们愿意为之打开一个App的痛点吗？</strong>
+</div>
+
+<div class="card">
+  <p>真相是这样的：</p>
+  <p style="margin-top:10px">一个人帮了老奶奶过马路。他感到温暖。这种温暖持续了大约10-15秒。然后他继续走路，想晚饭吃什么。他不会想："天哪，我需要一个App来安放这种温暖。"</p>
+  <p style="margin-top:10px">他不是因为"找不到地方记录善行"而痛苦。他是根本没想过要记录。</p>
+  <p style="margin-top:10px"><span class="tag tag-r">致命</span> 这不是一个"待解决的痛点"。这是一个"待唤醒的感觉"。两者之间有本质区别——痛点让人主动搜索解决方案，感觉需要被推一把才会行动。</p>
+</div>
+
+<div class="cold">
+  <strong>类比</strong>：日记App存在了几十年，大多数人不用。不是因为日记App功能不好，是因为绝大多数人没有写日记的需求。你不会因为"今天发生了一件值得记住的事"就下载一个日记App——你只会发一条朋友圈，或者什么都不发。善行记录比日记更低频。
+</div>
+
+<div class="card">
+  <h3>第二个致命问题：价值高度依赖AI表现</h3>
+  <p>如果AI苏东坡的回复像模板，整个产品就废了。而AI生成"温暖"这件事极其困难——它容易走向两个极端：要么像机器翻译的古文（冰冷），要么像过度注水的心灵鸡汤（虚伪）。</p>
+  <p style="margin-top:8px">大模型在"温暖"这件事上的表现是出了名的不稳定。它擅长逻辑推理、代码生成、事实总结。但"让人鼻子一酸"——这不是大模型的能力边界，这是大模型的能力断层。</p>
+  <p style="margin-top:8px"><span class="tag tag-r">致命</span> 如果AI苏东坡的回复不能让至少一个人沉默2秒，你投入的所有时间都在做一个高级版的QQ空间自动回复。</p>
+</div>
+
+<div class="card">
+  <h3>第三个致命问题：行为改变是产品设计中最难的事</h3>
+  <p>你要求用户在做过一件好事之后——打开App——打字记录——等待AI回复。这个链路里每一步都在流失用户。微信支付只需要点开扫码。抖音只需要往上滑。而你要求的是：先做善事（低频），再打开App（主动性），再打字（摩擦）。</p>
+  <p style="margin-top:8px"><span class="tag tag-r">致命</span> 这不是产品体验问题，这是行为经济学问题。人类行为的激活能量是有限的。你选择了一个激活链条最长的产品设计。</p>
+</div>
+
+<h2>二、评委视角：他们会想什么？</h2>
+
+<div class="card">
+  <h3>假设你在3分钟路演中展示了完美的Demo——评委脑子里依次闪过的是：</h3>
+
+  <table style="margin-top:14px">
+    <tr><th style="width:8%">秒</th><th style="width:42%">评委在想什么</th><th>这是好还是坏</th></tr>
+    <tr>
+      <td>0-20</td>
+      <td>"善行正反馈系统，有点意思。之前没见过。"</td>
+      <td><span class="tag tag-g">正面</span> 概念新颖</td>
+    </tr>
+    <tr>
+      <td>20-60</td>
+      <td>"AI苏东坡回复了一段话……嗯，是挺有文化感的。但这段话是从大模型生成的，对吧？"</td>
+      <td><span class="tag tag-y">中性</span> AI能力被认可，但没被震撼</td>
+    </tr>
+    <tr>
+      <td>60-120</td>
+      <td>"但你解决的具体问题是什么？谁在使用中真的受益了？你有没有真实用户的数据？"</td>
+      <td><span class="tag tag-r">危险</span> Impact 缺失暴露</td>
+    </tr>
+    <tr>
+      <td>120-180</td>
+      <td>"你这个东西跟小红书的'今日份温暖'tag有什么本质区别？为什么用户要来你这儿不在小红书？"</td>
+      <td><span class="tag tag-r">危险</span> 场景替代性问题</td>
+    </tr>
+  </table>
+</div>
+
+<div class="knife">
+  <strong>最致命的评委反应</strong>：不是"这个不好"，而是<strong>"所以呢？"</strong>
+  <br><br>
+  评委看完Demo后沉默2秒，然后抬头问："所以——这个产品最终改变了什么？"
+  <br>如果你回答"让善良被看见"——这在哲学层面很美，在Demo评审层面很空洞。
+  <br>相比之下，另一个参赛者说"我用AI帮200个独居老人自动识别跌倒风险"——<strong>他不需要解释"改变了什么"。</strong>
+</div>
+
+<h2>三、投资人说"不"的五个理由（按可能性排序）</h2>
+
+<div class="card">
+  <table>
+    <tr><th>#</th><th>投资人会说</th><th>你无法反驳的原因</th></tr>
+    <tr>
+      <td>1</td>
+      <td>"这个产品的核心价值是AI苏东坡那一段回复——但这段回复DeepSeek API一毛钱一条。壁垒为零。"</td>
+      <td>6人设微调需要时间，但投资人会说：给我两个工程师两周，也能做。</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>"用户帮人的频率是一个月1-2次。一个月打开你App2次的用户，你靠什么让他回来？"</td>
+      <td>你说"AI睡前反思"和"同频社交"——但一个不记录善行的用户，睡前反思和善行广场对他没有吸引力。</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>"这个赛道天花板太低了。愿意记录善行的人有多少？10万？100万？"</td>
+      <td>你可能引用小红书367万篇笔记。但投资人会说：那是内容消费，不是独立App。迁移率<1%。</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td>"冷启动怎么解？空荡荡的善行广场上，第一个发帖的人叫什么？'先驱'？"</td>
+      <td>你没有一个体面的答案。诚实地说：这笔钱我还没想好。</td>
+    </tr>
+    <tr>
+      <td>5</td>
+      <td>"你说这是社会基础设施，不追求商业回报。那我的钱投进去，退出路径是什么？"</td>
+      <td>没有退出路径。社会基础设施不追求财务回报——所以你走的是基金会/公益路线，不是VC路线。</td>
+    </tr>
+  </table>
+</div>
+
+<div class="verdict-box">
+  <h3 style="margin-top:0; font-size:15px; color:var(--yellow)">核心判断</h3>
+  <p style="font-size:14px; margin-top:8px">这个项目在<strong>创意创新性</strong>维度上得分很高（全场唯一），在<strong>社会价值</strong>维度上叙事优美但难以量化，在<strong>可落地性</strong>和<strong>商业可持续性</strong>上存在结构性缺陷。这些缺陷不是你写更多代码能解决的——它们是赛道本身的属性决定的。</p>
+</div>
+
+<h2>四、真实获奖概率（按评审标准逐级推算）</h2>
+
+<div class="card">
+  <h3>初赛评审的五个维度，好事发生的真实得分</h3>
+
+  <table>
+    <tr><th>维度</th><th>分数</th><th>凭什么</th><th>风险</th></tr>
+    <tr>
+      <td>创意创新性</td>
+      <td><span style="color:var(--green)">9.0</span></td>
+      <td>全场唯一善行正反馈系统。这个不恭维——确实是唯一的</td>
+      <td>低</td>
+    </tr>
+    <tr>
+      <td>场景落地价值</td>
+      <td><span style="color:var(--yellow)">5.5</span></td>
+      <td>场景描述优美但没任何实证。0个真实用户。相比"助老跌倒检测"一类项目，你的落地价值是推演的，不是证明的</td>
+      <td><span class="tag tag-r">高</span></td>
+    </tr>
+    <tr>
+      <td>商业发展潜力</td>
+      <td><span style="color:var(--red)">3.0</span></td>
+      <td>温暖商城+CSR的变现逻辑理论上成立但没跑通。基础设施定位本身就放弃了商业野心</td>
+      <td><span class="tag tag-r">极高</span></td>
+    </tr>
+    <tr>
+      <td>社会公益意义</td>
+      <td><span style="color:var(--green)">7.5</span></td>
+      <td>方向正确，叙事有深度。但"公益意义"在比赛评审中倾向于看重可衡量的影响（"帮了多少人"），而非概念的优美</td>
+      <td>中</td>
+    </tr>
+    <tr>
+      <td>技术创新性</td>
+      <td><span style="color:var(--yellow)">6.5</span></td>
+      <td>AI 4引擎架构完整，但核心是prompt工程+API调用。没有自研模型、没有独特数据飞轮。技术上可复制</td>
+      <td>中</td>
+    </tr>
+  </table>
+
+  <p style="margin-top:14px"><strong>加权总分</strong>：约 <strong>6.3 / 10</strong>。在9,665个项目中，这个分数处于什么位置？</p>
+</div>
+
+<div class="card">
+  <h3>四阶段真实概率</h3>
+
+  <div style="margin-bottom:20px">
+    <strong>报名审核</strong> <span style="color:var(--green)">~100%</span>
+    <div class="prob-bar"><div class="pb-h" style="width:100%">100%</div></div>
+    <p style="font-size:12px; color:var(--dim); margin-top:2px">只查合规。帖子合规，必过。</p>
+  </div>
+
+  <div style="margin-bottom:20px">
+    <strong>初赛Demo评审（前350名晋级）</strong> <span style="color:var(--green)">70~80%</span>
+    <div class="prob-bar">
+      <div class="pb-h" style="width:75%">75%</div>
+      <div class="pb-m" style="width:25%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff">25%</div>
+    </div>
+    <p style="font-size:12px; color:var(--dim); margin-top:2px">创意新颖性确保晋级。但注意：9,665个项目中约30%会提交有效Demo→约2,900份作品进入评审。前350名≈前12%。6.3分的综合得分能进前12%，但不稳。</p>
+  </div>
+
+  <div style="margin-bottom:20px">
+    <strong>复赛答辩（前20名晋级）</strong> <span style="color:var(--yellow)">25~35%</span>
+    <div class="prob-bar">
+      <div class="pb-h" style="width:30%">30%</div>
+      <div class="pb-m" style="width:30%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff">30%</div>
+      <div class="pb-l" style="width:40%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff">40%</div>
+    </div>
+    <p style="font-size:12px; color:var(--dim); margin-top:2px">这是分水岭。复赛评委一定会问"落地价值"和"用户验证"。如果你有哪怕10个真实用户的反馈，概率+10%。如果没有，他们会倾向于投给那些"帮了具体的人"的项目。</p>
+  </div>
+
+  <div style="margin-bottom:20px">
+    <strong>决赛路演（冠亚季军）</strong> <span style="color:var(--red)">8~15%</span>
+    <div class="prob-bar">
+      <div class="pb-h" style="width:12%">12%</div>
+      <div class="pb-l" style="width:88%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff">88%</div>
+    </div>
+    <p style="font-size:12px; color:var(--dim); margin-top:2px">决赛前三需要的不是"好创意"，是"好创意+好执行+好数据+好运气"。你的执行和数据都是短板。</p>
+  </div>
+</div>
+
+<div class="cold">
+  <strong>概率的诚实翻译</strong>：你的项目<strong>极大概率通过初赛</strong>。初赛之后，每晋级一轮，难度倍数不是线性增长，是指数增长。初赛看创意（你强），复赛看价值（你弱），决赛看一切（你没数据）。
+</div>
+
+<h2>五、这个项目最终"值不值得做"？</h2>
+
+<div class="card">
+  <p><strong>取决于你把"值得"定义成什么。</strong></p>
+
+  <table style="margin-top:12px">
+    <tr><th style="width:25%">目标</th><th style="width:25%">结论</th><th>解释</th></tr>
+    <tr>
+      <td>赢得TRAE大赛冠军</td>
+      <td><span class="tag tag-y">不太可能</span></td>
+      <td>创意顶尖，但可衡量影响力太弱。冠军大概率会颁给一个"帮了具体的人"且能展示数据的产品。</td>
+    </tr>
+    <tr>
+      <td>进入TRAE大赛决赛</td>
+      <td><span class="tag tag-y">有可能</span></td>
+      <td>25-35%的概率，取决于AI苏东坡的情感冲击力是否真的打动人，以及你是否能拿出哪怕一点用户反馈。</td>
+    </tr>
+    <tr>
+      <td>获得赛道专项奖</td>
+      <td><span class="tag tag-g">较高</span></td>
+      <td>社会公益+社会服务双标签，赛道内无同类项目。赛道奖看差异化+社会价值，你两项都强。</td>
+    </tr>
+    <tr>
+      <td>作为参赛作品展示个人能力</td>
+      <td><span class="tag tag-g">好选择</span></td>
+      <td>故事性强、哲学深度、AI能力展示充分。这是一个优秀的"面试作品"——让人记住你。</td>
+    </tr>
+    <tr>
+      <td>融资创业</td>
+      <td><span class="tag tag-r">不建议</span></td>
+      <td>天花板低、壁垒弱、冷启动难、用户频次低。投资人的五个"不"无法反驳。</td>
+    </tr>
+    <tr>
+      <td>做成一个运行中的社会实验</td>
+      <td><span class="tag tag-y">可尝试</span></td>
+      <td>小而美的社区产品可以不追求规模。如果TRAE大赛获奖给了启动资金和曝光，试着跑起来。不赌身家。</td>
+    </tr>
+  </table>
+</div>
+
+<h2>六、为了最大化概率，你还能做什么？</h2>
+
+<div class="card">
+  <p>以下排序按性价比：</p>
+
+  <table>
+    <tr><th>#</th><th>行动</th><th>概率提升</th><th>难度</th></tr>
+    <tr>
+      <td>1</td>
+      <td><strong>这周找3个人盲读AI苏东坡的回复</strong>。如果3个人都说"还行"，你就不该继续优化Demo——你该换一个方向。</td>
+      <td>+25%</td>
+      <td>低</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td><strong>初赛前找5-10人试用Demo</strong>。收集哪怕3条反馈截图。"用户说'挺温暖的'"这句话在答辩中的分量比你想象的重100倍。</td>
+      <td>+20%</td>
+      <td>中</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td><strong>把Demo做成6个场景的连环故事</strong>，不是6个功能页。评委看Demo30秒，如果他看到的是一个故事而不是一个功能列表，他记住的概率翻倍。</td>
+      <td>+15%</td>
+      <td>中</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td><strong>Demo视频里不要用文字解释"善行正反馈系统"</strong>。直接演：一个人帮了老人→打开App写下一句话→苏东坡回复→他沉默2秒→嘴角上扬。不需要任何旁白。</td>
+      <td>+15%</td>
+      <td>中</td>
+    </tr>
+    <tr>
+      <td>5</td>
+      <td><strong>准备一个无可反驳的"so what"回答</strong>。当评委问"所以改变了什么"——不说哲学，说行为。<em>"3个测试用户在试用一周后，其中2个人说他们开始更注意身边可以帮忙的小事了。"</em></td>
+      <td>+10%</td>
+      <td>取决于你的用户反馈</td>
+    </tr>
+  </table>
+</div>
+
+<h2>七、最终裁定</h2>
+
+<div class="verdict-box" style="border-color: rgba(248,81,73,0.3); background: rgba(248,81,73,0.04)">
+  <h3 style="margin-top:0; font-size:16px">十二个字</h3>
+
+  <p style="font-size:15px; margin:10px 0"><strong>「创意顶级，价值中游，落地存疑。」</strong></p>
+
+  <p style="font-size:14px; margin-top:12px">作为参赛作品，这是一个有记忆点的选择——评委不会忘记那个"让AI苏东坡夸你做的好事"的项目。但评委不会忘记它，不等于评委会把前三名给它。</p>
+
+  <p style="font-size:14px; margin-top:10px">作为创业项目，它目前不具备融资条件。不是因为做得不好，是因为赛道属性决定了它天然地不适合VC模型。</p>
+
+  <p style="font-size:14px; margin-top:10px">作为你个人能力的展示，它是优秀的选择。TRAE大赛本身是一个展示平台，奖项是锦上添花。即使只走到复赛，这个项目的叙事也足够让见过它的人记住你。</p>
+
+  <hr style="border: none; border-top: 1px solid var(--border); margin: 16px 0">
+
+  <p style="font-size:14px"><strong>如果能改变什么的话——</strong></p>
+  <p style="font-size:13px; color:var(--dim); margin-top:4px">不是加更多功能。不是写更多代码。是验证那一个假设：<strong>AI苏东坡的回复，能不能让一个真人沉默2秒。</strong></p>
+  <p style="font-size:13px; color:var(--dim); margin-top:4px">如果答案是"能"，剩下的短板可以用叙事包装。如果答案是"不能"，再完美的Demo也救不了一个没有灵魂的产品。</p>
+</div>
+
+</body>
+</html>

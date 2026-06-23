@@ -1,0 +1,248 @@
+@use '@/styles/variables.scss' as *;
+
+.container {
+  min-height: 100vh;
+  background: $color-bg-page;
+  padding: $page-padding;
+  padding-bottom: $spacing-xl * 2;
+}
+
+// 头部欢迎卡片
+.welcomeCard {
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  border-radius: $radius-xl;
+  padding: $spacing-xl $spacing-lg;
+  margin-bottom: $spacing-lg;
+  text-align: center;
+  box-shadow: $shadow-card;
+}
+
+.welcomeIcon {
+  font-size: 96rpx;
+  display: block;
+  margin-bottom: $spacing-sm;
+}
+
+.welcomeTitle {
+  font-size: $font-size-xxl;
+  font-weight: $font-weight-bold;
+  color: $color-text-white;
+  display: block;
+  margin-bottom: $spacing-xs;
+}
+
+.welcomeDesc {
+  font-size: $font-size-sm;
+  color: rgba(255, 255, 255, 0.9);
+  display: block;
+  line-height: $line-height-normal;
+}
+
+// 进度卡片
+.progressCard {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  margin-bottom: $spacing-lg;
+  box-shadow: $shadow-card;
+}
+
+.progressHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: $spacing-md;
+}
+
+.progressTitle {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
+.progressReward {
+  font-size: $font-size-sm;
+  color: $color-primary;
+  font-weight: $font-weight-medium;
+}
+
+.progressBar {
+  height: 20rpx;
+  background: $color-bg-hover;
+  border-radius: $radius-round;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  border-radius: $radius-round;
+  transition: width 0.6s ease;
+}
+
+.progressMeta {
+  display: flex;
+  justify-content: space-between;
+  margin-top: $spacing-sm;
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+// 任务列表
+.taskList {
+  margin-bottom: $spacing-lg;
+}
+
+.taskCard {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  margin-bottom: $spacing-md;
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+  box-shadow: $shadow-card;
+  border: 2rpx solid transparent;
+  transition: all $transition-base;
+
+  &.completed {
+    background: linear-gradient(135deg, #F6FFED 0%, #F0FFE0 100%);
+    border-color: rgba($color-success, 0.3);
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
+}
+
+.taskIcon {
+  font-size: 48rpx;
+  width: 80rpx;
+  height: 80rpx;
+  background: $color-bg-page;
+  border-radius: $radius-md;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.taskCard.completed .taskIcon {
+  background: rgba($color-success, 0.15);
+}
+
+.taskInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.taskTitle {
+  font-size: $font-size-md;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+  display: block;
+  margin-bottom: 4rpx;
+}
+
+.taskCard.completed .taskTitle {
+  color: $color-text-secondary;
+}
+
+.taskDesc {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  display: block;
+  margin-bottom: 4rpx;
+  line-height: $line-height-normal;
+}
+
+.taskReward {
+  font-size: $font-size-xs;
+  color: $color-primary;
+  font-weight: $font-weight-medium;
+}
+
+.taskCard.completed .taskReward {
+  color: $color-success;
+}
+
+.taskAction {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.taskArrow {
+  font-size: $font-size-lg;
+  color: $color-text-tertiary;
+}
+
+.taskCheck {
+  width: 48rpx;
+  height: 48rpx;
+  border-radius: $radius-round;
+  background: $color-success;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.taskCheckIcon {
+  font-size: $font-size-md;
+  color: $color-text-white;
+  font-weight: $font-weight-bold;
+}
+
+// 全部完成卡片
+.allCompletedCard {
+  background: linear-gradient(135deg, #FFFBE6 0%, #FFF1B8 100%);
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  margin: $spacing-lg 0;
+  text-align: center;
+  border: 2rpx solid rgba($color-warning, 0.3);
+}
+
+.allCompletedIcon {
+  font-size: 80rpx;
+  display: block;
+  margin-bottom: $spacing-sm;
+}
+
+.allCompletedTitle {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-warning;
+  display: block;
+  margin-bottom: $spacing-xs;
+}
+
+.allCompletedDesc {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  display: block;
+}
+
+// 底部按钮
+.footerBtn {
+  width: 100%;
+  height: $button-height-lg;
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  border-radius: $radius-button;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: $spacing-lg;
+
+  &:active {
+    opacity: 0.9;
+    transform: scale(0.98);
+  }
+}
+
+.footerBtnText {
+  font-size: $font-size-lg;
+  color: $color-text-white;
+  font-weight: $font-weight-medium;
+}

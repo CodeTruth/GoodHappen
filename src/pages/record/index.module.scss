@@ -1,0 +1,872 @@
+@use '@/styles/variables.scss' as *;
+
+.container {
+  min-height: 100vh;
+  background: $color-bg-page;
+  padding: $page-padding;
+}
+
+.header {
+  margin-bottom: $spacing-lg;
+}
+
+.title {
+  font-size: $font-size-xxl;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin-bottom: $spacing-xs;
+}
+
+.subtitle {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+}
+
+.typeSelector {
+  display: flex;
+  gap: $spacing-md;
+  margin-bottom: $spacing-lg;
+}
+
+.typeOption {
+  flex: 1;
+  background: $color-bg-card;
+  border-radius: $radius-md;
+  padding: $spacing-lg;
+  text-align: center;
+  border: 2rpx solid transparent;
+  transition: all $transition-base;
+
+  &.active {
+    border-color: $color-primary;
+    background: linear-gradient(135deg, #FFF5F5 0%, #FFE8E8 100%);
+  }
+}
+
+.typeIcon {
+  font-size: 48rpx;
+  margin-bottom: $spacing-sm;
+}
+
+.typeName {
+  font-size: $font-size-md;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+}
+
+.typeDesc {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+  margin-top: $spacing-xs;
+}
+
+.form {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  margin-bottom: $spacing-lg;
+}
+
+.formItem {
+  margin-bottom: $spacing-lg;
+}
+
+.label {
+  font-size: $font-size-md;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+  margin-bottom: $spacing-sm;
+}
+
+.textarea {
+  width: 100%;
+  min-height: 300rpx;
+  padding: $spacing-md;
+  background: $color-bg-page;
+  border-radius: $radius-md;
+  font-size: $font-size-md;
+  line-height: $line-height-loose;
+  color: $color-text-primary;
+  border: none;
+  box-sizing: border-box;
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-sm;
+}
+
+.tag {
+  background: $color-bg-hover;
+  border-radius: $radius-button;
+  padding: 12rpx $spacing-md;
+  border: 2rpx solid transparent;
+  transition: all $transition-base;
+
+  &.active {
+    border-color: $color-primary;
+    background: linear-gradient(135deg, #FFF5F5 0%, #FFE8E8 100%);
+  }
+}
+
+.tagText {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+}
+
+.tag.active .tagText {
+  color: $color-primary;
+  font-weight: $font-weight-medium;
+}
+
+.imageUpload {
+  display: flex;
+  gap: $spacing-md;
+  flex-wrap: wrap;
+}
+
+.uploadBtn {
+  width: 160rpx;
+  height: 160rpx;
+  background: $color-bg-page;
+  border-radius: $radius-md;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 2rpx dashed $color-border;
+}
+
+.uploadIcon {
+  font-size: 48rpx;
+  color: $color-text-tertiary;
+  margin-bottom: $spacing-xs;
+}
+
+.uploadText {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.imagePreview {
+  width: 160rpx;
+  height: 160rpx;
+  border-radius: $radius-md;
+  position: relative;
+}
+
+.previewImage {
+  width: 100%;
+  height: 100%;
+  border-radius: $radius-md;
+}
+
+.deleteBtn {
+  position: absolute;
+  top: 8rpx;
+  right: 8rpx;
+  width: 40rpx;
+  height: 40rpx;
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: $radius-round;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.deleteIcon {
+  font-size: $font-size-sm;
+  color: $color-text-white;
+}
+
+.scopeSelector {
+  display: flex;
+  gap: $spacing-md;
+}
+
+.scopeOption {
+  flex: 1;
+  background: $color-bg-hover;
+  border-radius: $radius-button;
+  padding: $spacing-md;
+  text-align: center;
+  border: 2rpx solid transparent;
+  transition: all $transition-base;
+
+  &.active {
+    border-color: $color-primary;
+    background: linear-gradient(135deg, #FFF5F5 0%, #FFE8E8 100%);
+  }
+}
+
+.scopeText {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+}
+
+.scopeOption.active .scopeText {
+  color: $color-primary;
+  font-weight: $font-weight-medium;
+}
+
+.submitBtn {
+  width: 100%;
+  height: $button-height-lg;
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  border-radius: $radius-button;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: $spacing-xl;
+  transition: all $transition-base;
+
+  &:active {
+    opacity: 0.9;
+    transform: scale(0.98);
+  }
+}
+
+.submitText {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-medium;
+  color: $color-text-white;
+}
+
+.submitting {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: $spacing-xl;
+}
+
+.loadingIcon {
+  font-size: 80rpx;
+  margin-bottom: $spacing-lg;
+  animation: bounce 1s ease-in-out infinite;
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-20rpx);
+  }
+}
+
+.loadingText {
+  font-size: $font-size-lg;
+  color: $color-text-secondary;
+}
+
+.feedback {
+  min-height: 100vh;
+  padding: $page-padding;
+  padding-top: $spacing-xl;
+}
+
+.feedbackHeader {
+  text-align: center;
+  margin-bottom: $spacing-xl;
+  animation: fadeInDown 0.4s ease-out;
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20rpx);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.feedbackTitle {
+  font-size: $font-size-xxl;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
+.fortuneAnimation {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: $spacing-sm;
+  margin-bottom: $spacing-md;
+  position: relative;
+}
+
+.fortuneIcon {
+  font-size: 48rpx;
+  animation: sparkle 0.5s ease-out;
+}
+
+@keyframes sparkle {
+  0% {
+    transform: scale(0) rotate(-45deg);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.5) rotate(45deg);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+.fortuneText {
+  font-size: $font-size-xl;
+  font-weight: $font-weight-semibold;
+  color: $color-primary;
+  animation: fadeInUp 0.5s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20rpx);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// 任务3：飘字动画（从下往上飘并淡出）
+.floatText {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  pointer-events: none;
+  animation: floatUp 1.5s ease-out forwards;
+}
+
+.floatTextInner {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-bold;
+  color: $color-primary;
+  text-shadow: 0 2rpx 8rpx rgba($color-primary, 0.3);
+}
+
+@keyframes floatUp {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 40rpx) scale(0.8);
+  }
+  20% {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1.1);
+  }
+  60% {
+    opacity: 1;
+    transform: translate(-50%, -40rpx) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -120rpx) scale(0.9);
+  }
+}
+
+.weeklyText {
+  display: block;
+  text-align: center;
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+  margin-bottom: $spacing-xl;
+  animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.aiCard {
+  background: linear-gradient(135deg, #FFF5F5 0%, #FFE8E8 100%);
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  margin-bottom: $spacing-xl;
+  animation: cardPopIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes cardPopIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.8) translateY(20rpx);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.aiHeader {
+  margin-bottom: $spacing-md;
+}
+
+.aiPersona {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $color-primary;
+}
+
+.aiContent {
+  font-size: $font-size-lg;
+  line-height: $line-height-loose;
+  color: $color-text-primary;
+}
+
+.feedbackActions {
+  display: flex;
+  gap: $spacing-md;
+  animation: fadeInUp 0.4s ease-out;
+}
+
+.actionBtn {
+  flex: 1;
+  height: $button-height-lg;
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  border-radius: $radius-button;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all $transition-base;
+
+  &:active {
+    opacity: 0.9;
+    transform: scale(0.98);
+  }
+}
+
+// 次要按钮（返回首页）
+.actionBtnSecondary {
+  background: $color-bg-card;
+  border: 2rpx solid $color-primary;
+
+  .actionText {
+    color: $color-primary;
+  }
+}
+
+.actionText {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-medium;
+  color: $color-text-white;
+}
+
+.streakInfo {
+  background: rgba($color-primary, 0.08);
+  border-radius: $radius-md;
+  padding: $spacing-sm $spacing-md;
+  margin-bottom: $spacing-md;
+}
+
+.streakText {
+  font-size: $font-size-sm;
+  color: $color-primary;
+  font-weight: $font-weight-medium;
+}
+
+.streamingDot {
+  color: $color-text-tertiary;
+  animation: blink 1s infinite;
+}
+
+@keyframes blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
+.cursor {
+  color: $color-primary;
+  animation: blink 0.8s infinite;
+  margin-left: 2rpx;
+}
+
+// ============================================
+// 任务1：媒体类型切换
+// ============================================
+.mediaSelector {
+  display: flex;
+  gap: $spacing-sm;
+}
+
+.mediaOption {
+  flex: 1;
+  background: $color-bg-hover;
+  border-radius: $radius-md;
+  padding: $spacing-md;
+  text-align: center;
+  border: 2rpx solid transparent;
+  transition: all $transition-base;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: $spacing-xs;
+
+  &.active {
+    border-color: $color-primary;
+    background: linear-gradient(135deg, #FFF5F5 0%, #FFE8E8 100%);
+  }
+}
+
+.mediaIcon {
+  font-size: 40rpx;
+}
+
+.mediaText {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+}
+
+.mediaOption.active .mediaText {
+  color: $color-primary;
+  font-weight: $font-weight-medium;
+}
+
+// ============================================
+// 任务1：语音录制
+// ============================================
+.voiceSection {
+  width: 100%;
+}
+
+.recordBtn {
+  width: 100%;
+  height: 200rpx;
+  background: linear-gradient(135deg, #FFF5F5 0%, #FFE8E8 100%);
+  border-radius: $radius-lg;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: $spacing-sm;
+  border: 2rpx dashed $color-primary;
+
+  &:active {
+    transform: scale(0.98);
+  }
+}
+
+.recordIcon {
+  font-size: 64rpx;
+}
+
+.recordBtnText {
+  font-size: $font-size-md;
+  color: $color-primary;
+  font-weight: $font-weight-medium;
+}
+
+// 录音中状态
+.recording {
+  width: 100%;
+  height: 200rpx;
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  border-radius: $radius-lg;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: $spacing-sm;
+
+  &:active {
+    opacity: 0.9;
+  }
+}
+
+// 波形动画
+.waveform {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  height: 60rpx;
+}
+
+.waveBar {
+  width: 8rpx;
+  height: 40rpx;
+  background: $color-text-white;
+  border-radius: $radius-round;
+  animation: wave 0.8s ease-in-out infinite;
+}
+
+@keyframes wave {
+  0%, 100% {
+    height: 20rpx;
+  }
+  50% {
+    height: 60rpx;
+  }
+}
+
+.recordingTime {
+  font-size: $font-size-lg;
+  color: $color-text-white;
+  font-weight: $font-weight-medium;
+  font-family: monospace;
+}
+
+.recordingHint {
+  font-size: $font-size-xs;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+// 录音完成预览
+.voicePreview {
+  width: 100%;
+  background: $color-bg-page;
+  border-radius: $radius-md;
+  padding: $spacing-md;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $spacing-md;
+}
+
+.voiceInfo {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+  min-width: 0;
+}
+
+.voiceIcon {
+  font-size: 40rpx;
+}
+
+.voiceMeta {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xs;
+  min-width: 0;
+}
+
+.voiceDuration {
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+  font-weight: $font-weight-medium;
+}
+
+.voiceText {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.voiceActions {
+  display: flex;
+  gap: $spacing-sm;
+}
+
+.voiceAction {
+  background: $color-bg-card;
+  border-radius: $radius-button;
+  padding: 8rpx $spacing-md;
+  border: 2rpx solid $color-border;
+}
+
+.voiceActionText {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+}
+
+// ============================================
+// 任务1：视频上传
+// ============================================
+.videoSection {
+  width: 100%;
+}
+
+.videoUploadBtn {
+  width: 100%;
+  height: 240rpx;
+  background: $color-bg-page;
+  border-radius: $radius-md;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: $spacing-xs;
+  border: 2rpx dashed $color-border;
+
+  &:active {
+    background: $color-bg-hover;
+  }
+}
+
+.uploadHint {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+// 视频缩略图预览
+.videoPreview {
+  position: relative;
+  width: 100%;
+  height: 320rpx;
+  border-radius: $radius-md;
+  overflow: hidden;
+  background: $color-bg-hover;
+}
+
+.videoThumb {
+  width: 100%;
+  height: 100%;
+}
+
+.videoPlayIcon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 96rpx;
+  height: 96rpx;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: $radius-round;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.playIcon {
+  font-size: 40rpx;
+  color: $color-text-white;
+  margin-left: 8rpx;
+}
+
+// ============================================
+// 任务2：草稿保存提示与列表
+// ============================================
+.draftSavedHint {
+  text-align: center;
+  margin-bottom: $spacing-md;
+  padding: $spacing-xs $spacing-md;
+}
+
+.draftSavedText {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.draftList {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  margin-bottom: $spacing-lg;
+}
+
+.draftListTitle {
+  font-size: $font-size-md;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+  margin-bottom: $spacing-md;
+  display: block;
+}
+
+.draftItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: $spacing-md 0;
+  border-bottom: 1rpx solid $color-divider;
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.draftContent {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xs;
+}
+
+.draftPreview {
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.draftTime {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.draftOps {
+  display: flex;
+  gap: $spacing-md;
+}
+
+.draftOp {
+  font-size: $font-size-sm;
+  color: $color-primary;
+  padding: $spacing-xs $spacing-sm;
+}
+
+// ============================================
+// N2 团体可见：团体选择器
+// ============================================
+.circleSelector {
+  margin-top: $spacing-md;
+  padding: $spacing-md;
+  background: $color-bg-page;
+  border-radius: $radius-md;
+}
+
+.circleSelectorLabel {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  margin-bottom: $spacing-sm;
+  display: block;
+}
+
+.circleOptions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-sm;
+}
+
+.circleOption {
+  background: $color-bg-card;
+  border-radius: $radius-button;
+  padding: 12rpx $spacing-md;
+  border: 2rpx solid transparent;
+  transition: all $transition-base;
+
+  &.active {
+    border-color: $color-primary;
+    background: linear-gradient(135deg, #FFF5F5 0%, #FFE8E8 100%);
+  }
+}
+
+.circleOptionText {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+}
+
+.circleOption.active .circleOptionText {
+  color: $color-primary;
+  font-weight: $font-weight-medium;
+}
+
+.circleHint {
+  font-size: $font-size-xs;
+  color: $color-warning;
+  margin-top: $spacing-sm;
+  display: block;
+}

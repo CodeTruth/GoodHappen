@@ -1,0 +1,578 @@
+@use '@/styles/variables.scss' as *;
+
+.container {
+  min-height: 100vh;
+  background: $color-bg-page;
+}
+
+/* 头部 */
+.header {
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  padding: $spacing-xl $page-padding $spacing-lg;
+}
+
+.headerTitle {
+  font-size: $font-size-xxl;
+  font-weight: $font-weight-semibold;
+  color: $color-text-white;
+  margin-bottom: $spacing-xs;
+  display: block;
+}
+
+.headerSubtitle {
+  font-size: $font-size-sm;
+  color: rgba(255, 255, 255, 0.9);
+  line-height: $line-height-normal;
+  display: block;
+}
+
+/* 等级概览 */
+.levelOverview {
+  display: flex;
+  gap: $spacing-sm;
+  margin: -$spacing-sm $page-padding $spacing-md;
+}
+
+.levelCard {
+  flex: 1;
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-md $spacing-sm;
+  box-shadow: $shadow-card;
+
+  &:active {
+    transform: scale(0.98);
+  }
+}
+
+.levelHeader {
+  display: flex;
+  align-items: center;
+  gap: $spacing-xs;
+  border-radius: $radius-button;
+  padding: 4rpx $spacing-sm;
+  margin-bottom: $spacing-xs;
+  align-self: flex-start;
+  display: inline-flex;
+}
+
+.levelBadge {
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+}
+
+.levelName {
+  font-size: 20rpx;
+  font-weight: $font-weight-medium;
+}
+
+.levelDesc {
+  font-size: 20rpx;
+  color: $color-text-secondary;
+  display: block;
+  margin-bottom: 4rpx;
+  line-height: $line-height-normal;
+}
+
+.levelRange {
+  font-size: 20rpx;
+  color: $color-text-tertiary;
+  display: block;
+  margin-bottom: $spacing-xs;
+}
+
+.levelProgress {
+  text-align: center;
+  background: $color-bg-page;
+  border-radius: $radius-sm;
+  padding: 4rpx 0;
+}
+
+.levelProgressText {
+  font-size: 20rpx;
+  color: $color-text-secondary;
+  font-weight: $font-weight-medium;
+}
+
+/* 等级筛选 */
+.tabs {
+  @include scroll-x-container;
+  padding: $spacing-md $page-padding;
+  background: $color-bg-card;
+  box-shadow: $shadow-float;
+  margin-bottom: $spacing-md;
+}
+
+.tab {
+  @include scroll-x-item(auto);
+  margin-right: $spacing-sm;
+  padding: 12rpx $spacing-lg;
+  border-radius: $radius-button;
+  background: $color-bg-hover;
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  transition: all $transition-base;
+  text-align: center;
+
+  &:last-child {
+    margin-right: 0;
+  }
+
+  &.active {
+    background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+    color: $color-text-white;
+    font-weight: $font-weight-medium;
+  }
+}
+
+/* 任务列表 */
+.taskList {
+  padding: 0 $page-padding $spacing-md;
+}
+
+.taskCard {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  margin-bottom: $spacing-md;
+  box-shadow: $shadow-card;
+
+  &:active {
+    transform: scale(0.99);
+  }
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: $spacing-sm;
+}
+
+.levelTag {
+  display: inline-block;
+  border-radius: $radius-button;
+  padding: 4rpx $spacing-md;
+}
+
+.levelTagText {
+  font-size: 20rpx;
+  font-weight: $font-weight-medium;
+}
+
+.statusTag {
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+}
+
+.taskTitle {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  display: block;
+  margin-bottom: $spacing-xs;
+}
+
+.taskDesc {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  line-height: $line-height-loose;
+  display: block;
+  margin-bottom: $spacing-sm;
+}
+
+.examples {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-xs;
+  margin-bottom: $spacing-sm;
+}
+
+.exampleTag {
+  font-size: 20rpx;
+  color: $color-text-secondary;
+  background: $color-bg-hover;
+  border-radius: $radius-button;
+  padding: 4rpx $spacing-sm;
+}
+
+.cardFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: $spacing-sm;
+  border-top: 1rpx solid $color-divider;
+}
+
+.footerLeft {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  flex: 1;
+  min-width: 0;
+}
+
+.rewardTag {
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  border-radius: $radius-button;
+  padding: 4rpx $spacing-md;
+  flex-shrink: 0;
+}
+
+.rewardText {
+  font-size: 20rpx;
+  color: $color-text-white;
+  font-weight: $font-weight-medium;
+}
+
+.metaText {
+  font-size: 20rpx;
+  color: $color-text-tertiary;
+  @include text-ellipsis;
+}
+
+.participants {
+  font-size: 20rpx;
+  color: $color-text-tertiary;
+  flex-shrink: 0;
+}
+
+/* 验证信息 */
+.reviewInfo {
+  margin-top: $spacing-sm;
+  padding: $spacing-xs $spacing-md;
+  background: rgba(250, 173, 20, 0.08);
+  border-radius: $radius-md;
+}
+
+.reviewText {
+  font-size: 20rpx;
+  color: $color-warning;
+}
+
+.verifiedBox {
+  display: flex;
+  align-items: center;
+  gap: $spacing-xs;
+  margin-top: $spacing-sm;
+  padding: $spacing-xs $spacing-md;
+  background: rgba(82, 196, 26, 0.08);
+  border-radius: $radius-md;
+}
+
+.verifiedIcon {
+  font-size: $font-size-sm;
+  color: $color-success;
+  font-weight: $font-weight-semibold;
+}
+
+.verifiedText {
+  font-size: 20rpx;
+  color: $color-success;
+  flex: 1;
+}
+
+/* 空状态 */
+.empty {
+  text-align: center;
+  padding: $spacing-xl 0;
+}
+
+.emptyIcon {
+  font-size: 80rpx;
+  display: block;
+  margin-bottom: $spacing-md;
+}
+
+.emptyText {
+  font-size: $font-size-md;
+  color: $color-text-secondary;
+}
+
+/* 提议按钮 */
+.proposeBtn {
+  margin: 0 $page-padding $spacing-md;
+  height: $button-height-md;
+  background: $color-bg-card;
+  border-radius: $radius-button;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2rpx dashed $color-primary;
+
+  &:active {
+    opacity: 0.85;
+  }
+}
+
+.proposeBtnText {
+  font-size: $font-size-sm;
+  color: $color-primary;
+  font-weight: $font-weight-medium;
+}
+
+/* 底部说明 */
+.footerNote {
+  text-align: center;
+  padding: $spacing-lg $page-padding $spacing-xl;
+}
+
+.footerText {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  line-height: $line-height-normal;
+}
+
+/* 详情弹窗 */
+.detailMask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 100;
+  display: flex;
+  align-items: flex-end;
+}
+
+.detailPanel {
+  width: 100%;
+  background: $color-bg-card;
+  border-radius: $radius-xl $radius-xl 0 0;
+  overflow: hidden;
+  max-height: 85vh;
+}
+
+.detailHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: $spacing-lg $page-padding $spacing-sm;
+  border-bottom: 1rpx solid $color-divider;
+}
+
+.detailTitle {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
+.detailClose {
+  font-size: $font-size-lg;
+  color: $color-text-tertiary;
+  padding: $spacing-xs;
+}
+
+.detailContent {
+  padding: $spacing-lg $page-padding $spacing-xl;
+  max-height: 75vh;
+  overflow-y: auto;
+}
+
+.detailTags {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: $spacing-sm;
+}
+
+.detailTaskTitle {
+  font-size: $font-size-xl;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  display: block;
+  margin-bottom: $spacing-xs;
+}
+
+.detailTaskDesc {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  line-height: $line-height-loose;
+  display: block;
+  margin-bottom: $spacing-md;
+}
+
+.detailInfo {
+  background: $color-bg-page;
+  border-radius: $radius-md;
+  padding: $spacing-md;
+  margin-bottom: $spacing-md;
+}
+
+.infoRow {
+  display: flex;
+  align-items: flex-start;
+  padding: $spacing-xs 0;
+}
+
+.infoLabel {
+  width: 140rpx;
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+  flex-shrink: 0;
+}
+
+.infoValue {
+  flex: 1;
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+}
+
+/* 验证流程 */
+.verifyFlow {
+  background: linear-gradient(135deg, #FFF5F5 0%, #FFE8E8 100%);
+  border-radius: $radius-md;
+  padding: $spacing-md;
+  margin-bottom: $spacing-lg;
+}
+
+.verifyFlowTitle {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  color: $color-primary;
+  margin-bottom: $spacing-sm;
+  display: block;
+}
+
+.verifyStep {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  padding: $spacing-xs 0;
+}
+
+.verifyStepIcon {
+  font-size: $font-size-md;
+  width: 48rpx;
+  text-align: center;
+}
+
+.verifyStepText {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+}
+
+/* 操作按钮 */
+.actionBtn {
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  border-radius: $radius-button;
+  height: $button-height-lg;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all $transition-base;
+
+  &:active {
+    opacity: 0.85;
+    transform: scale(0.98);
+  }
+}
+
+.actionBtnText {
+  font-size: $font-size-md;
+  font-weight: $font-weight-medium;
+  color: $color-text-white;
+}
+
+.actionBtnDisabled {
+  background: $color-bg-hover;
+  border-radius: $radius-button;
+  height: $button-height-lg;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.actionBtnTextDisabled {
+  font-size: $font-size-md;
+  color: $color-text-tertiary;
+}
+
+.actionBtnDone {
+  background: rgba(82, 196, 26, 0.1);
+  border-radius: $radius-button;
+  height: $button-height-lg;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.actionBtnTextDone {
+  font-size: $font-size-md;
+  color: $color-success;
+  font-weight: $font-weight-medium;
+}
+
+/* 提议表单 */
+.proposeHint {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  line-height: $line-height-normal;
+  display: block;
+  margin-bottom: $spacing-md;
+  padding: $spacing-sm $spacing-md;
+  background: $color-bg-page;
+  border-radius: $radius-md;
+}
+
+.inputGroup {
+  margin-bottom: $spacing-md;
+}
+
+.inputLabel {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  margin-bottom: $spacing-xs;
+  display: block;
+}
+
+.inputBox {
+  background: $color-bg-page;
+  border-radius: $radius-md;
+  padding: $spacing-sm $spacing-md;
+  border: 1rpx solid $color-border;
+}
+
+.inputText {
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+}
+
+.levelSelect {
+  display: flex;
+  gap: $spacing-sm;
+}
+
+.levelOption {
+  flex: 1;
+  background: $color-bg-page;
+  border-radius: $radius-md;
+  padding: $spacing-sm 0;
+  text-align: center;
+  border: 2rpx solid transparent;
+  transition: all $transition-base;
+
+  &.levelOptionActive {
+    background: rgba(255, 107, 107, 0.08);
+    border-color: $color-primary;
+  }
+}
+
+.levelOptionText {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  display: block;
+}
+
+.levelOptionActive .levelOptionText {
+  color: $color-primary;
+}
+
+.levelOptionLabel {
+  font-size: 20rpx;
+  color: $color-text-tertiary;
+  display: block;
+  margin-top: 4rpx;
+}

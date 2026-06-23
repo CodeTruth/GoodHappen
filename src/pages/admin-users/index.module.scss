@@ -1,0 +1,511 @@
+@use '@/styles/variables.scss' as *;
+
+.container {
+  min-height: 100vh;
+  background: $color-bg-page;
+  padding-bottom: $spacing-xl * 2;
+}
+
+// 顶部统计头部
+.header {
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  padding: $spacing-lg;
+  padding-top: $spacing-xl;
+}
+
+.headerTitle {
+  font-size: $font-size-xxl;
+  font-weight: $font-weight-bold;
+  color: $color-text-white;
+  margin-bottom: $spacing-sm;
+  display: block;
+}
+
+.headerDesc {
+  font-size: $font-size-sm;
+  color: rgba(255, 255, 255, 0.85);
+  margin-bottom: $spacing-md;
+  display: block;
+}
+
+.headerStats {
+  display: flex;
+  gap: $spacing-md;
+}
+
+.headerStat {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: $radius-md;
+  padding: $spacing-sm $spacing-md;
+}
+
+.headerStatValue {
+  font-size: $font-size-xl;
+  font-weight: $font-weight-bold;
+  color: $color-text-white;
+  display: block;
+}
+
+.headerStatLabel {
+  font-size: $font-size-xs;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+// 搜索栏
+.searchBar {
+  background: $color-bg-card;
+  padding: $spacing-sm $spacing-md;
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  border-bottom: 1rpx solid $color-divider;
+}
+
+.searchInput {
+  flex: 1;
+  height: 64rpx;
+  background: $color-bg-page;
+  border-radius: $radius-button;
+  padding: 0 $spacing-md;
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+}
+
+// 筛选标签栏
+.filterBar {
+  white-space: nowrap;
+  background: $color-bg-card;
+  padding: $spacing-sm $spacing-md;
+  border-bottom: 1rpx solid $color-divider;
+}
+
+.filterItem {
+  display: inline-block;
+  padding: 8rpx $spacing-md;
+  margin-right: $spacing-sm;
+  background: $color-bg-hover;
+  border-radius: $radius-button;
+  border: 2rpx solid transparent;
+  transition: all $transition-base;
+
+  &.active {
+    border-color: $color-primary;
+    background: linear-gradient(135deg, #FFF5F5 0%, #FFE8E8 100%);
+
+    .filterText {
+      color: $color-primary;
+      font-weight: $font-weight-medium;
+    }
+  }
+}
+
+.filterText {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+}
+
+// 内容区域
+.content {
+  padding: $spacing-md $page-padding;
+}
+
+// 用户卡片
+.userCard {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-md;
+  margin-bottom: $spacing-md;
+  box-shadow: $shadow-card;
+}
+
+.userHeader {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  margin-bottom: $spacing-sm;
+}
+
+.userAvatar {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: $radius-round;
+  flex-shrink: 0;
+}
+
+.userInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.userName {
+  font-size: $font-size-md;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+  display: block;
+  @include text-ellipsis;
+}
+
+.userMeta {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  display: block;
+  margin-top: 2rpx;
+}
+
+// 状态标签
+.statusTag {
+  padding: 4rpx $spacing-sm;
+  border-radius: $radius-button;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+  flex-shrink: 0;
+}
+
+.statusActive {
+  background: rgba($color-success, 0.1);
+  color: $color-success;
+}
+
+.statusBanned {
+  background: rgba($color-error, 0.1);
+  color: $color-error;
+}
+
+.statusMarked {
+  background: rgba($color-warning, 0.1);
+  color: $color-warning;
+}
+
+// 标记标签
+.markTag {
+  padding: 2rpx $spacing-xs;
+  border-radius: $radius-xs;
+  font-size: $font-size-xs;
+  margin-left: $spacing-xs;
+}
+
+.markVip {
+  background: rgba($color-primary, 0.1);
+  color: $color-primary;
+}
+
+.markVerified {
+  background: rgba($color-info, 0.1);
+  color: $color-info;
+}
+
+.markSuspect {
+  background: rgba($color-error, 0.1);
+  color: $color-error;
+}
+
+.markNormal {
+  background: $color-bg-hover;
+  color: $color-text-tertiary;
+}
+
+// 用户数据统计
+.userStats {
+  display: flex;
+  gap: $spacing-md;
+  padding: $spacing-sm 0;
+  border-top: 1rpx solid $color-divider;
+  border-bottom: 1rpx solid $color-divider;
+  margin-bottom: $spacing-sm;
+}
+
+.userStat {
+  flex: 1;
+  text-align: center;
+}
+
+.userStatValue {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-primary;
+  display: block;
+}
+
+.userStatLabel {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+// 操作按钮
+.userActions {
+  display: flex;
+  gap: $spacing-sm;
+}
+
+.actionBtn {
+  flex: 1;
+  height: $button-height-sm;
+  border-radius: $radius-button;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all $transition-base;
+
+  &:active {
+    opacity: 0.9;
+    transform: scale(0.98);
+  }
+}
+
+.actionBan {
+  background: $color-error;
+}
+
+.actionUnban {
+  background: $color-success;
+}
+
+.actionMark {
+  background: $color-warning;
+}
+
+.actionDetail {
+  background: $color-bg-hover;
+}
+
+.actionBtnText {
+  font-size: $font-size-sm;
+  color: $color-text-white;
+  font-weight: $font-weight-medium;
+}
+
+.actionDetailText {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  font-weight: $font-weight-medium;
+}
+
+// 详情弹窗
+.detailMask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 1000;
+  display: flex;
+  align-items: flex-end;
+}
+
+.detailPanel {
+  width: 100%;
+  max-height: 85vh;
+  background: $color-bg-card;
+  border-radius: $radius-xl $radius-xl 0 0;
+  overflow-y: auto;
+}
+
+.detailHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: $spacing-md $spacing-lg;
+  border-bottom: 1rpx solid $color-divider;
+}
+
+.detailTitle {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
+.detailClose {
+  font-size: $font-size-xl;
+  color: $color-text-tertiary;
+  padding: $spacing-xs;
+}
+
+.detailBody {
+  padding: $spacing-lg;
+}
+
+.detailSection {
+  margin-bottom: $spacing-lg;
+}
+
+.detailSectionTitle {
+  font-size: $font-size-md;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+  margin-bottom: $spacing-sm;
+  display: block;
+}
+
+// 详情用户信息
+.detailUserCard {
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+  padding: $spacing-md;
+  background: $color-bg-page;
+  border-radius: $radius-md;
+}
+
+.detailAvatar {
+  width: 100rpx;
+  height: 100rpx;
+  border-radius: $radius-round;
+}
+
+.detailUserName {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  display: block;
+}
+
+.detailUserBio {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  display: block;
+  margin-top: 4rpx;
+}
+
+.detailUserMeta {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  display: block;
+  margin-top: 4rpx;
+}
+
+// 善行历史列表
+.historyItem {
+  padding: $spacing-sm $spacing-md;
+  background: $color-bg-page;
+  border-radius: $radius-md;
+  margin-bottom: $spacing-sm;
+}
+
+.historyContent {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  line-height: $line-height-normal;
+  display: block;
+  margin-bottom: $spacing-xs;
+  @include text-ellipsis-multi(2);
+}
+
+.historyMeta {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+// 福气流水
+.flowItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: $spacing-sm $spacing-md;
+  background: $color-bg-page;
+  border-radius: $radius-md;
+  margin-bottom: $spacing-sm;
+}
+
+.flowInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.flowDesc {
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+  display: block;
+  @include text-ellipsis;
+}
+
+.flowTime {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  display: block;
+}
+
+.flowAmount {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+}
+
+.flowPositive {
+  color: $color-success;
+}
+
+.flowNegative {
+  color: $color-error;
+}
+
+// 违规记录
+.violationItem {
+  padding: $spacing-sm $spacing-md;
+  background: rgba($color-error, 0.05);
+  border-radius: $radius-md;
+  margin-bottom: $spacing-sm;
+  border-left: 6rpx solid $color-error;
+}
+
+.violationDesc {
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+  display: block;
+  margin-bottom: $spacing-xs;
+}
+
+.violationMeta {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+// 封禁信息
+.banInfo {
+  padding: $spacing-md;
+  background: rgba($color-error, 0.05);
+  border-radius: $radius-md;
+  border-left: 6rpx solid $color-error;
+}
+
+.banReason {
+  font-size: $font-size-sm;
+  color: $color-error;
+  font-weight: $font-weight-medium;
+  display: block;
+  margin-bottom: $spacing-xs;
+}
+
+.banMeta {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  display: block;
+}
+
+// 底部操作
+.detailFooter {
+  display: flex;
+  gap: $spacing-sm;
+  padding: $spacing-md $spacing-lg;
+  border-top: 1rpx solid $color-divider;
+  position: sticky;
+  bottom: 0;
+  background: $color-bg-card;
+}
+
+// 空状态
+.empty {
+  text-align: center;
+  padding: $spacing-xl * 2 0;
+}
+
+.emptyIcon {
+  font-size: 80rpx;
+  display: block;
+  margin-bottom: $spacing-md;
+}
+
+.emptyText {
+  font-size: $font-size-md;
+  color: $color-text-tertiary;
+}
