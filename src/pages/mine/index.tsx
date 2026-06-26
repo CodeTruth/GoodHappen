@@ -59,6 +59,15 @@ const MinePage: React.FC = () => {
       success: (res) => {
         if (res.confirm) {
           logout();
+          useFortuneStore.setState({
+            totalFortune: 0,
+            highestFortune: 0,
+            availableFortune: 0,
+            frozenFortune: 0,
+            transactions: [],
+            dailyStats: { date: new Date().toISOString().split('T')[0], count: 0, fortune: 0 },
+            streak: { currentStreak: 0, lastRecordDate: '', highestStreak: 0 },
+          });
           Taro.showToast({ title: '已退出登录', icon: 'success' });
         }
       }

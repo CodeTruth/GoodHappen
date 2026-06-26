@@ -25,12 +25,15 @@ const ALL_REGIONS = ['北京市', '上海市', '广州市', '深圳市', '杭州
 const HomePage: React.FC = () => {
   // 更新自定义 tabBar 选中状态（H5环境中用useEffect替代useDidShow）
   useEffect(() => {
-    if (Taro.getTabBar) {
-      const tabbar = Taro.getTabBar<{ current: number }>();
-      if (tabbar) {
-        tabbar.current = 0;
+    try {
+      const page = Taro.getCurrentInstance().page;
+      if (page && Taro.getTabBar) {
+        const tabbar = Taro.getTabBar<{ current: number }>(page);
+        if (tabbar) {
+          tabbar.current = 0;
+        }
       }
-    }
+    } catch { /* H5 环境不支持 getTabBar */ }
   }, []);
 
   const [activeTab, setActiveTab] = useState<SquareTab>('all');

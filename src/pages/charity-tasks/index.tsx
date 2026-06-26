@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { View, Text, ScrollView } from '@tarojs/components';
+import { View, Text, ScrollView, Input } from '@tarojs/components';
 import Taro from '@tarojs/taro';
 import classnames from 'classnames';
 import { useCharityFundStore, TASK_LEVEL_MAP, TASK_STATUS_MAP } from '@/store/charityFund';
@@ -33,7 +33,6 @@ const CharityTasksPage: React.FC = () => {
   const [activeLevel, setActiveLevel] = useState<TaskLevel | 'all'>('all');
   const [selectedTask, setSelectedTask] = useState<CharityTask | null>(null);
   const [showPropose, setShowPropose] = useState(false);
-  const [refreshKey, setRefreshKey] = useState(0);
 
   // 提议任务表单
   const [proposeTitle, setProposeTitle] = useState('');
@@ -49,7 +48,7 @@ const CharityTasksPage: React.FC = () => {
   const filteredTasks = useMemo(() => {
     if (activeLevel === 'all') return tasks;
     return tasks.filter(t => t.level === activeLevel);
-  }, [tasks, activeLevel, refreshKey]);
+  }, [tasks, activeLevel]);
 
   // 按等级分组统计
   const levelStats = useMemo(() => {
@@ -80,7 +79,6 @@ const CharityTasksPage: React.FC = () => {
     const result = startTask(task.id);
     if (result.success) {
       Taro.showToast({ title: result.message, icon: 'success' });
-      setRefreshKey(k => k + 1);
       setSelectedTask(null);
     } else {
       Taro.showToast({ title: result.message, icon: 'none' });
@@ -99,7 +97,6 @@ const CharityTasksPage: React.FC = () => {
         showCancel: false,
         confirmText: '我知道了',
       });
-      setRefreshKey(k => k + 1);
       setSelectedTask(null);
     } else {
       Taro.showToast({ title: result.message, icon: 'none' });
@@ -134,7 +131,6 @@ const CharityTasksPage: React.FC = () => {
     if (result.success) {
       Taro.showToast({ title: result.message, icon: 'success' });
       setShowPropose(false);
-      setRefreshKey(k => k + 1);
     } else {
       Taro.showToast({ title: result.message, icon: 'none' });
     }
@@ -192,11 +188,11 @@ const CharityTasksPage: React.FC = () => {
       </ScrollView>
 
       {/* 任务列表 */}
-      <View className={styles.taskList} key={refreshKey}>
+      <View className={styles.taskList}>
         {filteredTasks.length > 0 ? (
           filteredTasks.map((task) => {
             const levelInfo = TASK_LEVEL_MAP[task.level];
-            const statusInfo = TASK_STATUS_MAP[task.status];
+            const statusInfo = TASK_STATUS_MAP[task.status] || { label: '已取消', color: '#999' };
             const sourceInfo = SOURCE_MAP[task.source];
             return (
               <View
@@ -308,8 +304,8 @@ const CharityTasksPage: React.FC = () => {
                     {selectedTask.level} · {TASK_LEVEL_MAP[selectedTask.level].label}
                   </Text>
                 </View>
-                <Text style={{ color: TASK_STATUS_MAP[selectedTask.status].color }}>
-                  {TASK_STATUS_MAP[selectedTask.status].label}
+                <Text style={{ color: (TASK_STATUS_MAP[selectedTask.status] || { label: '已取消', color: '#999' }).color }}>
+                  {(TASK_STATUS_MAP[selectedTask.status] || { label: '已取消', color: '#999' }).label}
                 </Text>
               </View>
 
@@ -416,7 +412,13 @@ const CharityTasksPage: React.FC = () => {
               <View className={styles.inputGroup}>
                 <Text className={styles.inputLabel}>任务标题（5-30字）</Text>
                 <View className={styles.inputBox}>
-                  <Text className={styles.inputText}>{proposeTitle || '请输入任务标题'}</Text>
+                  <Input
+                    className={styles.inputText}
+                    placeholder="请输入任务标题"
+                    value={proposeTitle}
+                    onInput={(e) => setProposeTitle(e.detail.value)}
+                    maxlength={30}
+                  />
                 </View>
               </View>
 
@@ -424,7 +426,12 @@ const CharityTasksPage: React.FC = () => {
               <View className={styles.inputGroup}>
                 <Text className={styles.inputLabel}>任务描述</Text>
                 <View className={styles.inputBox}>
-                  <Text className={styles.inputText}>{proposeDesc || '请输入任务描述'}</Text>
+                  <Input
+                    className={styles.inputText}
+                    placeholder="请输入任务描述"
+                    value={proposeDesc}
+                    onInput={(e) => setProposeDesc(e.detail.value)}
+                  />
                 </View>
               </View>
 
@@ -432,7 +439,12 @@ const CharityTasksPage: React.FC = () => {
               <View className={styles.inputGroup}>
                 <Text className={styles.inputLabel}>任务分类</Text>
                 <View className={styles.inputBox}>
-                  <Text className={styles.inputText}>{proposeCategory || '如：邻里互助'}</Text>
+                  <Input
+                    className={styles.inputText}
+                    placeholder="如：邻里互助"
+                    value={proposeCategory}
+                    onInput={(e) => setProposeCategory(e.detail.value)}
+                  />
                 </View>
               </View>
 

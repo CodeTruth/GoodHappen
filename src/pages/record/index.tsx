@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { View, Text, Textarea, Image } from '@tarojs/components';
 import Taro, { RecorderManager } from '@tarojs/taro';
 import { generateMultiAIResponseStream, moderateContent, evaluateCredibility } from '@/services/kindness';
@@ -61,7 +61,11 @@ const RecordPage: React.FC = () => {
   const [aiResponses, setAiResponses] = useState<AIResponseType[]>([]); // 多人回复
   const [isStreaming, setIsStreaming] = useState(false);
   const [showPlaceholder, setShowPlaceholder] = useState(false);
-  const [weeklyCount] = useState(3);
+  const weeklyCount = useMemo(() => {
+    const now = new Date();
+    const weekStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() - now.getDay());
+    return publishedList.filter(k => new Date(k.createdAt) >= weekStart).length || 0;
+  }, [publishedList]);
 
   // ====== 媒体类型切换（任务1）======
   const [mediaType, setMediaType] = useState<MediaType>('text');
@@ -74,6 +78,7 @@ const RecordPage: React.FC = () => {
   const recorderManagerRef = useRef<RecorderManager | null>(null);
   const recordTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const feedbackTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const aiAbortedRef = useRef(false);
   const fortuneIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // ====== 视频上传状态（任务1）======
@@ -496,7 +501,7 @@ const RecordPage: React.FC = () => {
 
       // 标记草稿已发布（开启15分钟编辑窗口）
       if (currentDraftId) {
-        const publishedId = `kindness_${Date.now()}`;
+        const publishedId = `kindness_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
         publishDraft(currentDraftId, publishedId);
       }
 
@@ -533,23 +538,28 @@ const RecordPage: React.FC = () => {
       setTimeout(async () => {
         setIsStreaming(true);
         setAiResponses([]);
+        aiAbortedRef.current = false;
         await generateMultiAIResponseStream(
           content || voiceText || '记录一件善事',
           recordType === 'witness',
           {
             firstPersonaStart: () => {
+              if (aiAbortedRef.current) return;
               setShowPlaceholder(true);
             },
             firstChunk: (chunk) => {
+              if (aiAbortedRef.current) return;
               setShowPlaceholder(false);
               setAiContent(prev => prev + chunk);
             },
             firstComplete: (fullContent, persona) => {
+              if (aiAbortedRef.current) return;
               setShowPlaceholder(false);
               setAiContent(fullContent);
               setAiPersonaName(persona.name);
             },
             secondComplete: (fullContent, persona) => {
+              if (aiAbortedRef.current) return;
               // 第二位名人回复到达，加入列表
               setAiResponses(prev => [...prev, {
                 persona: persona.id,
@@ -559,6 +569,7 @@ const RecordPage: React.FC = () => {
               }]);
             },
             allComplete: (responses) => {
+              if (aiAbortedRef.current) return;
               setIsStreaming(false);
               setFeedbackStep('done');
               // 更新 kindness store 中的 aiResponse（取第一条）
@@ -574,6 +585,7 @@ const RecordPage: React.FC = () => {
               addPublishedKindness(updatedKindness);
             },
             onError: () => {
+              if (aiAbortedRef.current) return;
               setShowPlaceholder(false);
               setAiContent('AI小伙伴今天有点忙，但你的温暖已经被记住了 ✨');
               setIsStreaming(false);
@@ -608,6 +620,7 @@ const RecordPage: React.FC = () => {
   };
 
   const handleBack = () => {
+    aiAbortedRef.current = true;
     clearAllTimers();
     setPhase('input');
     setContent('');

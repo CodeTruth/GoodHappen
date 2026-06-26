@@ -31,7 +31,7 @@ const DetailPage: React.FC = () => {
   // 从 store 获取已发布的善行（用于查找用户自己发布的）
   const publishedList = useKindnessStore((s) => s.publishedList);
   // 互动 store
-  const { hasLiked, toggleLike, getLikeCount, getCommentCount, addComment } = useInteractionStore();
+  const { hasLiked, toggleLike, getLikeCount, getCommentCount, addComment, getCommentList } = useInteractionStore();
   const { addNotification, isDndActive } = useNotificationStore();
 
   useEffect(() => {
@@ -57,6 +57,21 @@ const DetailPage: React.FC = () => {
     if (!kindness) return [];
     return getMockComments(kindness.id);
   }, [kindness]);
+
+  // 合并 mock 评论和用户提交的评论
+  const allComments = useMemo(() => {
+    const userComments = getCommentList(kindness?.id || '').map(c => ({
+      id: c.id,
+      userId: c.userId,
+      userName: c.userName,
+      content: c.content,
+      createdAt: c.createdAt,
+    }));
+    // 去重：以 id 为准
+    const existingIds = new Set(mockComments.map(c => c.id));
+    const uniqueUserComments = userComments.filter(c => !existingIds.has(c.id));
+    return [...mockComments, ...uniqueUserComments];
+  }, [mockComments, kindness?.id, getCommentList]);
 
   // 格式化时间
   const formatDate = (dateStr: string) => {
@@ -137,6 +152,8 @@ const DetailPage: React.FC = () => {
       </View>
     );
   }
+
+  if (!kindness) return null;
 
   // 实时数据
   const currentLikes = getLikeCount(kindness.id, kindness.likes);
@@ -267,9 +284,9 @@ const DetailPage: React.FC = () => {
         </View>
 
         {/* 评论列表 */}
-        {mockComments.length > 0 ? (
+        {allComments.length > 0 ? (
           <View className={styles.commentList}>
-            {mockComments.map((comment) => (
+            {allComments.map((comment) => (
               <View key={comment.id} className={styles.commentItem}>
                 <Image
                   src={comment.userAvatar}
