@@ -8,6 +8,8 @@ import { getWeeklyWarmPartners } from '@/data/social';
 import { useSocialStore } from '@/store/social';
 import { useUserStore } from '@/store/user';
 import { useInteractionStore } from '@/store/interaction';
+import { useKindnessStore } from '@/store/kindness';
+import CustomTabBar from '@/components/CustomTabBar';
 import { useNotificationStore } from '@/store/notification';
 import { Kindness } from '@/types/kindness';
 import styles from './index.module.scss';
@@ -21,6 +23,16 @@ const ALL_TAGS = ['助人', '环保', '见证', '公益', '邻里互助', '孝�
 const ALL_REGIONS = ['北京市', '上海市', '广州市', '深圳市', '杭州市', '成都市', '武汉市', '南京市', '西安市', '重庆市'];
 
 const HomePage: React.FC = () => {
+  // 更新自定义 tabBar 选中状态（H5环境中用useEffect替代useDidShow）
+  useEffect(() => {
+    if (Taro.getTabBar) {
+      const tabbar = Taro.getTabBar<{ current: number }>();
+      if (tabbar) {
+        tabbar.current = 0;
+      }
+    }
+  }, []);
+
   const [activeTab, setActiveTab] = useState<SquareTab>('all');
   const [selectedTag, setSelectedTag] = useState<string>('');
   const [selectedRegion, setSelectedRegion] = useState<string>('');
@@ -31,19 +43,27 @@ const HomePage: React.FC = () => {
   const { userInfo, loadFromStorage: loadUser } = useUserStore();
   const { loadFromStorage: loadInteraction } = useInteractionStore();
   const { loadFromStorage: loadNotification, loadMockData: loadMockNotification, cleanupExpired } = useNotificationStore();
+  const { publishedList: userKindnessList, loadFromStorage: loadKindness } = useKindnessStore();
 
   // 初始化：加载持久化数据
   useEffect(() => {
     loadUser();
     loadSocial();
     loadInteraction();
+    loadKindness();
     loadNotification();
     loadMockNotification();
     cleanupExpired();
   }, []);
 
-  // 原始善行列表
-  const allKindness = useMemo(() => getKindnessList(), []);
+  // 原始善行列表 = mock数据 + 用户本地发布的新善行（用户善行优先排列）
+  const allKindness = useMemo(() => {
+    const mockList = getKindnessList();
+    // 去重合并：如果用户善行ID已在mock中，用用户版本覆盖
+    const mockIds = new Set(mockList.map(k => k.id));
+    const uniqueUserList = userKindnessList.filter(k => !mockIds.has(k.id));
+    return [...uniqueUserList, ...mockList];
+  }, [userKindnessList]);
 
   // 温暖伙伴卡片（每周不超过2条，独立展示）
   const warmPartners = useMemo(() => getWeeklyWarmPartners(), []);
@@ -139,6 +159,7 @@ const HomePage: React.FC = () => {
     !onlyFollowing;
 
   return (
+    <View className={styles.pageWrapper}>
     <ScrollView
       className={styles.container}
       scrollY
@@ -289,6 +310,8 @@ const HomePage: React.FC = () => {
         )}
       </View>
     </ScrollView>
+    <CustomTabBar currentPath="pages/home/index" />
+    </View>
   );
 };
 

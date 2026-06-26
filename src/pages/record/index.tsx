@@ -1,15 +1,19 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { View, Text, Textarea, Image } from '@tarojs/components';
 import Taro, { RecorderManager } from '@tarojs/taro';
-import { generateAIResponseStream, moderateContent, evaluateCredibility } from '@/services/kindness';
+import { generateMultiAIResponseStream, moderateContent, evaluateCredibility } from '@/services/kindness';
+import type { AIResponse as AIResponseType } from '@/services/kindness';
 import { calculateFortune } from '@/utils/fortune';
 import { useFortuneStore } from '@/store/fortune';
+import { useKindnessStore } from '@/store/kindness';
 import { useUserStore, checkIsMinor } from '@/store/user';
 import { useDraftStore, DraftFormData } from '@/store/draft';
 import { useMilestoneStore } from '@/store/milestone';
 import { useCircleStore } from '@/store/circle';
-import { PERSONAS } from '@/services/ai';
+// import { PERSONAS } from '@/services/ai'; // 不再需要直接引用人设列表
+import { Kindness } from '@/types/kindness';
 import MilestonePopup from '@/components/MilestonePopup';
+import CustomTabBar from '@/components/CustomTabBar';
 import styles from './index.module.scss';
 
 // 反馈阶段：输入 → 提交中 → 反馈
@@ -35,6 +39,14 @@ const VIDEO_MAX_DURATION = 60;
 const VOICE_MAX_DURATION = 60;
 
 const RecordPage: React.FC = () => {
+  // 更新自定义 tabBar 选中状态（H5环境中用useEffect替代useDidShow）
+  useEffect(() => {
+    if (Taro.getTabBar) {
+      const tabbar = Taro.getTabBar<{ current: number }>();
+      if (tabbar) { tabbar.current = 1; }
+    }
+  }, []);
+
   const [recordType, setRecordType] = useState<'self' | 'witness'>('self');
   const [content, setContent] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
@@ -46,6 +58,7 @@ const RecordPage: React.FC = () => {
   const [fortune, setFortune] = useState(0);
   const [aiContent, setAiContent] = useState('');
   const [aiPersonaName, setAiPersonaName] = useState('');
+  const [aiResponses, setAiResponses] = useState<AIResponseType[]>([]); // 多人回复
   const [isStreaming, setIsStreaming] = useState(false);
   const [showPlaceholder, setShowPlaceholder] = useState(false);
   const [weeklyCount] = useState(3);
@@ -92,6 +105,9 @@ const RecordPage: React.FC = () => {
 
   const { streak, addFortune, recordKindness, canEarnToday, getDailyRemaining, resetIfNeeded, loadFromStorage } = useFortuneStore();
 
+  // ====== 善行发布存储（修复首页看不到发布记录的问题） ======
+  const { addKindness: addPublishedKindness } = useKindnessStore();
+
   // ====== 用户体系（Phase 5）：未成年保护 ======
   const { userInfo, loadFromStorage: loadUserFromStorage } = useUserStore();
   // 判定是否未成年
@@ -117,11 +133,15 @@ const RecordPage: React.FC = () => {
     loadTriggered();
     loadUserFromStorage();
     loadCircleFromStorage();
-    // 初始化录音管理器
-    recorderManagerRef.current = Taro.getRecorderManager();
+    // 初始化录音管理器（仅在支持录音的环境中）
+    try {
+      recorderManagerRef.current = Taro.getRecorderManager();
+    } catch {
+      recorderManagerRef.current = null;
+    }
 
-    // 注册录音回调
-    if (recorderManagerRef.current) {
+    // 注册录音回调（H5环境中录音管理器可能不支持）
+    if (recorderManagerRef.current && typeof recorderManagerRef.current.onStop === 'function') {
       recorderManagerRef.current.onStop((res) => {
         setIsRecording(false);
         setVoicePath(res.tempFilePath);
@@ -133,7 +153,7 @@ const RecordPage: React.FC = () => {
         }
         // 语音转文字（占位：实际应调用微信插件或后端 ASR 服务）
         // 这里先用占位文本，提示用户语音已记录
-        setVoiceText('[语音已记录，转文字功能开发中]');
+        setVoiceText('[语音已记录，正在转文字...]');
         Taro.showToast({ title: '语音已保存', icon: 'success' });
       });
 
@@ -465,6 +485,31 @@ const RecordPage: React.FC = () => {
         publishDraft(currentDraftId, publishedId);
       }
 
+      // 将善行数据保存到 kindness store（修复首页看不到发布记录的问题）
+      const newKindnessId = `kindness_${Date.now()}`;
+      const userName = userInfo?.name || '我';
+      const userAvatar = userInfo?.avatar || '';
+      const newKindness: Kindness = {
+        id: newKindnessId,
+        userId: userInfo?.id || 'currentUser',
+        userName,
+        userAvatar,
+        content: content || voiceText || '',
+        type: recordType,
+        tags: selectedTags,
+        images: images.length > 0 ? images : undefined,
+        video: videoPath || undefined,
+        location: userInfo?.region || undefined,
+        visibleScope,
+        circleId: visibleScope === 'circle' ? selectedCircleId : undefined,
+        credibilityScore: credibilityResult.level === 'high' ? 1.2 : 1.0,
+        blessingValue: fortuneResult.total,
+        likes: 0,
+        comments: 0,
+        createdAt: new Date().toISOString(),
+      };
+      addPublishedKindness(newKindness);
+
       // 进入反馈阶段，启动严格时序动画
       setPhase('feedback');
       runFeedbackSequence(fortuneResult.total);
@@ -472,27 +517,46 @@ const RecordPage: React.FC = () => {
       // 等待 AI 卡片出现后再开始流式输出
       setTimeout(async () => {
         setIsStreaming(true);
-        const personaId = await generateAIResponseStream(
+        setAiResponses([]);
+        await generateMultiAIResponseStream(
           content || voiceText || '记录一件善事',
           recordType === 'witness',
-          undefined,
           {
-            onStart: () => {
+            firstPersonaStart: () => {
               setShowPlaceholder(true);
             },
-            onTimeout: () => {
-              setShowPlaceholder(true);
-              setAiContent('AI正在感受你的温暖...');
-            },
-            onChunk: (chunk) => {
+            firstChunk: (chunk) => {
               setShowPlaceholder(false);
               setAiContent(prev => prev + chunk);
             },
-            onComplete: (fullContent) => {
+            firstComplete: (fullContent, persona) => {
               setShowPlaceholder(false);
               setAiContent(fullContent);
+              setAiPersonaName(persona.name);
+            },
+            secondComplete: (fullContent, persona) => {
+              // 第二位名人回复到达，加入列表
+              setAiResponses(prev => [...prev, {
+                persona: persona.id,
+                personaName: persona.name,
+                content: fullContent,
+                createdAt: new Date().toISOString(),
+              }]);
+            },
+            allComplete: (responses) => {
               setIsStreaming(false);
               setFeedbackStep('done');
+              // 更新 kindness store 中的 aiResponse（取第一条）
+              const updatedKindness: Kindness = {
+                ...newKindness,
+                aiResponse: {
+                  persona: responses[0].persona,
+                  personaName: responses[0].personaName,
+                  content: responses[0].content,
+                  createdAt: responses[0].createdAt,
+                },
+              };
+              addPublishedKindness(updatedKindness);
             },
             onError: () => {
               setShowPlaceholder(false);
@@ -503,8 +567,6 @@ const RecordPage: React.FC = () => {
           }
         );
 
-        const persona = PERSONAS.find(p => p.id === personaId);
-        setAiPersonaName(persona?.name || 'AI');
       }, 1500); // 在 ai_card 阶段（1.5s）开始 AI 请求
 
       // 任务4：检查里程碑触发（善行数+1 后检查）
@@ -577,6 +639,7 @@ const RecordPage: React.FC = () => {
   const dailyRemaining = getDailyRemaining();
 
   return (
+    <View className={styles.pageWrapper}>
     <View className={styles.container}>
       {/* 任务4：里程碑弹窗 */}
       <MilestonePopup />
@@ -626,13 +689,6 @@ const RecordPage: React.FC = () => {
                 >
                   <Text className={styles.mediaIcon}>📝</Text>
                   <Text className={styles.mediaText}>文字</Text>
-                </View>
-                <View
-                  className={`${styles.mediaOption} ${mediaType === 'voice' ? styles.active : ''}`}
-                  onClick={() => setMediaType('voice')}
-                >
-                  <Text className={styles.mediaIcon}>🎤</Text>
-                  <Text className={styles.mediaText}>语音</Text>
                 </View>
                 <View
                   className={`${styles.mediaOption} ${mediaType === 'video' ? styles.active : ''}`}
@@ -926,23 +982,37 @@ const RecordPage: React.FC = () => {
             </Text>
           )}
 
-          {/* Step 4: AI卡片出现（1.5s 后） */}
+          {/* Step 4: AI卡片出现（1.5s 后） - 多人回复 */}
           {(feedbackStep === 'ai_card' ||
             feedbackStep === 'ai_streaming' ||
             feedbackStep === 'done') && (
-            <View className={styles.aiCard}>
-              <View className={styles.aiHeader}>
-                <Text className={styles.aiPersona}>
-                  {aiPersonaName || 'AI'}的回应
-                  {isStreaming && <Text className={styles.streamingDot}>...</Text>}
+            <View className={styles.aiCards}>
+              {/* 第一位名人：流式呈现 */}
+              <View className={styles.aiCard}>
+                <View className={styles.aiHeader}>
+                  <Text className={styles.aiPersona}>
+                    {aiPersonaName || 'AI'}的回应
+                    {isStreaming && <Text className={styles.streamingDot}>...</Text>}
+                  </Text>
+                </View>
+                <Text className={styles.aiContent}>
+                  {feedbackStep === 'ai_card'
+                    ? 'AI正在感受你的温暖…'
+                    : (showPlaceholder && !aiContent ? 'AI正在感受你的温暖...' : aiContent)}
+                  {isStreaming && <Text className={styles.cursor}>|</Text>}
                 </Text>
               </View>
-              <Text className={styles.aiContent}>
-                {feedbackStep === 'ai_card'
-                  ? 'AI正在感受你的温暖…'
-                  : (showPlaceholder && !aiContent ? 'AI正在感受你的温暖...' : aiContent)}
-                {isStreaming && <Text className={styles.cursor}>|</Text>}
-              </Text>
+              {/* 第二位名人：完成后出现 */}
+              {aiResponses.map((resp, idx) => (
+                <View key={resp.persona} className={`${styles.aiCard} ${styles.aiCardSecond}`}>
+                  <View className={styles.aiHeader}>
+                    <Text className={styles.aiPersona}>
+                      {resp.personaName}也说
+                    </Text>
+                  </View>
+                  <Text className={styles.aiContent}>{resp.content}</Text>
+                </View>
+              ))}
             </View>
           )}
 
@@ -959,6 +1029,8 @@ const RecordPage: React.FC = () => {
           )}
         </View>
       )}
+    </View>
+    <CustomTabBar currentPath="pages/record/index" />
     </View>
   );
 };

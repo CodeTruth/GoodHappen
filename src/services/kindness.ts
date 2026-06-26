@@ -7,31 +7,48 @@ export interface AIResponse {
   createdAt: string;
 }
 
-export const generateAIResponse = async (
-  kindnessContent: string,
-  isWitness: boolean = false,
-  personaId?: PersonaType
-): Promise<AIResponse> => {
-  const persona = personaId
-    ? PERSONAS.find(p => p.id === personaId)
-    : PERSONAS[Math.floor(Math.random() * PERSONAS.length)];
-
-  if (!persona) {
-    throw new Error('Persona not found');
+/**
+ * 从人设列表中随机选取 n 个不重复的人设
+ */
+function pickRandomPersonas(count: number, excludeId?: PersonaType) {
+  const pool = excludeId ? PERSONAS.filter(p => p.id !== excludeId) : [...PERSONAS];
+  const result: typeof PERSONAS = [];
+  const shuffled = pool.sort(() => Math.random() - 0.5);
+  for (let i = 0; i < Math.min(count, shuffled.length); i++) {
+    result.push(shuffled[i]);
   }
+  return result;
+}
 
+function buildPrompt(kindnessContent: string, personaName: string, isWitness: boolean): string {
   const witnessPrefix = isWitness
     ? '这是一条见证记录——用户记录了自己看到的别人的善行。请以赞赏和鼓励的语气回应，赞美用户善于发现美好的眼睛。'
     : '这是一条善行记录——用户记录了自己做的好事。请以温暖和赞美的语气回应。';
 
-  const prompt = `${witnessPrefix}\n\n善行内容：${kindnessContent}\n\n请用${persona.name}的风格回应这条善行：`;
+  const globalWarmthConstraint = `
+【全局约束】
+1. 回复必须结合善行内容的具体细节，不能泛泛而谈
+2. 无论以什么风格表达，最终落点必须是：用户感到"被看见、被温暖、被认同、被奖励"
+3. 不要中性或冷淡收尾，不要给用户"哦就这样？"的感觉
+4. 50-150字`;
 
+  return `${witnessPrefix}\n\n善行内容：${kindnessContent}\n\n请用${personaName}的风格回应这条善行。${globalWarmthConstraint}`;
+}
+
+/**
+ * 生成单条 AI 回复
+ */
+async function generateSingleResponse(
+  kindnessContent: string,
+  persona: typeof PERSONAS[0],
+  isWitness: boolean
+): Promise<AIResponse> {
+  const prompt = buildPrompt(kindnessContent, persona.name, isWitness);
   try {
     const response = await deepseekChat([
       { role: 'system', content: persona.systemPrompt },
       { role: 'user', content: prompt }
     ]);
-
     return {
       persona: persona.id,
       personaName: persona.name,
@@ -47,8 +64,51 @@ export const generateAIResponse = async (
       createdAt: new Date().toISOString()
     };
   }
+}
+
+/**
+ * 生成多人 AI 回复（默认2位名人同时回应）
+ */
+export const generateAIResponse = async (
+  kindnessContent: string,
+  isWitness: boolean = false,
+  personaId?: PersonaType
+): Promise<AIResponse> => {
+  // 保持单条回复的向后兼容：如果指定了 personaId，只返回一条
+  if (personaId) {
+    const persona = PERSONAS.find(p => p.id === personaId);
+    if (!persona) throw new Error('Persona not found');
+    return generateSingleResponse(kindnessContent, persona, isWitness);
+  }
+
+  // 多人回复：随机选2个人设，并行请求
+  const personas = pickRandomPersonas(2);
+  const results = await Promise.all(
+    personas.map(p => generateSingleResponse(kindnessContent, p, isWitness))
+  );
+
+  // 返回第一条（调用方如需多条，使用 generateMultiAIResponse）
+  return results[0];
 };
 
+/**
+ * 生成多人 AI 回复，返回多条（供记录页展示多条回复卡片）
+ */
+export const generateMultiAIResponse = async (
+  kindnessContent: string,
+  isWitness: boolean = false,
+  count: number = 2
+): Promise<AIResponse[]> => {
+  const personas = pickRandomPersonas(count);
+  const results = await Promise.all(
+    personas.map(p => generateSingleResponse(kindnessContent, p, isWitness))
+  );
+  return results;
+};
+
+/**
+ * 流式生成多人 AI 回复（依次展示，第一个流式完成后开始第二个）
+ */
 export const generateAIResponseStream = async (
   kindnessContent: string,
   isWitness: boolean,
@@ -57,22 +117,13 @@ export const generateAIResponseStream = async (
 ): Promise<PersonaType> => {
   const persona = personaId
     ? PERSONAS.find(p => p.id === personaId)
-    : PERSONAS[Math.floor(Math.random() * PERSONAS.length)];
+    : pickRandomPersonas(1)[0];
 
   if (!persona) {
     throw new Error('Persona not found');
   }
 
-  const witnessPrefix = isWitness
-    ? '这是一条见证记录——用户记录了自己看到的别人的善行。请以赞赏和鼓励的语气回应，赞美用户善于发现美好的眼睛。'
-    : '这是一条善行记录——用户记录了自己做的好事。请以温暖和赞美的语气回应。';
-
-  const prompt = `${witnessPrefix}\n\n善行内容：${kindnessContent}\n\n请用${persona.name}的风格回应这条善行（50-150字）：`;
-
-  const originalOnComplete = callbacks.onComplete;
-  callbacks.onComplete = (fullContent: string) => {
-    originalOnComplete?.(fullContent);
-  };
+  const prompt = buildPrompt(kindnessContent, persona.name, isWitness);
 
   await deepseekChatStream(
     [
@@ -83,6 +134,70 @@ export const generateAIResponseStream = async (
   );
 
   return persona.id;
+};
+
+/**
+ * 流式生成多人回复（第一个流式完成后，第二个非流式获取）
+ * 返回所有人设 ID
+ */
+export const generateMultiAIResponseStream = async (
+  kindnessContent: string,
+  isWitness: boolean,
+  callbacks: {
+    firstPersonaStart?: () => void;
+    firstChunk?: (chunk: string) => void;
+    firstComplete?: (fullContent: string, persona: typeof PERSONAS[0]) => void;
+    secondComplete?: (fullContent: string, persona: typeof PERSONAS[0]) => void;
+    allComplete?: (responses: AIResponse[]) => void;
+    onError?: (error: Error) => void;
+  }
+): Promise<void> => {
+  const personas = pickRandomPersonas(2);
+  const now = new Date().toISOString();
+
+  try {
+    // 第一位：流式呈现
+    callbacks.firstPersonaStart?.();
+    const prompt1 = buildPrompt(kindnessContent, personas[0].name, isWitness);
+    let content1 = '';
+    await deepseekChatStream(
+      [
+        { role: 'system', content: personas[0].systemPrompt },
+        { role: 'user', content: prompt1 }
+      ],
+      {
+        onStart: () => {},
+        onChunk: (chunk: string) => {
+          content1 += chunk;
+          callbacks.firstChunk?.(chunk);
+        },
+        onComplete: () => {
+          const resp1: AIResponse = {
+            persona: personas[0].id,
+            personaName: personas[0].name,
+            content: content1,
+            createdAt: now
+          };
+          callbacks.firstComplete?.(content1, personas[0]);
+        },
+        onError: callbacks.onError
+      }
+    );
+
+    // 第二位：非流式获取（在第一位流式完成后）
+    const resp2 = await generateSingleResponse(kindnessContent, personas[1], isWitness);
+    callbacks.secondComplete?.(resp2.content, personas[1]);
+
+    const resp1: AIResponse = {
+      persona: personas[0].id,
+      personaName: personas[0].name,
+      content: content1,
+      createdAt: now
+    };
+    callbacks.allComplete?.([resp1, resp2]);
+  } catch (error) {
+    callbacks.onError?.(error as Error);
+  }
 };
 
 export type CredibilityLevel = 'high' | 'medium' | 'low' | 'suspicious';

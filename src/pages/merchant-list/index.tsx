@@ -105,14 +105,6 @@ const MerchantListPage: React.FC = () => {
     });
   };
 
-  // 打开地图（简化展示）
-  const handleOpenMap = () => {
-    Taro.showToast({
-      title: '附近温暖商家地图即将上线',
-      icon: 'none',
-    });
-  };
-
   // 判断权益是否可兑换
   const checkBenefitRedeemable = (benefit: MerchantBenefit): { canRedeem: boolean; reason?: string } => {
     if (currentTitle.level < benefit.requiredTitleLevel) {
@@ -138,18 +130,6 @@ const MerchantListPage: React.FC = () => {
           <Text className={styles.fortuneDivider}>·</Text>
           <Text className={styles.fortuneText}>当前称号 {currentTitle.name}</Text>
         </View>
-      </View>
-
-      {/* 附近温暖商家地图入口 */}
-      <View className={styles.mapEntry} onClick={handleOpenMap}>
-        <View className={styles.mapInfo}>
-          <Text className={styles.mapIcon}>🗺️</Text>
-          <View className={styles.mapText}>
-            <Text className={styles.mapTitle}>附近温暖商家</Text>
-            <Text className={styles.mapDesc}>查看地图上的温暖商家分布</Text>
-          </View>
-        </View>
-        <Text className={styles.mapArrow}>›</Text>
       </View>
 
       {/* 权益类型筛选 */}

@@ -21,8 +21,10 @@ export interface Kindness {
   createdAt: string;
 }
 
+export type KindnessPersona = 'sudongpo' | 'confucius' | 'libai' | 'dufu' | 'zhuangzi' | 'liqingzhao' | 'taoyuanming' | 'wangwei';
+
 export interface AIResponse {
-  persona: 'sudongpo' | 'confucius' | 'hobbes' | 'eliot' | 'praise' | 'cat';
+  persona: KindnessPersona;
   personaName: string;
   content: string;
   createdAt: string;

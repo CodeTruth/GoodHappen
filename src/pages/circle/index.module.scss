@@ -1,9 +1,14 @@
 @use '@/styles/variables.scss' as *;
 
+.pageWrapper {
+  min-height: 100vh;
+}
+
 .container {
   min-height: 100vh;
   background: $color-bg-page;
   padding: $page-padding;
+  padding-bottom: calc(#{$page-padding} + 120px); // 为自定义 tabBar 留出空间
 }
 
 .header {

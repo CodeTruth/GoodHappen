@@ -1,10 +1,19 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, Text } from '@tarojs/components';
 import Taro from '@tarojs/taro';
 import { getCircles } from '@/data/users';
+import CustomTabBar from '@/components/CustomTabBar';
 import styles from './index.module.scss';
 
 const CirclePage: React.FC = () => {
+  // 更新自定义 tabBar 选中状态（H5环境中用useEffect替代useDidShow）
+  useEffect(() => {
+    if (Taro.getTabBar) {
+      const tabbar = Taro.getTabBar<{ current: number }>();
+      if (tabbar) { tabbar.current = 2; }
+    }
+  }, []);
+
   const circles = getCircles();
 
   const getCircleIcon = (type: string) => {
@@ -25,13 +34,6 @@ const CirclePage: React.FC = () => {
     return names[type] || '团体';
   };
 
-  const handleCreateCircle = () => {
-    Taro.showToast({
-      title: '功能开发中',
-      icon: 'none'
-    });
-  };
-
   const handleCircleClick = (circleId: string) => {
     Taro.navigateTo({
       url: `/pages/circleDetail/index?id=${circleId}`
@@ -39,17 +41,12 @@ const CirclePage: React.FC = () => {
   };
 
   return (
+    <View className={styles.pageWrapper}>
     <View className={styles.container}>
       {/* 页面头部 */}
       <View className={styles.header}>
         <Text className={styles.title}>善行圈</Text>
         <Text className={styles.subtitle}>团体善行，温暖聚合</Text>
-      </View>
-
-      {/* 创建按钮 */}
-      <View className={styles.createBtn} onClick={handleCreateCircle}>
-        <Text className={styles.createIcon}>➕</Text>
-        <Text className={styles.createText}>创建善行圈</Text>
       </View>
 
       {/* 善行圈列表 */}
@@ -83,6 +80,8 @@ const CirclePage: React.FC = () => {
           </View>
         ))}
       </View>
+    </View>
+    <CustomTabBar currentPath="pages/circle/index" />
     </View>
   );
 };

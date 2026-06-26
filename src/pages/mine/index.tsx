@@ -5,9 +5,18 @@ import { getCurrentUser } from '@/data/users';
 import { useFortuneStore } from '@/store/fortune';
 import { useUserStore, checkIsMinor } from '@/store/user';
 import { TITLES } from '@/utils/fortune';
+import CustomTabBar from '@/components/CustomTabBar';
 import styles from './index.module.scss';
 
 const MinePage: React.FC = () => {
+  // 更新自定义 tabBar 选中状态（H5环境中用useEffect替代useDidShow）
+  useEffect(() => {
+    if (Taro.getTabBar) {
+      const tabbar = Taro.getTabBar<{ current: number }>();
+      if (tabbar) { tabbar.current = 3; }
+    }
+  }, []);
+
   // 兼容旧代码：未登录时使用 mock 数据展示
   const mockUser = getCurrentUser();
   const {
@@ -70,7 +79,6 @@ const MinePage: React.FC = () => {
 
   const menuItems = [
     { icon: '🔔', text: '消息通知', action: () => Taro.navigateTo({ url: '/pages/notifications/index' }) },
-    { icon: '📜', text: '善行履历', action: () => Taro.showToast({ title: '功能开发中', icon: 'none' }) },
     { icon: '🤝', text: '公益履历', action: () => requireAuthAction('/pages/charity-record/index') },
     { icon: '📢', text: '发布公益需求', action: () => requireAuthAction('/pages/charity-publish/index') },
     { icon: '💰', text: '福气流水', action: () => Taro.showToast({ title: `共${transactions.length}条记录`, icon: 'none' }) },
@@ -78,7 +86,6 @@ const MinePage: React.FC = () => {
     { icon: '👤', text: '编辑资料', action: () => requireAuthAction('/pages/profile-edit/index') },
     { icon: '🔒', text: '隐私设置', action: () => requireAuthAction('/pages/privacy-settings/index') },
     { icon: '🛡️', text: '账号安全', action: () => requireAuthAction('/pages/account-security/index') },
-    { icon: '❓', text: '帮助与反馈', action: () => Taro.showToast({ title: '功能开发中', icon: 'none' }) },
   ];
 
   const nextTitle = TITLES.find(t => t.minFortune > totalFortune);
@@ -87,6 +94,7 @@ const MinePage: React.FC = () => {
     : 100;
 
   return (
+    <View className={styles.pageWrapper}>
     <View className={styles.container}>
       {/* 头部用户信息 */}
       <View className={styles.header}>
@@ -203,6 +211,8 @@ const MinePage: React.FC = () => {
       <View className={styles.version}>
         <Text>好事发生 v1.0.0</Text>
       </View>
+    </View>
+    <CustomTabBar currentPath="pages/mine/index" />
     </View>
   );
 };

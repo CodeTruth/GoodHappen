@@ -1,9 +1,14 @@
 @use '@/styles/variables.scss' as *;
 
+.pageWrapper {
+  min-height: 100vh;
+}
+
 .container {
   min-height: 100vh;
   background: $color-bg-page;
   padding: $page-padding;
+  padding-bottom: calc(#{$page-padding} + 120px); // 为自定义 tabBar 留出空间
 }
 
 .header {
@@ -387,12 +392,25 @@
   to { opacity: 1; }
 }
 
+.aiCards {
+  margin-bottom: $spacing-xl;
+}
+
 .aiCard {
   background: linear-gradient(135deg, #FFF5F5 0%, #FFE8E8 100%);
   border-radius: $radius-lg;
   padding: $spacing-lg;
-  margin-bottom: $spacing-xl;
+  margin-bottom: $spacing-md;
   animation: cardPopIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  &.aiCardSecond {
+    background: linear-gradient(135deg, #F0FFF4 0%, #E0F8E8 100%);
+    animation: fadeInUp 0.6s ease-out;
+
+    .aiPersona {
+      color: #059669;
+    }
+  }
 }
 
 @keyframes cardPopIn {
@@ -403,6 +421,17 @@
   100% {
     opacity: 1;
     transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes fadeInUp {
+  0% {
+    opacity: 0;
+    transform: translateY(20rpx);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 

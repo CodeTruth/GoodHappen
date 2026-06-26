@@ -1,7 +1,7 @@
 {
   "miniprogramRoot": "./",
-  "projectname": "taro_template",
-  "description": "taro_template",
+  "projectname": "haoshi-fasheng",
+  "description": "好事发生",
   "appid": "touristappid",
   "setting": {
     "urlCheck": true,

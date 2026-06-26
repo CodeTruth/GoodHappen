@@ -108,7 +108,7 @@ const WarmthStoriesPage: React.FC = () => {
           <View className={styles.empty}>
             <Text className={styles.emptyIcon}>🌱</Text>
             <Text className={styles.emptyText}>这个周期还在收集故事</Text>
-            <Text className={styles.emptySubText}>温暖正在发生，敬请期待</Text>
+            <Text className={styles.emptySubText}>去记录第一份温暖吧 ✨</Text>
           </View>
         )}
       </View>

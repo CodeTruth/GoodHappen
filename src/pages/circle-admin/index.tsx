@@ -211,15 +211,6 @@ const CircleAdminPage: React.FC = () => {
     });
   };
 
-  // 处理创建任务
-  const handleCreateTask = () => {
-    if (!canManageTasks) {
-      Taro.showToast({ title: '仅管理员可创建任务', icon: 'none' });
-      return;
-    }
-    Taro.showToast({ title: '任务创建功能开发中', icon: 'none' });
-  };
-
   // 格式化时间
   const formatTime = (dateStr: string): string => {
     const date = new Date(dateStr);
@@ -421,11 +412,6 @@ const CircleAdminPage: React.FC = () => {
           <View className={styles.card}>
             <View className={styles.cardHeader}>
               <Text className={styles.cardTitle}>📋 打卡任务管理</Text>
-              {canManageTasks && (
-                <View className={styles.createBtn} onClick={handleCreateTask}>
-                  <Text className={styles.createBtnText}>+ 创建</Text>
-                </View>
-              )}
             </View>
             {circleTasks.length === 0 ? (
               <View className={styles.empty}>

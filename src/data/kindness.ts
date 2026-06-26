@@ -65,9 +65,9 @@ export const mockKindnessList: Kindness[] = [
     comments: 3,
     createdAt: '2024-06-22T08:45:00Z',
     aiResponse: {
-      persona: 'cat',
-      personaName: '治愈小猫',
-      content: '喵~ 你今天做的这件事，会让小动物们更开心的 🐱',
+      persona: 'liqingzhao',
+      personaName: '李清照',
+      content: '这样的温柔，恰似细雨润物无声，让人心头一暖。',
       createdAt: '2024-06-22T08:45:03Z'
     }
   },
@@ -111,9 +111,9 @@ export const mockKindnessList: Kindness[] = [
     comments: 15,
     createdAt: '2024-06-21T20:15:00Z',
     aiResponse: {
-      persona: 'eliot',
-      personaName: '艾略特',
-      content: '四月是最残忍的月份，但你在六月的这个傍晚，让我们看到了人性中最温柔的一面。',
+      persona: 'dufu',
+      personaName: '杜甫',
+      content: '人间烟火里，这样的善意就像寒夜里的一盏灯，虽微弱却足以照亮归途。',
       createdAt: '2024-06-21T20:15:03Z'
     }
   },
@@ -134,9 +134,9 @@ export const mockKindnessList: Kindness[] = [
     comments: 19,
     createdAt: '2024-06-21T18:00:00Z',
     aiResponse: {
-      persona: 'praise',
-      personaName: '夸夸团',
-      content: '天哪！！你也太棒了吧！！今天又是被你暖到的一天！！',
+      persona: 'zhuangzi',
+      personaName: '庄子',
+      content: '善行如水，顺势而为，不争而利万物。这便是自然之道。',
       createdAt: '2024-06-21T18:00:03Z'
     }
   },
@@ -157,9 +157,9 @@ export const mockKindnessList: Kindness[] = [
     comments: 9,
     createdAt: '2024-06-21T16:30:00Z',
     aiResponse: {
-      persona: 'hobbes',
-      personaName: '霍布斯',
-      content: '哼，又做好事？你这样让我们这些懒人很没面子啊……但说真的，很棒。',
+      persona: 'libai',
+      personaName: '李白',
+      content: '千尺桃花潭水，不及你这份豪情万丈！举杯敬你，好样的！',
       createdAt: '2024-06-21T16:30:03Z'
     }
   },
@@ -226,9 +226,9 @@ export const mockKindnessList: Kindness[] = [
     comments: 11,
     createdAt: '2024-06-21T10:00:00Z',
     aiResponse: {
-      persona: 'cat',
-      personaName: '治愈小猫',
-      content: '喵~ 你今天帮了那个小朋友，晚上会做一个好梦的 🐱',
+      persona: 'wangwei',
+      personaName: '王维',
+      content: '你的善行如山间清泉，默默滋养，却让整个山谷都有了生机。',
       createdAt: '2024-06-21T10:00:03Z'
     }
   }

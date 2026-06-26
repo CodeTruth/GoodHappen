@@ -839,7 +839,7 @@ export const mockConfigItems: ConfigItem[] = [
     value: 'sudongpo',
     defaultValue: 'sudongpo',
     type: 'select',
-    options: ['sudongpo', 'confucius', 'hobbes', 'eliot', 'praise', 'cat'],
+    options: ['sudongpo', 'confucius', 'libai', 'dufu', 'zhuangzi', 'liqingzhao', 'taoyuanming', 'wangwei'],
     description: '新用户默认匹配的AI人格',
   },
   // 审核参数

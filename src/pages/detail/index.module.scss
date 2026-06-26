@@ -1,14 +1,20 @@
 @use '@/styles/variables.scss' as *;
 
+// ============================================
+// 善行详情页 - 完整样式
+// ============================================
+
+// ---- 页面容器 ----
 .container {
   min-height: 100vh;
   background: $color-bg-page;
-  padding: $page-padding;
+  padding-bottom: 0; // 底部栏固定，不需要 padding
 }
 
+// ---- 加载状态 ----
 .loading {
   text-align: center;
-  padding: $spacing-xl 0;
+  padding: 120rpx 0;
 }
 
 .loadingText {
@@ -16,12 +22,501 @@
   color: $color-text-tertiary;
 }
 
-.empty {
+// ---- 不存在状态 ----
+.notFound {
   text-align: center;
-  padding: $spacing-xl 0;
+  padding: 120rpx $spacing-lg;
 }
 
-.emptyText {
-  font-size: $font-size-md;
+.notFoundIcon {
+  font-size: 96rpx;
+  display: block;
+  margin-bottom: $spacing-lg;
+}
+
+.notFoundText {
+  font-size: $font-size-xl;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  display: block;
+  margin-bottom: $spacing-sm;
+}
+
+.notFoundSub {
+  font-size: $font-size-sm;
   color: $color-text-tertiary;
+  display: block;
+}
+
+// ============================================
+// 善行内容区 - 卡片
+// ============================================
+.card {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  margin: $page-padding;
+  margin-bottom: 0;
+  box-shadow: $shadow-card;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  margin-bottom: $spacing-md;
+}
+
+.avatar {
+  width: 88rpx;
+  height: 88rpx;
+  border-radius: $radius-round;
+  margin-right: $spacing-md;
+  flex-shrink: 0;
+}
+
+.userInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.userName {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  display: block;
+  margin-bottom: 4rpx;
+}
+
+.meta {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+  display: block;
+}
+
+.blessingTag {
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  border-radius: $radius-button;
+  padding: 8rpx $spacing-md;
+  flex-shrink: 0;
+}
+
+.blessingText {
+  font-size: $font-size-xs;
+  color: $color-text-white;
+  font-weight: $font-weight-medium;
+}
+
+// 正文
+.content {
+  margin-bottom: $spacing-md;
+}
+
+.textContent {
+  font-size: $font-size-lg;
+  line-height: $line-height-loose;
+  color: $color-text-primary;
+}
+
+// 标签
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-sm;
+  margin-bottom: $spacing-md;
+}
+
+.tag {
+  background: rgba($color-primary, 0.08);
+  border-radius: $radius-sm;
+  padding: 8rpx $spacing-md;
+}
+
+.tagText {
+  font-size: $font-size-sm;
+  color: $color-primary;
+  font-weight: $font-weight-medium;
+}
+
+// 图片
+.images {
+  display: flex;
+  gap: $spacing-sm;
+  margin-bottom: $spacing-md;
+  flex-wrap: wrap;
+}
+
+.image {
+  width: 210rpx;
+  height: 210rpx;
+  border-radius: $radius-md;
+  flex-shrink: 0;
+}
+
+// 位置
+.location {
+  margin-bottom: $spacing-xs;
+}
+
+.locationText {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+}
+
+// ============================================
+// AI 共鸣区 - 核心亮点
+// ============================================
+.aiSection {
+  margin: $spacing-md $page-padding 0;
+  position: relative;
+}
+
+.aiBadge {
+  margin-bottom: $spacing-sm;
+}
+
+.aiBadgeText {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  color: $color-primary;
+  letter-spacing: 2rpx;
+}
+
+.aiCard {
+  background: linear-gradient(135deg, #FFF5F0 0%, #FFEDE5 30%, #FFF0F0 100%);
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  border: 2rpx solid rgba($color-primary, 0.15);
+  position: relative;
+  overflow: hidden;
+
+  // 装饰性背景元素
+  &::before {
+    content: '';
+    position: absolute;
+    top: -40rpx;
+    right: -40rpx;
+    width: 160rpx;
+    height: 160rpx;
+    border-radius: 50%;
+    background: rgba($color-primary, 0.06);
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -30rpx;
+    left: -30rpx;
+    width: 120rpx;
+    height: 120rpx;
+    border-radius: 50%;
+    background: rgba($color-primary-light, 0.08);
+  }
+}
+
+.aiHeader {
+  display: flex;
+  align-items: center;
+  margin-bottom: $spacing-md;
+  position: relative;
+  z-index: 1;
+}
+
+.aiPersonaIcon {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: $radius-round;
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: $spacing-md;
+  flex-shrink: 0;
+  box-shadow: 0 4rpx 12rpx rgba($color-primary, 0.25);
+}
+
+.aiPersonaEmoji {
+  font-size: 36rpx;
+}
+
+.aiPersonaInfo {
+  flex: 1;
+}
+
+.aiPersonaName {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  display: block;
+  margin-bottom: 4rpx;
+}
+
+.aiPersonaTime {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  display: block;
+}
+
+.aiDivider {
+  height: 1rpx;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba($color-primary, 0.2) 50%,
+    transparent 100%
+  );
+  margin-bottom: $spacing-md;
+  position: relative;
+  z-index: 1;
+}
+
+.aiContent {
+  font-size: $font-size-lg;
+  line-height: $line-height-loose;
+  color: $color-text-primary;
+  position: relative;
+  z-index: 1;
+  font-style: italic;
+}
+
+// ============================================
+// 互动数据概览
+// ============================================
+.statsBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg 0;
+  margin: $spacing-md $page-padding 0;
+  box-shadow: $shadow-card;
+}
+
+.statItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4rpx;
+}
+
+.statIcon {
+  font-size: 36rpx;
+  display: block;
+  margin-bottom: 4rpx;
+}
+
+.statValue {
+  font-size: $font-size-xl;
+  font-weight: $font-weight-bold;
+  color: $color-primary;
+}
+
+.statLabel {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.statDivider {
+  width: 1rpx;
+  height: 60rpx;
+  background: $color-border;
+}
+
+// ============================================
+// 评论区
+// ============================================
+.commentSection {
+  margin: $spacing-md $page-padding 0;
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  box-shadow: $shadow-card;
+}
+
+.sectionHeader {
+  margin-bottom: $spacing-md;
+  padding-bottom: $spacing-sm;
+  border-bottom: 1rpx solid $color-divider;
+}
+
+.sectionTitle {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
+.commentList {
+  display: flex;
+  flex-direction: column;
+}
+
+.commentItem {
+  display: flex;
+  padding: $spacing-md 0;
+  border-bottom: 1rpx solid $color-divider;
+
+  &:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+
+  &:first-child {
+    padding-top: 0;
+  }
+}
+
+.commentAvatar {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: $radius-round;
+  margin-right: $spacing-md;
+  flex-shrink: 0;
+}
+
+.commentBody {
+  flex: 1;
+  min-width: 0;
+}
+
+.commentHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8rpx;
+}
+
+.commentUserName {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $color-text-secondary;
+}
+
+.commentTime {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.commentContent {
+  font-size: $font-size-md;
+  line-height: $line-height-loose;
+  color: $color-text-primary;
+  word-break: break-word;
+}
+
+// 评论空状态
+.commentEmpty {
+  padding: $spacing-xl 0;
+  text-align: center;
+}
+
+.commentEmptyText {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+}
+
+// ============================================
+// 底部占位（防止内容被固定栏遮挡）
+// ============================================
+.bottomPlaceholder {
+  height: 120rpx;
+}
+
+// ============================================
+// 底部操作栏（固定定位）
+// ============================================
+.bottomBar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  padding: $spacing-sm $spacing-lg;
+  padding-bottom: calc(#{$spacing-sm} + env(safe-area-inset-bottom));
+  background: $color-bg-card;
+  border-top: 1rpx solid $color-border;
+  box-shadow: $shadow-float;
+  z-index: 100;
+}
+
+// 点赞按钮
+.likeBtn {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  padding: 12rpx $spacing-md;
+  border-radius: $radius-button;
+  background: $color-bg-hover;
+  margin-right: $spacing-sm;
+  transition: all $transition-base;
+  flex-shrink: 0;
+
+  &:active {
+    opacity: 0.7;
+    transform: scale(0.96);
+  }
+}
+
+.likeBtnActive {
+  background: rgba($color-primary, 0.1);
+
+  .likeBtnText {
+    color: $color-primary;
+    font-weight: $font-weight-medium;
+  }
+}
+
+.likeBtnIcon {
+  font-size: $font-size-lg;
+}
+
+.likeBtnText {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+  white-space: nowrap;
+}
+
+.likeCount {
+  color: inherit;
+}
+
+// 评论输入框
+.commentInputWrapper {
+  flex: 1;
+  min-width: 0;
+}
+
+.commentInput {
+  width: 100%;
+  height: 72rpx;
+  background: $color-bg-hover;
+  border-radius: $radius-button;
+  padding: 0 $spacing-lg;
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+  box-sizing: border-box;
+}
+
+// 分享按钮
+.shareBtn {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: $radius-round;
+  background: $color-bg-hover;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: $spacing-sm;
+  flex-shrink: 0;
+  transition: all $transition-base;
+
+  &:active {
+    opacity: 0.7;
+    transform: scale(0.96);
+  }
+}
+
+.shareBtnIcon {
+  font-size: $font-size-xl;
+  color: $color-text-secondary;
 }

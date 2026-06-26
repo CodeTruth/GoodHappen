@@ -128,14 +128,6 @@ const MyStatsPage: React.FC = () => {
     return `conic-gradient(${stops.join(', ')})`;
   }, [typeDistribution]);
 
-  // 跳转年度报告
-  const handleViewReport = () => {
-    Taro.showToast({
-      title: '年度报告即将上线',
-      icon: 'none',
-    });
-  };
-
   return (
     <ScrollView className={styles.container} scrollY enableBackToTop>
       {/* 头部 */}
@@ -238,15 +230,6 @@ const MyStatsPage: React.FC = () => {
         </View>
       </View>
 
-      {/* 年度温暖报告入口 */}
-      <View className={styles.reportEntry} onClick={handleViewReport}>
-        <Text className={styles.reportIcon}>📖</Text>
-        <View className={styles.reportInfo}>
-          <Text className={styles.reportTitle}>年度温暖报告</Text>
-          <Text className={styles.reportDesc}>回顾这一年的温暖旅程</Text>
-        </View>
-        <Text className={styles.reportArrow}>›</Text>
-      </View>
     </ScrollView>
   );
 };
