@@ -189,7 +189,7 @@ const pushMatchNotification = async (
       type: 'matched',
       title,
       content,
-      relatedId: source.id,
+      relatedId: target.id,
     });
   }
 

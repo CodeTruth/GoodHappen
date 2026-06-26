@@ -61,6 +61,11 @@ const SharePoster: React.FC<SharePosterProps> = ({
         }
         const canvas = res[0].node;
         const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          console.error('[SharePoster] Failed to get 2d context');
+          setLoading(false);
+          return;
+        }
         const dpr = Taro.getSystemInfoSync().pixelRatio;
         const width = res[0].width;
         const height = res[0].height;
@@ -222,7 +227,7 @@ const SharePoster: React.FC<SharePosterProps> = ({
     let current = '';
     for (const char of text) {
       const test = current + char;
-      if (ctx.measureText(test).width > maxWidth - 48 && current) {
+      if (ctx.measureText(test).width > maxWidth && current) {
         lines.push(current);
         current = char;
       } else {
@@ -312,17 +317,16 @@ const SharePoster: React.FC<SharePosterProps> = ({
       </View>
       <View className={styles.container}>
         {/* Canvas 海报 */}
-        {loading ? (
+        <View className={styles.canvasWrap} style={{ display: loading ? 'none' : 'block' }}>
+          <Canvas
+            type="2d"
+            id={canvasId}
+            className={styles.posterCanvas}
+          />
+        </View>
+        {loading && (
           <View className={styles.loading}>
             <Text className={styles.loadingText}>海报生成中...</Text>
-          </View>
-        ) : (
-          <View className={styles.canvasWrap}>
-            <Canvas
-              type="2d"
-              id={canvasId}
-              className={styles.posterCanvas}
-            />
           </View>
         )}
 

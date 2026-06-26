@@ -438,15 +438,12 @@ export const useCharityStore = create<CharityState>((set, get) => ({
       return { success: false, message: '仅当事人可确认完成' };
     }
 
-    // 福气自动划转
+    // 福气自动划转：从冻结池转出到接单者可用余额
+    // transferFrozenFortune 将冻结的福气转为可用福气（不改变 totalFortune）
+    // 不应再调用 earnCharityReward，否则 totalFortune 会虚增
     if (need.reward > 0) {
       const fortuneStore = useFortuneStore.getState();
-      // 从冻结池划转给接单者
       fortuneStore.transferFrozenFortune(need.reward, `完成·${need.title}`, needId);
-      // 如果接单者是当前用户，则获得福气奖励
-      if (need.accepterId === userId) {
-        fortuneStore.earnCharityReward(need.reward, `接单奖励·${need.title}`, needId);
-      }
     }
 
     set((state) => ({

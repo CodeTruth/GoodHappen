@@ -237,7 +237,7 @@ export const checkFortuneConcentration = (userId: string): AlertRecord | null =>
     return (
       txTime >= windowStart &&
       t.amount > 0 &&
-      (t.type === 'earn' || t.type === 'award')
+      (t.type === 'earn' || (t.type === 'award' && !t.description?.startsWith('取消退回') && !t.description?.startsWith('福气解冻')))
     );
   });
 

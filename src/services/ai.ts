@@ -1,9 +1,13 @@
 import Taro from '@tarojs/taro';
 
-// Taro defineConstants 编译时注入全局常量
+// API Key 从环境变量注入，严禁硬编码在源码中
+// Taro 编译时通过 defineConstants 注入 DEEPSEEK_API_KEY
 // eslint-disable-next-line no-undef
 declare const DEEPSEEK_API_KEY: string;
-const API_KEY = (typeof DEEPSEEK_API_KEY !== 'undefined' ? DEEPSEEK_API_KEY : '') || '';
+const API_KEY = (typeof DEEPSEEK_API_KEY !== 'undefined' && DEEPSEEK_API_KEY) ? DEEPSEEK_API_KEY : '';
+if (!API_KEY) {
+  console.warn('[AI] DEEPSEEK_API_KEY 未配置，AI功能将不可用。请在 .env 中配置或在 Taro defineConstants 中注入。');
+}
 const API_BASE_URL = 'https://api.deepseek.com';
 const MODEL = 'deepseek-chat';
 const TIMEOUT = 10000;

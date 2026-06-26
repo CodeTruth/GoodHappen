@@ -64,21 +64,25 @@ const LoginPage: React.FC = () => {
       Taro.showToast({ title: '请输入手机号', icon: 'none' });
       return;
     }
-    const result = await sendVerifyCode(phone);
-    if (result.success) {
-      Taro.showToast({ title: result.message, icon: 'none' });
-      setCountdown(60);
-      timerRef.current = setInterval(() => {
-        setCountdown((prev) => {
-          if (prev <= 1) {
-            clearInterval(timerRef.current);
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-    } else {
-      Taro.showToast({ title: result.message, icon: 'none' });
+    try {
+      const result = await sendVerifyCode(phone);
+      if (result.success) {
+        Taro.showToast({ title: result.message, icon: 'none' });
+        setCountdown(60);
+        timerRef.current = setInterval(() => {
+          setCountdown((prev) => {
+            if (prev <= 1) {
+              clearInterval(timerRef.current);
+              return 0;
+            }
+            return prev - 1;
+          });
+        }, 1000);
+      } else {
+        Taro.showToast({ title: result.message, icon: 'none' });
+      }
+    } catch {
+      Taro.showToast({ title: '验证码发送失败，请重试', icon: 'none' });
     }
   };
 

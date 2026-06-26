@@ -194,6 +194,12 @@ export const useAnalyticsStore = create<AnalyticsState>((set, get) => ({
 
   // 记录埋点事件：同步更新计数器 + 调用埋点服务
   recordEvent: (name, params = {}, userId) => {
+    // 跨天归档检查：如果 todayDate 不是今天，先归档昨日数据再记录
+    const today = getToday();
+    if (get().todayDate !== today) {
+      set({ todayCounters: { ...defaultTodayCounters }, todayDate: today });
+    }
+
     // 调用埋点服务记录事件（写入本地缓存，批量上报）
     trackEvent(name, params, userId);
 

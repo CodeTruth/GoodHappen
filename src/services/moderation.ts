@@ -7,6 +7,9 @@ import {
 import { useModerationStore, ModerationTask, AIResult } from '@/store/moderation';
 import { useNotificationStore, sendSubscribeMessage } from '@/store/notification';
 
+// 模拟复审定时器句柄，用于清理
+const reviewTimers = new Map<string, ReturnType<typeof setTimeout>>();
+
 // 高风险判定阈值
 const HIGH_RISK_CONFIDENCE_THRESHOLD = 0.7;
 
@@ -160,10 +163,13 @@ export const simulateHumanReview = (taskId: string): void => {
   startReview(taskId, reviewer);
   console.log('[Moderation] 开始人工复审:', { taskId, reviewer });
 
+  // 幂等保护：同一任务不重复设置定时器
+  if (reviewTimers.has(taskId)) return;
   // 模拟复审耗时：1-5秒（实际为24小时内）
   const reviewDelay = 1000 + Math.random() * 4000;
 
-  setTimeout(() => {
+  const timer = setTimeout(() => {
+    reviewTimers.delete(taskId);
     const currentTask = getTaskById(taskId);
     if (!currentTask || currentTask.status !== 'reviewing') return;
 
@@ -184,6 +190,7 @@ export const simulateHumanReview = (taskId: string): void => {
       pushModerationNotification(currentTask, false);
     }
   }, reviewDelay);
+  reviewTimers.set(taskId, timer);
 };
 
 // 处理待复审队列：为所有pending任务启动模拟复审

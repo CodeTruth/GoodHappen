@@ -1,3 +1,4 @@
+import Taro from '@tarojs/taro';
 import React, { useState } from 'react';
 import { View, Text, Textarea } from '@tarojs/components';
 import { useCharityStore } from '@/store/charity';
@@ -45,6 +46,8 @@ const RatingDialog: React.FC<RatingDialogProps> = ({ need, visible, onClose, onR
     if (result.success) {
       onRated?.();
       onClose();
+    } else {
+      Taro.showToast({ title: result.message || '评价失败', icon: 'none' });
     }
   };
 
@@ -61,7 +64,7 @@ const RatingDialog: React.FC<RatingDialogProps> = ({ need, visible, onClose, onR
 
         {/* 评价对象 */}
         <View className={styles.targetInfo}>
-          <Text className={styles.targetAvatar}>{targetAvatar ? '👤' : '👤'}</Text>
+          <Text className={styles.targetAvatar}>👤</Text>
           <View className={styles.targetMeta}>
             <Text className={styles.targetName}>{targetName || '对方'}</Text>
             <Text className={styles.targetRole}>

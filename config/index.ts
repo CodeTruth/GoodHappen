@@ -2,7 +2,6 @@ import { defineConfig, type UserConfigExport } from '@tarojs/cli';
 import TsconfigPathsPlugin from 'tsconfig-paths-webpack-plugin';
 import devConfig from './dev';
 import prodConfig from './prod';
-import vitePluginImp from 'vite-plugin-imp';
 import dotenv from 'dotenv';
 
 // 加载 .env 文件中的环境变量
@@ -98,7 +97,7 @@ export default defineConfig<'webpack5'>(async (merge, { command, mode }) => {
       },
     },
     rn: {
-      appName: 'taroDemo',
+      appName: '好事发生',
       postcss: {
         cssModules: {
           enable: true,

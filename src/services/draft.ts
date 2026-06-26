@@ -116,7 +116,7 @@ export const listDrafts = (): Draft[] => {
 export const deleteDraft = (id: string): boolean => {
   const drafts = readAll();
   const idx = drafts.findIndex(d => d.id === id);
-  if (idx < 0) return false;
+  if (idx < 0 || drafts[idx].deleted) return false;
   // 软删除：标记 deleted 并写入回收站
   drafts[idx].deleted = true;
   drafts[idx].updatedAt = Date.now();

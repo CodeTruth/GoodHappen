@@ -73,6 +73,8 @@ const RecordPage: React.FC = () => {
   const [recordDuration, setRecordDuration] = useState(0);
   const recorderManagerRef = useRef<RecorderManager | null>(null);
   const recordTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const feedbackTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const fortuneIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // ====== 视频上传状态（任务1）======
   const [videoPath, setVideoPath] = useState<string>('');
@@ -173,6 +175,18 @@ const RecordPage: React.FC = () => {
       if (recordTimerRef.current) {
         clearInterval(recordTimerRef.current);
       }
+      // 清理录音回调
+      if (recorderManagerRef.current) {
+        try {
+          if (typeof recorderManagerRef.current.offStop === 'function') {
+            recorderManagerRef.current.offStop();
+          }
+          if (typeof recorderManagerRef.current.offError === 'function') {
+            recorderManagerRef.current.offError();
+          }
+        } catch { /* 忽略清理异常 */ }
+      }
+      clearAllTimers();
     };
   }, []);
 
@@ -329,60 +343,61 @@ const RecordPage: React.FC = () => {
 
   // ====== 任务3：福气数字滚动动画 ======
   const runFortuneRollAnimation = (target: number) => {
-    const duration = 800; // 总时长 800ms
+    const duration = 800;
     const steps = 30;
     const interval = duration / steps;
     let current = 0;
     const inc = target / steps;
+    if (fortuneIntervalRef.current) {
+      clearInterval(fortuneIntervalRef.current);
+    }
     const timer = setInterval(() => {
       current += inc;
       if (current >= target) {
         setFortuneDisplay(target);
         clearInterval(timer);
+        fortuneIntervalRef.current = null;
       } else {
         setFortuneDisplay(Math.floor(current));
       }
     }, interval);
+    fortuneIntervalRef.current = timer;
   };
 
   // ====== 任务3：反馈动效时序控制 ======
   const runFeedbackSequence = (fortuneValue: number) => {
-    // 重置子阶段
+    // 清理旧定时器
+    clearAllTimers();
+
     setFeedbackStep('hidden');
     setFortuneDisplay(0);
     setFloatVisible(false);
 
-    // (0.5s) 入库成功
-    setTimeout(() => {
-      setFeedbackStep('success');
-    }, 500);
+    const addTimer = (fn: () => void, delay: number) => {
+      const id = setTimeout(fn, delay);
+      feedbackTimersRef.current.push(id);
+      return id;
+    };
 
-    // (0.8s) 福气飘字 + 数字滚动开始（success 后 0.3s）
-    setTimeout(() => {
+    addTimer(() => { setFeedbackStep('success'); }, 500);
+    addTimer(() => {
       setFeedbackStep('fortune_float');
       setFloatVisible(true);
       runFortuneRollAnimation(fortuneValue);
     }, 800);
-
-    // (1.0s) 飘字开始淡出（fortune_float 后 0.2s 显示本周文字）
-    setTimeout(() => {
-      setFeedbackStep('weekly_text');
-    }, 1000);
-
-    // (1.5s) AI卡片出现（weekly_text 后 0.5s）
-    setTimeout(() => {
-      setFeedbackStep('ai_card');
-    }, 1500);
-
-    // (2.5s-3.5s) AI流式输出开始（ai_card 后 1-2s）
-    setTimeout(() => {
-      setFeedbackStep('ai_streaming');
-    }, 2500);
+    addTimer(() => { setFeedbackStep('weekly_text'); }, 1000);
+    addTimer(() => { setFeedbackStep('ai_card'); }, 1500);
+    addTimer(() => { setFeedbackStep('ai_streaming'); }, 2500);
   };
 
   // 清理所有定时器
   const clearAllTimers = () => {
-    // 反馈时序由 setTimeout 链控制，无需显式清理（页面卸载时 React 会处理）
+    feedbackTimersRef.current.forEach(clearTimeout);
+    feedbackTimersRef.current = [];
+    if (fortuneIntervalRef.current) {
+      clearInterval(fortuneIntervalRef.current);
+      fortuneIntervalRef.current = null;
+    }
   };
 
   const handleSubmit = async () => {

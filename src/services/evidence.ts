@@ -114,9 +114,9 @@ export const generateHash = (data: string): string => {
     hash = ((hash << 5) - hash) + char;
     hash = hash & hash; // 转为 32 位整数
   }
-  // 转为 16 进制字符串并补齐
+  // 转为 16 进制字符串并补齐（纯确定性哈希，不包含时间分量）
   const hex = Math.abs(hash).toString(16).padStart(8, '0');
-  return `ev_${hex}${Date.now().toString(16).slice(-8)}`;
+  return `ev_${hex}`;
 };
 
 /**
@@ -257,8 +257,13 @@ export const triggerSOS = (
 export const verifyEvidenceIntegrity = (pkg: EvidencePackage): boolean => {
   const hashSource = `${pkg.recordId}|${pkg.timestamp}|${pkg.content}|${pkg.gps.latitude},${pkg.gps.longitude}`;
   const expectedHash = generateHash(hashSource);
-  // 注意：锁定后的证据包哈希会变化，这里只校验基础部分
-  return pkg.hash.startsWith(expectedHash.slice(0, 12)) || pkg.hash.includes('sealed');
+  // 锁定后的证据包：哈希基于原始哈希 + sealed 标记重新生成
+  if (pkg.sealedAt) {
+    const sealedHash = generateHash(`${expectedHash}|sealed|${pkg.sealedAt}`);
+    return pkg.hash === sealedHash;
+  }
+  // 未锁定的证据包：直接比较哈希
+  return pkg.hash === expectedHash;
 };
 
 // ============================================

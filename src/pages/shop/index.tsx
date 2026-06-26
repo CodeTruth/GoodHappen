@@ -14,7 +14,7 @@ const ShopPage: React.FC = () => {
 
   const [activeCategory, setActiveCategory] = useState<ProductCategory | 'all'>('all');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [redemptionRecords, setRedemptionRecords] = useState(getRedemptions());
+  const [redemptionRecords, setRedemptionRecords] = useState(() => getRedemptions());
 
   useEffect(() => {
     loadFromStorage();

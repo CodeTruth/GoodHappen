@@ -244,6 +244,9 @@ const calculateStreak = (
     const diff = (prev.getTime() - curr.getTime()) / (1000 * 60 * 60 * 24);
     if (diff === 1) {
       streak++;
+    } else if (diff === 0) {
+      // 同日多条记录，跳过继续
+      continue;
     } else {
       break;
     }
@@ -259,13 +262,17 @@ export const useCheckinStore = create<CheckinState>((set, get) => ({
     const id = `ck_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
     const today = getToday();
     const streakDays = calculateStreak(get().records, record.userId, record.category);
+    // 检查今天是否已有同品类打卡，避免 streakDays 虚增
+    const hasTodayCheckin = get().records.some(
+      r => r.userId === record.userId && r.date === today && r.category === record.category
+    );
 
     const newRecord: CheckinRecord = {
       ...record,
       id,
       createdAt: new Date().toISOString(),
       date: today,
-      streakDays: streakDays + (streakDays > 0 ? 1 : 1),
+      streakDays: hasTodayCheckin ? streakDays : streakDays + 1,
     };
 
     set(state => ({ records: [newRecord, ...state.records] }));

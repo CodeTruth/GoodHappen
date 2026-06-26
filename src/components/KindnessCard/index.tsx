@@ -141,7 +141,7 @@ const KindnessCard: React.FC<KindnessCardProps> = ({ kindness, onClick, showComm
           className={`${styles.action} ${styles.likeAction} ${liked ? styles.liked : ''}`}
           onClick={handleLikeClick}
         >
-          <Text className={styles.actionIcon}>{liked ? '🤍' : '🤍'}</Text>
+          <Text className={styles.actionIcon}>{liked ? '❤️' : '🤍'}</Text>
           <Text className={styles.actionText}>
             被温暖到 {currentLikes > 0 ? currentLikes : ''}
           </Text>
