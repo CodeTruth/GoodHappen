@@ -16,7 +16,7 @@ export const mockKindnessList: Kindness[] = [
     credibilityScore: 1.0,
     blessingValue: 12,
     likes: 23,
-    comments: 5,
+    comments: 7,
     createdAt: '2024-06-22T10:30:00Z',
     aiResponse: {
       persona: 'sudongpo',
@@ -39,7 +39,7 @@ export const mockKindnessList: Kindness[] = [
     credibilityScore: 1.0,
     blessingValue: 0, // 见证不计入福气值
     likes: 45,
-    comments: 12,
+    comments: 4,
     createdAt: '2024-06-22T09:15:00Z',
     aiResponse: {
       persona: 'sudongpo',
@@ -62,7 +62,7 @@ export const mockKindnessList: Kindness[] = [
     credibilityScore: 1.0,
     blessingValue: 8,
     likes: 18,
-    comments: 3,
+    comments: 5,
     createdAt: '2024-06-22T08:45:00Z',
     aiResponse: {
       persona: 'liqingzhao',
@@ -131,7 +131,7 @@ export const mockKindnessList: Kindness[] = [
     credibilityScore: 1.0,
     blessingValue: 11,
     likes: 67,
-    comments: 19,
+    comments: 5,
     createdAt: '2024-06-21T18:00:00Z',
     aiResponse: {
       persona: 'zhuangzi',
@@ -177,7 +177,7 @@ export const mockKindnessList: Kindness[] = [
     credibilityScore: 1.0,
     blessingValue: 15,
     likes: 89,
-    comments: 23,
+    comments: 6,
     createdAt: '2024-06-21T14:00:00Z',
     aiResponse: {
       persona: 'sudongpo',
@@ -200,7 +200,7 @@ export const mockKindnessList: Kindness[] = [
     credibilityScore: 1.0,
     blessingValue: 0,
     likes: 72,
-    comments: 16,
+    comments: 4,
     createdAt: '2024-06-21T12:00:00Z',
     aiResponse: {
       persona: 'confucius',
@@ -223,7 +223,7 @@ export const mockKindnessList: Kindness[] = [
     credibilityScore: 1.0,
     blessingValue: 13,
     likes: 54,
-    comments: 11,
+    comments: 6,
     createdAt: '2024-06-21T10:00:00Z',
     aiResponse: {
       persona: 'wangwei',

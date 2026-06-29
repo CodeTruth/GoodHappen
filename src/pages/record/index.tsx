@@ -10,6 +10,7 @@ import { useUserStore, checkIsMinor } from '@/store/user';
 import { useDraftStore, DraftFormData } from '@/store/draft';
 import { useMilestoneStore } from '@/store/milestone';
 import { useCircleStore } from '@/store/circle';
+import { useRitualStore } from '@/store/ritual';
 // import { PERSONAS } from '@/services/ai'; // 不再需要直接引用人设列表
 import { Kindness } from '@/types/kindness';
 import MilestonePopup from '@/components/MilestonePopup';
@@ -41,10 +42,13 @@ const VOICE_MAX_DURATION = 60;
 const RecordPage: React.FC = () => {
   // 更新自定义 tabBar 选中状态（H5环境中用useEffect替代useDidShow）
   useEffect(() => {
-    if (Taro.getTabBar) {
-      const tabbar = Taro.getTabBar<{ current: number }>();
-      if (tabbar) { tabbar.current = 1; }
-    }
+    try {
+      const page = Taro.getCurrentInstance().page;
+      if (page && Taro.getTabBar) {
+        const tabbar = Taro.getTabBar<{ current: number }>(page);
+        if (tabbar) { tabbar.current = 1; }
+      }
+    } catch { /* H5 环境不支持 getTabBar */ }
   }, []);
 
   const [recordType, setRecordType] = useState<'self' | 'witness'>('self');
@@ -61,6 +65,13 @@ const RecordPage: React.FC = () => {
   const [aiResponses, setAiResponses] = useState<AIResponseType[]>([]); // 多人回复
   const [isStreaming, setIsStreaming] = useState(false);
   const [showPlaceholder, setShowPlaceholder] = useState(false);
+
+  // ====== 善行发布存储 ======
+  const { addKindness: addPublishedKindness, publishedList } = useKindnessStore();
+
+  // 仪式开关
+  const { enabled: ritualEnabled } = useRitualStore();
+
   const weeklyCount = useMemo(() => {
     const now = new Date();
     const weekStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() - now.getDay());
@@ -68,7 +79,20 @@ const RecordPage: React.FC = () => {
   }, [publishedList]);
 
   // ====== 媒体类型切换（任务1）======
-  const [mediaType, setMediaType] = useState<MediaType>('text');
+  // 使用 Set 存储已选择的媒体类型，支持多选组合
+  const [selectedMediaTypes, setSelectedMediaTypes] = useState<Set<MediaType>>(new Set(['text']));
+
+  const toggleMediaType = (type: MediaType) => {
+    const newSet = new Set(selectedMediaTypes);
+    if (newSet.has(type)) {
+      if (newSet.size > 1) {
+        newSet.delete(type);
+      }
+    } else {
+      newSet.add(type);
+    }
+    setSelectedMediaTypes(newSet);
+  };
 
   // ====== 语音录制状态（任务1）======
   const [isRecording, setIsRecording] = useState(false);
@@ -113,7 +137,6 @@ const RecordPage: React.FC = () => {
   const { streak, addFortune, recordKindness, canEarnToday, getDailyRemaining, resetIfNeeded, loadFromStorage } = useFortuneStore();
 
   // ====== 善行发布存储（修复首页看不到发布记录的问题） ======
-  const { addKindness: addPublishedKindness } = useKindnessStore();
 
   // ====== 用户体系（Phase 5）：未成年保护 ======
   const { userInfo, loadFromStorage: loadUserFromStorage } = useUserStore();
@@ -142,7 +165,14 @@ const RecordPage: React.FC = () => {
     loadCircleFromStorage();
     // 初始化录音管理器（仅在支持录音的环境中）
     try {
-      recorderManagerRef.current = Taro.getRecorderManager();
+      const manager = Taro.getRecorderManager();
+      // H5 环境中 getRecorderManager 由 temporarilyNotSupport 包装，返回 rejected Promise
+      if (manager && typeof manager.catch === 'function') {
+        manager.catch(() => { /* H5 不支持录音 */ });
+        recorderManagerRef.current = null;
+      } else {
+        recorderManagerRef.current = manager;
+      }
     } catch {
       recorderManagerRef.current = null;
     }
@@ -384,6 +414,17 @@ const RecordPage: React.FC = () => {
       return id;
     };
 
+    if (!ritualEnabled) {
+      // 仪式关闭：极简反馈，直接显示结果
+      addTimer(() => {
+        setFeedbackStep('done');
+        setFortuneDisplay(fortuneValue);
+        setFloatVisible(false);
+      }, 300);
+      return;
+    }
+
+    // 仪式开启：完整40秒仪式流程
     addTimer(() => { setFeedbackStep('success'); }, 500);
     addTimer(() => {
       setFeedbackStep('fortune_float');
@@ -417,11 +458,6 @@ const RecordPage: React.FC = () => {
         title: '请输入内容或添加媒体',
         icon: 'none'
       });
-      return;
-    }
-
-    if (mediaType === 'text' && !hasText && !hasImages) {
-      Taro.showToast({ title: '请输入内容', icon: 'none' });
       return;
     }
 
@@ -534,7 +570,7 @@ const RecordPage: React.FC = () => {
       setPhase('feedback');
       runFeedbackSequence(fortuneResult.total);
 
-      // 等待 AI 卡片出现后再开始流式输出
+      // 等待 AI 卡片出现后再开始流式输出（仪式关闭时立即开始）
       setTimeout(async () => {
         setIsStreaming(true);
         setAiResponses([]);
@@ -594,7 +630,7 @@ const RecordPage: React.FC = () => {
           }
         );
 
-      }, 1500); // 在 ai_card 阶段（1.5s）开始 AI 请求
+      }, ritualEnabled ? 1500 : 0); // 仪式开启时等待1.5s，关闭时立即开始
 
       // 任务4：检查里程碑触发（善行数+1 后检查）
       if (recordType === 'self') {
@@ -635,6 +671,7 @@ const RecordPage: React.FC = () => {
     setFortune(0);
     setFeedbackStep('hidden');
     setSelectedCircleId('');
+    setSelectedMediaTypes(new Set(['text']));
     clearCurrent();
     Taro.switchTab({
       url: '/pages/home/index'
@@ -707,25 +744,33 @@ const RecordPage: React.FC = () => {
           </View>
 
           <View className={styles.form}>
-            {/* 任务1：媒体类型切换入口 */}
+            {/* 任务1：媒体类型切换入口（支持多选组合） */}
             <View className={styles.formItem}>
-              <Text className={styles.label}>记录方式</Text>
+              <Text className={styles.label}>记录方式（可多选）</Text>
               <View className={styles.mediaSelector}>
                 <View
-                  className={`${styles.mediaOption} ${mediaType === 'text' ? styles.active : ''}`}
-                  onClick={() => setMediaType('text')}
+                  className={`${styles.mediaOption} ${selectedMediaTypes.has('text') ? styles.active : ''}`}
+                  onClick={() => toggleMediaType('text')}
                 >
                   <Text className={styles.mediaIcon}>📝</Text>
                   <Text className={styles.mediaText}>文字</Text>
                 </View>
                 <View
-                  className={`${styles.mediaOption} ${mediaType === 'video' ? styles.active : ''}`}
-                  onClick={() => setMediaType('video')}
+                  className={`${styles.mediaOption} ${selectedMediaTypes.has('voice') ? styles.active : ''}`}
+                  onClick={() => toggleMediaType('voice')}
+                >
+                  <Text className={styles.mediaIcon}>🎤</Text>
+                  <Text className={styles.mediaText}>语音</Text>
+                </View>
+                <View
+                  className={`${styles.mediaOption} ${selectedMediaTypes.has('video') ? styles.active : ''}`}
+                  onClick={() => toggleMediaType('video')}
                 >
                   <Text className={styles.mediaIcon}>🎬</Text>
                   <Text className={styles.mediaText}>视频</Text>
                 </View>
               </View>
+              <Text className={styles.mediaHint}>支持文字+图片+视频组合发布</Text>
             </View>
 
             {/* 文字输入（始终可用，语音/视频时可作为补充） */}
@@ -733,7 +778,7 @@ const RecordPage: React.FC = () => {
               <Text className={styles.label}>内容</Text>
               <Textarea
                 className={styles.textarea}
-                placeholder={mediaType === 'voice' ? '语音转文字内容（可编辑）...' : '记录下这个温暖的瞬间...'}
+                placeholder={selectedMediaTypes.has('voice') ? '语音转文字内容（可编辑）...' : '记录下这个温暖的瞬间...'}
                 value={content}
                 onInput={(e) => setContent(e.detail.value)}
                 maxlength={500}
@@ -741,8 +786,8 @@ const RecordPage: React.FC = () => {
               />
             </View>
 
-            {/* 任务1：语音录制区域 */}
-            {mediaType === 'voice' && (
+            {/* 任务1：语音录制区域（选择语音时显示） */}
+            {selectedMediaTypes.has('voice') && (
               <View className={styles.formItem}>
                 <Text className={styles.label}>语音录制</Text>
                 <View className={styles.voiceSection}>
@@ -793,8 +838,8 @@ const RecordPage: React.FC = () => {
               </View>
             )}
 
-            {/* 任务1：视频上传区域 */}
-            {mediaType === 'video' && (
+            {/* 任务1：视频上传区域（选择视频时显示） */}
+            {selectedMediaTypes.has('video') && (
               <View className={styles.formItem}>
                 <Text className={styles.label}>视频（≤{VIDEO_MAX_DURATION}秒）</Text>
                 <View className={styles.videoSection}>
@@ -960,8 +1005,8 @@ const RecordPage: React.FC = () => {
 
       {phase === 'submitting' && (
         <View className={styles.submitting}>
-          <View className={styles.loadingIcon}>✨</View>
-          <Text className={styles.loadingText}>AI正在感受你的温暖...</Text>
+          <View className={styles.loadingIcon}>🖋️</View>
+          <Text className={styles.loadingText}>墨落纸上，温暖正在成形...</Text>
         </View>
       )}
 
@@ -1015,28 +1060,49 @@ const RecordPage: React.FC = () => {
             feedbackStep === 'ai_streaming' ||
             feedbackStep === 'done') && (
             <View className={styles.aiCards}>
-              {/* 第一位名人：流式呈现 */}
-              <View className={styles.aiCard}>
+              {/* 第一位名人：流式呈现，可点击进入对话 */}
+              <View
+                className={styles.aiCard}
+                onClick={() => {
+                  // 找到第一位AI的人物ID（从aiPersonaName反查或通过其他方式）
+                  // 这里使用一个简化的方式：从 kindness store 或已知数据中查找
+                  // 实际应通过回调获取，这里先使用一个通用跳转
+                  const firstPersonaId = aiResponses[0]?.persona || 'sudongpo';
+                  Taro.navigateTo({
+                    url: `/pages/ai-chat/index?persona=${firstPersonaId}&mode=free`
+                  });
+                }}
+              >
                 <View className={styles.aiHeader}>
                   <Text className={styles.aiPersona}>
-                    {aiPersonaName || 'AI'}的回应
+                    🏛️ {aiPersonaName || '先贤'}回应
                     {isStreaming && <Text className={styles.streamingDot}>...</Text>}
                   </Text>
+                  <Text className={styles.aiHint}>💬 点击继续对话</Text>
                 </View>
                 <Text className={styles.aiContent}>
                   {feedbackStep === 'ai_card'
-                    ? 'AI正在感受你的温暖…'
-                    : (showPlaceholder && !aiContent ? 'AI正在感受你的温暖...' : aiContent)}
+                    ? '古人提笔，墨香渐起…'
+                    : (showPlaceholder && !aiContent ? '古人提笔，墨香渐起...' : aiContent)}
                   {isStreaming && <Text className={styles.cursor}>|</Text>}
                 </Text>
               </View>
-              {/* 第二位名人：完成后出现 */}
+              {/* 第二位名人：完成后出现，可点击进入对话 */}
               {aiResponses.map((resp, idx) => (
-                <View key={resp.persona} className={`${styles.aiCard} ${styles.aiCardSecond}`}>
+                <View
+                  key={resp.persona}
+                  className={`${styles.aiCard} ${styles.aiCardSecond}`}
+                  onClick={() => {
+                    Taro.navigateTo({
+                      url: `/pages/ai-chat/index?persona=${resp.persona}&mode=free`
+                    });
+                  }}
+                >
                   <View className={styles.aiHeader}>
                     <Text className={styles.aiPersona}>
-                      {resp.personaName}也说
+                      📜 {resp.personaName}也回应
                     </Text>
+                    <Text className={styles.aiHint}>💬 点击继续对话</Text>
                   </View>
                   <Text className={styles.aiContent}>{resp.content}</Text>
                 </View>

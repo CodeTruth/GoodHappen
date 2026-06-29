@@ -93,8 +93,14 @@ const NotificationsPage: React.FC = () => {
       markAsRead(item.id);
     }
     // 如果有关联ID，跳转到详情
-    if (item.relatedId && (item.type === 'like' || item.type === 'comment' || item.type === 'mention' || item.type === 'matched' || item.type === 'moderation')) {
+    if (item.relatedId && (item.type === 'like' || item.type === 'comment' || item.type === 'mention' || item.type === 'matched' || item.type === 'moderation' || item.type === 'good_deed_witnessed')) {
       Taro.navigateTo({ url: `/pages/detail/index?id=${item.relatedId}` });
+    } else if (item.type === 'ai_response' && item.relatedId) {
+      // AI回应通知跳转到对话页
+      Taro.navigateTo({ url: `/pages/ai-chat/index?characterId=${item.relatedId}` });
+    } else if (item.type === 'level_up') {
+      // 等级升级通知跳转到我的页查看等级
+      Taro.switchTab({ url: '/pages/my/index' });
     }
   };
 

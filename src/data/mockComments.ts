@@ -45,6 +45,20 @@ const mockCommentsMap: Record<string, MockComment[]> = {
       content: '邻里互助真的很重要，向楼主学习。',
       createdAt: '2024-06-22T16:45:00Z',
     },
+    {
+      id: 'c1_6',
+      userName: '瑞幸咖啡',
+      userAvatar: 'https://picsum.photos/id/1080/200/200',
+      content: '瑞幸咖啡致敬这份邻里间的温暖，一杯小蓝杯，敬每一位城市善行者 ☕',
+      createdAt: '2024-06-22T17:10:00Z',
+    },
+    {
+      id: 'c1_7',
+      userName: '星巴克',
+      userAvatar: 'https://picsum.photos/id/1069/200/200',
+      content: '星巴克致敬每一位传递温暖的邻里伙伴，用一杯拿铁的温度，致敬善行的力量。',
+      createdAt: '2024-06-22T17:30:00Z',
+    },
   ],
   '2': [
     {
@@ -68,6 +82,13 @@ const mockCommentsMap: Record<string, MockComment[]> = {
       content: '地铁上让人让座的善意真的要珍惜，希望更多人像这个女孩一样。',
       createdAt: '2024-06-22T11:15:00Z',
     },
+    {
+      id: 'c2_4',
+      userName: '瑞幸咖啡',
+      userAvatar: 'https://picsum.photos/id/1080/200/200',
+      content: '城市通勤路上的善意最动人，瑞幸咖啡致敬每一位温暖的同路人 ☕',
+      createdAt: '2024-06-22T11:45:00Z',
+    },
   ],
   '3': [
     {
@@ -90,6 +111,20 @@ const mockCommentsMap: Record<string, MockComment[]> = {
       userAvatar: 'https://picsum.photos/id/1027/200/200',
       content: '捡垃圾虽然不起眼，但确实是很棒的善行。为楼主点赞！',
       createdAt: '2024-06-22T11:30:00Z',
+    },
+    {
+      id: 'c3_4',
+      userName: 'Patagonia',
+      userAvatar: 'https://picsum.photos/id/1084/200/200',
+      content: 'Patagonia 致敬每一位守护地球的善行者，用环保行动致敬自然的守护者 🌍',
+      createdAt: '2024-06-22T12:00:00Z',
+    },
+    {
+      id: 'c3_5',
+      userName: '奈雪的茶',
+      userAvatar: 'https://picsum.photos/id/1079/200/200',
+      content: '奈雪的茶致敬每一份对自然的善意，用一杯果茶的清甜，致敬地球的守护者。',
+      createdAt: '2024-06-22T12:15:00Z',
     },
   ],
   '4': [
@@ -167,6 +202,20 @@ const mockCommentsMap: Record<string, MockComment[]> = {
       content: '一瓶水虽小，但带来的温暖是巨大的。',
       createdAt: '2024-06-21T20:00:00Z',
     },
+    {
+      id: 'c6_4',
+      userName: '瑞幸咖啡',
+      userAvatar: 'https://picsum.photos/id/1080/200/200',
+      content: '瑞幸咖啡向每一位烈日下的劳动者致敬，也向每一位传递清凉的善心人致敬 ☕',
+      createdAt: '2024-06-21T20:30:00Z',
+    },
+    {
+      id: 'c6_5',
+      userName: '星巴克',
+      userAvatar: 'https://picsum.photos/id/1069/200/200',
+      content: '星巴克致敬每一份夏日里的清凉善意，用一杯冰美式的温度，致敬善行的力量。',
+      createdAt: '2024-06-21T21:00:00Z',
+    },
   ],
   '7': [
     {
@@ -220,6 +269,13 @@ const mockCommentsMap: Record<string, MockComment[]> = {
       content: '珍惜和父母在一起的每一天，共勉。',
       createdAt: '2024-06-21T17:00:00Z',
     },
+    {
+      id: 'c8_6',
+      userName: '奈雪的茶',
+      userAvatar: 'https://picsum.photos/id/1079/200/200',
+      content: '奈雪的茶致敬每一份温暖的陪伴，用一杯果茶的清甜，致敬亲情的力量。',
+      createdAt: '2024-06-21T17:30:00Z',
+    },
   ],
   '9': [
     {
@@ -242,6 +298,13 @@ const mockCommentsMap: Record<string, MockComment[]> = {
       userAvatar: 'https://picsum.photos/id/177/200/200',
       content: '专业的人做专业的事，还能帮助有需要的人，双倍温暖！',
       createdAt: '2024-06-21T14:00:00Z',
+    },
+    {
+      id: 'c9_4',
+      userName: '瑞幸咖啡',
+      userAvatar: 'https://picsum.photos/id/1080/200/200',
+      content: '用专业技能传递温暖，瑞幸咖啡致敬每一位社区志愿者 ☕',
+      createdAt: '2024-06-21T14:30:00Z',
     },
   ],
   '10': [
@@ -272,6 +335,20 @@ const mockCommentsMap: Record<string, MockComment[]> = {
       userAvatar: 'https://picsum.photos/id/338/200/200',
       content: '下次邻居有困难我也会帮忙的，被楼主的善行感染了。',
       createdAt: '2024-06-21T12:30:00Z',
+    },
+    {
+      id: 'c10_5',
+      userName: '星巴克',
+      userAvatar: 'https://picsum.photos/id/1069/200/200',
+      content: '星巴克致敬每一位温暖的邻里伙伴，用一杯咖啡的温度，致敬社区的善意。',
+      createdAt: '2024-06-21T13:00:00Z',
+    },
+    {
+      id: 'c10_6',
+      userName: '奈雪的茶',
+      userAvatar: 'https://picsum.photos/id/1079/200/200',
+      content: '奈雪的茶致敬每一份温暖的邻里情，用一杯果茶的清甜，致敬善意的传递。',
+      createdAt: '2024-06-21T13:15:00Z',
     },
   ],
 };

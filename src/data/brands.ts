@@ -165,6 +165,17 @@ export const mockBrands: Brand[] = [
     partnerSince: '2024-04-22',
     csrLink: 'https://example.com/patagonia-csr',
   },
+  {
+    id: 'brand_luckin',
+    name: '瑞幸咖啡',
+    logo: 'https://picsum.photos/id/1080/200/200',
+    description: '瑞幸咖啡致敬每一位城市善行者，用一杯咖啡的温度，致敬温暖的传递',
+    focusArea: '城市温暖 · 善意随行',
+    slots: ['kindness_square', 'warmth_shop', 'quarterly_release', 'fund_disclosure'],
+    totalSponsorship: 25000,
+    partnerSince: '2024-03-08',
+    csrLink: 'https://example.com/luckin-csr',
+  },
 ];
 
 // 获取所有品牌

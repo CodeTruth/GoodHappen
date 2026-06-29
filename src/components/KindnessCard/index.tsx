@@ -129,7 +129,7 @@ const KindnessCard: React.FC<KindnessCardProps> = ({ kindness, onClick, showComm
       {aiResponse && (
         <View className={styles.aiResponse}>
           <View className={styles.aiHeader}>
-            <Text className={styles.aiPersona}>{aiResponse.personaName}的回应</Text>
+            <Text className={styles.aiPersona}>🏛️ {aiResponse.personaName}回应</Text>
           </View>
           <Text className={styles.aiContent}>{aiResponse.content}</Text>
         </View>

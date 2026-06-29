@@ -5,8 +5,8 @@
   justify-content: space-around;
   height: 100px;
   padding-bottom: env(safe-area-inset-bottom);
-  background-color: #ffffff;
-  border-top: 1px solid #e5e5e5;
+  background-color: #FFFCF8;
+  border-top: 1rpx solid #E5DDD3;
   position: fixed;
   bottom: 0;
   left: 0;
@@ -28,7 +28,7 @@
 
 .tabItemActive {
   .tabText {
-    color: #FF6B6B;
+    color: #C4956A;
     font-weight: 600;
   }
 
@@ -56,7 +56,7 @@
 
 .tabText {
   font-size: 20px;
-  color: #999999;
+  color: #9E8E7E;
   line-height: 1.2;
   transition: color 0.2s ease;
 }

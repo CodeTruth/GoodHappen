@@ -8,10 +8,13 @@ import styles from './index.module.scss';
 const CirclePage: React.FC = () => {
   // 更新自定义 tabBar 选中状态（H5环境中用useEffect替代useDidShow）
   useEffect(() => {
-    if (Taro.getTabBar) {
-      const tabbar = Taro.getTabBar<{ current: number }>();
-      if (tabbar) { tabbar.current = 2; }
-    }
+    try {
+      const page = Taro.getCurrentInstance().page;
+      if (page && Taro.getTabBar) {
+        const tabbar = Taro.getTabBar<{ current: number }>(page);
+        if (tabbar) { tabbar.current = 2; }
+      }
+    } catch { /* H5 环境不支持 getTabBar */ }
   }, []);
 
   const circles = getCircles();

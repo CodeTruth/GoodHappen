@@ -250,15 +250,25 @@
 .loadingIcon {
   font-size: 80rpx;
   margin-bottom: $spacing-lg;
-  animation: bounce 1s ease-in-out infinite;
+  animation: inkSpread 2s ease-in-out infinite;
 }
 
-@keyframes bounce {
-  0%, 100% {
-    transform: translateY(0);
+// 墨滴扩散动画
+@keyframes inkSpread {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.4;
+    filter: blur(0);
   }
   50% {
-    transform: translateY(-20rpx);
+    transform: scale(1.1);
+    opacity: 1;
+    filter: blur(2rpx);
+  }
+  100% {
+    transform: scale(0.8);
+    opacity: 0.4;
+    filter: blur(0);
   }
 }
 
@@ -397,18 +407,20 @@
 }
 
 .aiCard {
-  background: linear-gradient(135deg, #FFF5F5 0%, #FFE8E8 100%);
+  background: linear-gradient(135deg, #FFF9F0 0%, #FFF3E0 100%);
   border-radius: $radius-lg;
   padding: $spacing-lg;
   margin-bottom: $spacing-md;
+  border-left: 6rpx solid $color-primary;
   animation: cardPopIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
 
   &.aiCardSecond {
-    background: linear-gradient(135deg, #F0FFF4 0%, #E0F8E8 100%);
-    animation: fadeInUp 0.6s ease-out;
+    background: linear-gradient(135deg, #FEF2F2 0%, #FCE7E7 100%);
+    border-left: 6rpx solid $color-cinnabar;
+    animation: fadeInSlow 1.2s ease-out;
 
     .aiPersona {
-      color: #059669;
+      color: $color-cinnabar;
     }
   }
 }
@@ -435,14 +447,39 @@
   }
 }
 
+// 第二位AI卡片慢速淡入
+@keyframes fadeInSlow {
+  0% {
+    opacity: 0;
+    transform: translateY(30rpx) scale(0.95);
+  }
+  40% {
+    opacity: 0.3;
+    transform: translateY(15rpx) scale(0.97);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 .aiHeader {
   margin-bottom: $spacing-md;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .aiPersona {
   font-size: $font-size-sm;
   font-weight: $font-weight-medium;
   color: $color-primary;
+}
+
+.aiHint {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  opacity: 0.8;
 }
 
 .aiContent {
@@ -557,6 +594,13 @@
 .mediaOption.active .mediaText {
   color: $color-primary;
   font-weight: $font-weight-medium;
+}
+
+.mediaHint {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin-top: $spacing-xs;
+  text-align: center;
 }
 
 // ============================================

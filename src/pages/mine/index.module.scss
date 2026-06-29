@@ -239,6 +239,24 @@
   margin-top: $spacing-md;
 }
 
+.levelHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: $spacing-xs;
+}
+
+.levelBadge {
+  font-size: $font-size-sm;
+  font-weight: 600;
+  color: $color-text-white;
+}
+
+.levelNext {
+  font-size: $font-size-xs;
+  color: rgba(255, 255, 255, 0.8);
+}
+
 .progressBar {
   height: 12rpx;
   background: rgba(255, 255, 255, 0.3);
@@ -301,4 +319,45 @@
 .streakBestText {
   font-size: $font-size-xs;
   color: $color-primary;
+}
+
+.section {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  margin: 0 $page-padding $spacing-md;
+  box-shadow: $shadow-card;
+}
+
+.gridMenu {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: $spacing-md;
+}
+
+.gridItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: $spacing-md $spacing-sm;
+  border-radius: $radius-md;
+  background: $color-bg-page;
+  transition: all $transition-base;
+
+  &:active {
+    background: rgba($color-primary, 0.1);
+    transform: scale(0.98);
+  }
+}
+
+.gridIcon {
+  font-size: $font-size-xxl;
+  margin-bottom: $spacing-xs;
+}
+
+.gridText {
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+  text-align: center;
+  white-space: nowrap;
 }

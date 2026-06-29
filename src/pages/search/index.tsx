@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { View, Text, Input, ScrollView } from '@tarojs/components';
 import Taro from '@tarojs/taro';
-import { getKindnessList } from '@/data/kindness';
-import { mockHotSearchList, mockSearchTags, mockSearchRegions } from '@/data/search';
+import { searchKindness, getHotSearchTags } from '@/services/search';
 import { validateSearchKeyword } from '@/utils/sensitive';
 import KindnessCard from '@/components/KindnessCard';
 import { Kindness } from '@/types/kindness';
@@ -21,7 +20,8 @@ const SearchPage: React.FC = () => {
   const [activeRegion, setActiveRegion] = useState('');
   const [error, setError] = useState('');
 
-  const allKindness = useMemo(() => getKindnessList(), []);
+  // 获取热门搜索标签
+  const hotTags = useMemo(() => getHotSearchTags(), []);
 
   // 加载搜索历史
   useEffect(() => {
@@ -54,7 +54,7 @@ const SearchPage: React.FC = () => {
     Taro.removeStorageSync(HISTORY_KEY);
   };
 
-  // 执行搜索（模拟全文检索）
+  // 执行搜索
   const executeSearch = (kw: string, tag: string, region: string) => {
     setError('');
 
@@ -68,37 +68,23 @@ const SearchPage: React.FC = () => {
       }
     }
 
-    let results = [...allKindness];
+    // 如果只有标签没有关键词，用标签作为关键词搜索
+    const searchKeyword = kw || tag;
+    let results: Kindness[] = [];
 
-    // 全文检索（模拟）：匹配内容、标签、用户名、地区
-    if (kw) {
-      const lowerKw = kw.toLowerCase();
-      results = results.filter((item) => {
-        return (
-          item.content.toLowerCase().includes(lowerKw) ||
-          item.userName.toLowerCase().includes(lowerKw) ||
-          item.tags.some((t) => t.toLowerCase().includes(lowerKw)) ||
-          (item.location && item.location.toLowerCase().includes(lowerKw))
-        );
+    if (searchKeyword) {
+      results = searchKindness({
+        keyword: searchKeyword,
+        sortBy: 'relevance',
       });
     }
 
-    // 按标签筛选
-    if (tag) {
-      results = results.filter((item) => item.tags.includes(tag));
-    }
-
-    // 按地区筛选
+    // 按地区筛选（保留原有地区筛选逻辑）
     if (region) {
       results = results.filter((item) =>
         item.location?.includes(region.slice(0, 2))
       );
     }
-
-    // 按时间倒序排序
-    results.sort(
-      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    );
 
     setSearchResults(results);
     setHasSearched(true);
@@ -198,26 +184,13 @@ const SearchPage: React.FC = () => {
           <View className={styles.filterSection}>
             <ScrollView className={styles.tagScroll} scrollX enableFlex>
               <View className={styles.tagScrollInner}>
-                {mockSearchTags.map((tag) => (
+                {hotTags.map((tag) => (
                   <Text
                     key={tag}
                     className={`${styles.filterTag} ${activeTag === tag ? styles.filterTagActive : ''}`}
                     onClick={() => handleTagClick(tag)}
                   >
                     #{tag}
-                  </Text>
-                ))}
-              </View>
-            </ScrollView>
-            <ScrollView className={styles.regionScroll} scrollX enableFlex>
-              <View className={styles.regionScrollInner}>
-                {mockSearchRegions.map((region) => (
-                  <Text
-                    key={region}
-                    className={`${styles.filterRegion} ${activeRegion === region ? styles.filterRegionActive : ''}`}
-                    onClick={() => handleRegionClick(region)}
-                  >
-                    {region}
                   </Text>
                 ))}
               </View>
@@ -279,21 +252,18 @@ const SearchPage: React.FC = () => {
               <Text className={styles.sectionTitle}>🔥 热门搜索</Text>
             </View>
             <View className={styles.hotList}>
-              {mockHotSearchList.map((item, index) => (
+              {hotTags.slice(0, 10).map((keyword, index) => (
                 <View
-                  key={item.keyword}
+                  key={keyword}
                   className={styles.hotItem}
-                  onClick={() => handleHotSearchClick(item.keyword)}
+                  onClick={() => handleHotSearchClick(keyword)}
                 >
                   <Text
                     className={`${styles.hotRank} ${index < 3 ? styles.hotRankTop : ''}`}
                   >
                     {index + 1}
                   </Text>
-                  <Text className={styles.hotKeyword}>{item.keyword}</Text>
-                  <Text className={styles.hotTrend}>
-                    {item.trend === 'up' ? '↑' : item.trend === 'down' ? '↓' : '—'}
-                  </Text>
+                  <Text className={styles.hotKeyword}>{keyword}</Text>
                 </View>
               ))}
             </View>
@@ -305,16 +275,16 @@ const SearchPage: React.FC = () => {
               <Text className={styles.sectionTitle}>快捷标签</Text>
             </View>
             <View className={styles.quickList}>
-              {mockSearchTags.map((tag) => (
-                <Text
-                  key={tag}
-                  className={styles.quickTag}
-                  onClick={() => handleTagClick(tag)}
-                >
-                  #{tag}
-                </Text>
-              ))}
-            </View>
+                {hotTags.map((tag) => (
+                  <Text
+                    key={tag}
+                    className={styles.quickTag}
+                    onClick={() => handleTagClick(tag)}
+                  >
+                    #{tag}
+                  </Text>
+                ))}
+              </View>
           </View>
         </ScrollView>
       )}

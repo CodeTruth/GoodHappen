@@ -107,7 +107,11 @@ const reportViaTaro = (event: AnalyticsEvent): boolean => {
     // Taro.reportEvent 是微信小程序的数据上报API
     // 实际项目中需在微信公众平台配置事件
     if (typeof Taro.reportEvent === 'function') {
-      Taro.reportEvent(event.name, event.params);
+      const result = Taro.reportEvent(event.name, event.params);
+      // H5 环境中 reportEvent 由 temporarilyNotSupport 包装，返回 rejected Promise
+      if (result && typeof result.catch === 'function') {
+        result.catch(() => { /* H5 不支持 reportEvent，静默忽略 */ });
+      }
       return true;
     }
     return false;

@@ -6,8 +6,9 @@ export default {
   },
   mini: {},
   h5: {
+    publicPath: '/',
     devServer: {
-      open: false, //禁止自动打开浏览器
+      open: false,
     },
   },
 } satisfies UserConfigExport<'webpack5'>;

@@ -39,19 +39,20 @@ export default defineAppConfig({
     'pages/charity-fund/index',
     'pages/recipients/index',
     'pages/charity-tasks/index',
-    'pages/claim-flow/index'
+    'pages/claim-flow/index',
+    'pages/ai-chat/index'
   ],
   window: {
     backgroundTextStyle: 'light',
-    navigationBarBackgroundColor: '#FF6B6B',
+    navigationBarBackgroundColor: '#C4956A',
     navigationBarTitleText: '好事发生',
     navigationBarTextStyle: 'white'
   },
   tabBar: {
     custom: true,
-    color: '#999999',
-    selectedColor: '#FF6B6B',
-    backgroundColor: '#ffffff',
+    color: '#9E8E7E',
+    selectedColor: '#C4956A',
+    backgroundColor: '#FFFCF8',
     borderStyle: 'black',
     list: [
       {

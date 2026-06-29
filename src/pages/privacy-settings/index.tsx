@@ -2,15 +2,18 @@ import React, { useEffect } from 'react';
 import { View, Text, Switch } from '@tarojs/components';
 import Taro from '@tarojs/taro';
 import { useUserStore, checkIsMinor } from '@/store/user';
+import { useRitualStore } from '@/store/ritual';
 import { requireLogin } from '@/services/auth';
 import { VisibilityScope } from '@/types/user';
 import styles from './index.module.scss';
 
 const PrivacySettingsPage: React.FC = () => {
   const { userInfo, privacySettings, updatePrivacySettings, resetPrivacySettings, loadFromStorage } = useUserStore();
+  const { enabled: ritualEnabled, soundEnabled, hapticEnabled, toggleRitual, toggleSound, toggleHaptic, loadFromStorage: loadRitual } = useRitualStore();
 
   useEffect(() => {
     loadFromStorage();
+    loadRitual();
   }, []);
 
   // 未登录跳转登录页
@@ -150,6 +153,51 @@ const PrivacySettingsPage: React.FC = () => {
               checked={privacySettings.allowMatching}
               color="#FF6B6B"
               onChange={(e) => handleSwitchChange('allowMatching', e.detail.value)}
+            />
+          </View>
+        </View>
+      </View>
+
+      {/* 体验设置 */}
+      <View className={styles.section}>
+        <Text className={styles.sectionTitle}>体验设置</Text>
+        <View className={styles.card}>
+          {/* 发布善行仪式 */}
+          <View className={styles.item}>
+            <View className={styles.itemLeft}>
+              <Text className={styles.itemLabel}>发布善行仪式</Text>
+              <Text className={styles.itemDesc}>发布善行后播放墨滴动画、福气飘字等仪式效果</Text>
+            </View>
+            <Switch
+              checked={ritualEnabled}
+              color="#C4956A"
+              onChange={() => toggleRitual()}
+            />
+          </View>
+
+          {/* 音效 */}
+          <View className={styles.item}>
+            <View className={styles.itemLeft}>
+              <Text className={styles.itemLabel}>仪式音效</Text>
+              <Text className={styles.itemDesc}>播放古风音效增强沉浸感</Text>
+            </View>
+            <Switch
+              checked={soundEnabled}
+              color="#C4956A"
+              onChange={() => toggleSound()}
+            />
+          </View>
+
+          {/* 触觉反馈 */}
+          <View className={styles.item}>
+            <View className={styles.itemLeft}>
+              <Text className={styles.itemLabel}>触觉反馈</Text>
+              <Text className={styles.itemDesc}>发布善行时手机震动反馈</Text>
+            </View>
+            <Switch
+              checked={hapticEnabled}
+              color="#C4956A"
+              onChange={() => toggleHaptic()}
             />
           </View>
         </View>

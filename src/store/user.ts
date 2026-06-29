@@ -78,7 +78,15 @@ export const useUserStore = create<UserState>((set, get) => ({
     console.log('[UserStore] Login success, isMinor:', minor);
   },
 
-  logout: () => {
+  logout: async () => {
+    // 先调用 Supabase 登出
+    try {
+      const { logoutFromSupabase } = await import('@/services/auth');
+      await logoutFromSupabase();
+    } catch (e) {
+      console.error('[UserStore] Supabase logout failed:', e);
+    }
+
     set({
       isLoggedIn: false,
       token: null,

@@ -14,10 +14,13 @@ export type NotificationType =
   | 'comment'          // 评论
   | 'mention'          // @提及
   | 'follow'           // 关注
+  | 'ai_response'      // AI人物回应
+  | 'good_deed_witnessed' // 善行被见证
   // 系统消息
   | 'moderation'       // 审核结果
   | 'title'            // 称号变更
   | 'milestone'        // 里程碑
+  | 'level_up'         // 福气等级升级
   // 公益消息
   | 'order'            // 接单
   | 'complete'         // 完成
@@ -66,6 +69,10 @@ export const MESSAGE_TEMPLATES: Record<NotificationType, MessageTemplate> = {
   reflection: { icon: '🌙', titlePrefix: '睡前反思', subscribeTemplateId: 'tpl_reflection', closable: true, accentColor: '#FFA07A' },
   matched: { icon: '✨', titlePrefix: '善行匹配', subscribeTemplateId: 'tpl_matched', closable: true, accentColor: '#FF6B6B' },
   story: { icon: '📖', titlePrefix: '温暖故事', subscribeTemplateId: 'tpl_story', closable: true, accentColor: '#FFA07A' },
+  // 新增P2消息类型
+  ai_response: { icon: '🤖', titlePrefix: 'AI回复', subscribeTemplateId: 'tpl_ai_response', closable: true, accentColor: '#722ED1' },
+  good_deed_witnessed: { icon: '👁️', titlePrefix: '善行见证', subscribeTemplateId: 'tpl_witness', closable: true, accentColor: '#13C2C2' },
+  level_up: { icon: '⬆️', titlePrefix: '等级升级', subscribeTemplateId: 'tpl_level_up', closable: true, accentColor: '#FA8C16' },
   system: { icon: '📢', titlePrefix: '系统通知', subscribeTemplateId: 'tpl_system', closable: true, accentColor: '#999999' },
 };
 

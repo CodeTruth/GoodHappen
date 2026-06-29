@@ -101,10 +101,11 @@
 }
 
 .aiResponse {
-  background: linear-gradient(135deg, #FFF5F5 0%, #FFE8E8 100%);
+  background: linear-gradient(135deg, #FFF9F0 0%, #FFF3E0 100%);
   border-radius: $radius-md;
   padding: $spacing-lg;
   margin-bottom: $spacing-md;
+  border-left: 4rpx solid $color-primary;
 }
 
 .aiHeader {

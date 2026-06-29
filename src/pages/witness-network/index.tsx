@@ -2,8 +2,8 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { View, Text, ScrollView, Image } from '@tarojs/components';
 import Taro from '@tarojs/taro';
 import classnames from 'classnames';
-import { useProtectionStore } from '@/store/protection';
-import { WITNESS_MATCH_CONFIG } from '@/services/evidence';
+import { useProtectionStore, SOSRecord, WitnessMatch } from '@/store/protection';
+import { WITNESS_MATCH_CONFIG, WitnessRecord } from '@/services/evidence';
 import { useUserStore } from '@/store/user';
 import styles from './index.module.scss';
 
@@ -17,6 +17,75 @@ import styles from './index.module.scss';
  * 4. 展示见证者列表与"温暖见证人"徽章
  * 5. 见证者收到通知状态
  */
+
+// Mock 示例数据 - 用于展示有见证匹配的效果
+const mockSosRecord: SOSRecord = {
+  id: 'sos_mock_001',
+  recordId: 'kindness_mock_001',
+  triggeredAt: '2024-06-22T10:30:00Z',
+  description: '我在帮老人过马路时被对方讹诈，请求法律援助',
+  status: 'lawyer_matched',
+  witnessMatchCount: 3,
+  gps: {
+    latitude: 39.9045,
+    longitude: 116.4078,
+    address: '北京市朝阳区·善行地点',
+    accuracy: 10,
+  },
+  evidencePackageId: 'evidence_mock_001',
+};
+
+const mockWitnessMatch: WitnessMatch = {
+  id: 'match_mock_001',
+  sosRecordId: 'sos_mock_001',
+  witnessRecordIds: ['wit_001', 'wit_002', 'wit_003'],
+  timeDiffMinutes: 5,
+  gpsRadiusMeters: 50,
+  descriptionMatchScore: 0.85,
+  evidenceChainFormed: true,
+  matchedAt: '2024-06-22T10:35:00Z',
+};
+
+// Mock 见证记录数据
+const mockWitnessRecords: WitnessRecord[] = [
+  {
+    id: 'wit_001',
+    recordId: 'kindness_mock_002',
+    witnessUserId: 'user_wit_001',
+    witnessDescription: '看到一位年轻人扶老人过马路，老人看起来很感激',
+    createdAt: '2024-06-22T10:28:00Z',
+    gps: { latitude: 39.9048, longitude: 116.4075, address: '北京市朝阳区善行地点附近' },
+    kindnessType: 'help_elderly',
+    keywords: ['扶老人', '过马路', '感激'],
+    status: 'notified',
+    notifiedAt: '2024-06-22T10:40:00Z',
+  },
+  {
+    id: 'wit_002',
+    recordId: 'kindness_mock_003',
+    witnessUserId: 'user_wit_002',
+    witnessDescription: '路过看到有人帮老人，老人走路很慢，年轻人很耐心',
+    createdAt: '2024-06-22T10:32:00Z',
+    gps: { latitude: 39.9043, longitude: 116.4080, address: '北京市朝阳区善行地点附近' },
+    kindnessType: 'help_elderly',
+    keywords: ['帮老人', '走路慢', '耐心'],
+    status: 'notified',
+    notifiedAt: '2024-06-22T10:42:00Z',
+  },
+  {
+    id: 'wit_003',
+    recordId: 'kindness_mock_004',
+    witnessUserId: 'user_wit_003',
+    witnessDescription: '在马路对面看到，年轻人很小心地扶着老人走',
+    createdAt: '2024-06-22T10:25:00Z',
+    gps: { latitude: 39.9040, longitude: 116.4082, address: '北京市朝阳区善行地点附近' },
+    kindnessType: 'help_elderly',
+    keywords: ['扶老人', '小心', '马路对面'],
+    status: 'notified',
+    notifiedAt: '2024-06-22T10:45:00Z',
+  },
+];
+
 const WitnessNetworkPage: React.FC = () => {
   const {
     sosRecords,
@@ -36,27 +105,35 @@ const WitnessNetworkPage: React.FC = () => {
     loadUser();
   }, []);
 
-  // 默认选中最新求助记录
+  // 默认选中最新求助记录，如果没有则使用 mock 数据
   useEffect(() => {
     if (sosRecords.length > 0 && !activeSosId) {
       setActiveSosId(sosRecords[0].id);
+    } else if (sosRecords.length === 0 && !activeSosId) {
+      // 使用 mock 数据展示示例
+      setActiveSosId(mockSosRecord.id);
     }
   }, [sosRecords, activeSosId]);
 
-  // 当前求助记录
-  const currentSos = sosRecords.find(s => s.id === activeSosId) || sosRecords[0];
+  // 当前求助记录：优先使用真实数据，如果没有则使用 mock
+  const currentSos = sosRecords.find(s => s.id === activeSosId) || (sosRecords.length === 0 ? mockSosRecord : sosRecords[0]);
 
-  // 见证匹配结果
-  const matchResult = currentSos ? getWitnessMatchBySos(currentSos.id) : undefined;
+  // 见证匹配结果：优先使用真实数据，如果没有则使用 mock
+  const realMatchResult = currentSos ? getWitnessMatchBySos(currentSos.id) : undefined;
+  const matchResult = realMatchResult || (sosRecords.length === 0 ? mockWitnessMatch : undefined);
 
-  // 匹配的见证记录
+  // 匹配的见证记录：优先使用真实数据，如果没有则使用 mock
   const matchedWitnesses = useMemo(() => {
     if (!matchResult) return [];
-    return witnessRecords.filter(w => matchResult.witnessRecordIds.includes(w.id));
+    // 如果有真实见证记录，使用真实数据
+    const realWitnesses = witnessRecords.filter(w => matchResult.witnessRecordIds.includes(w.id));
+    if (realWitnesses.length > 0) return realWitnesses;
+    // 否则使用 mock 数据
+    return mockWitnessRecords.filter(w => matchResult.witnessRecordIds.includes(w.id));
   }, [matchResult, witnessRecords]);
 
   // 已通知的见证者（获得徽章的）
-  const notifiedWitnesses = getNotifiedWitnesses();
+  const notifiedWitnesses = sosRecords.length === 0 ? mockWitnessRecords.filter(w => w.status === 'notified') : getNotifiedWitnesses();
 
   // 格式化时间
   const formatTime = (iso: string): string => {
@@ -87,8 +164,8 @@ const WitnessNetworkPage: React.FC = () => {
     }
   };
 
-  // 是否有空状态
-  const hasNoData = !currentSos || !matchResult;
+  // 是否有空状态：如果没有真实数据但有 mock 数据，则不显示空状态
+  const hasNoData = sosRecords.length === 0 ? false : (!currentSos || !matchResult);
 
   return (
     <ScrollView className={styles.container} scrollY enableBackToTop>

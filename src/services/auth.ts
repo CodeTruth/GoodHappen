@@ -1,5 +1,6 @@
 import Taro from '@tarojs/taro';
 import { UserInfo } from '@/types/user';
+import { supabase, isSupabaseAvailable } from './supabase';
 
 export interface LoginResult {
   token: string;
@@ -65,31 +66,97 @@ export const loginWithWechat = async (): Promise<LoginResult> => {
 };
 
 /**
- * 发送验证码（模拟）
+ * 发送验证码（优先Supabase，fallback模拟）
  */
 export const sendVerifyCode = async (phone: string): Promise<{ success: boolean; message: string }> => {
   // 简单校验手机号格式
   if (!/^1[3-9]\d{9}$/.test(phone)) {
     return { success: false, message: '手机号格式不正确' };
   }
+
+  // 优先使用 Supabase
+  if (isSupabaseAvailable()) {
+    try {
+      const { error } = await supabase.auth.signInWithOtp({
+        phone,
+      });
+      if (error) {
+        console.error('[Auth] Supabase send OTP failed:', error);
+        // fallback 到模拟
+      } else {
+        console.log('[Auth] Supabase OTP sent to:', phone);
+        return { success: true, message: '验证码已发送' };
+      }
+    } catch (e) {
+      console.error('[Auth] Supabase OTP error:', e);
+    }
+  }
+
   // 模拟发送验证码
   console.log('[Auth] Send verify code to:', phone);
   return { success: true, message: '验证码已发送（模拟）' };
 };
 
 /**
- * 手机号+验证码登录（模拟）
+ * 手机号+验证码登录（优先Supabase，fallback模拟）
  */
 export const loginWithPhone = async (phone: string, code: string): Promise<LoginResult> => {
   // 校验验证码格式
   if (!/^\d{6}$/.test(code)) {
     throw new Error('验证码格式不正确');
   }
-  // 模拟验证码校验（任意 6 位数字均通过）
-  console.log('[Auth] Phone login:', phone);
+
+  // 优先使用 Supabase
+  if (isSupabaseAvailable()) {
+    try {
+      const { data, error } = await supabase.auth.verifyOtp({
+        phone,
+        token: code,
+        type: 'sms',
+      });
+      if (error) {
+        console.error('[Auth] Supabase verify OTP failed:', error);
+        throw new Error('验证码错误或已过期');
+      }
+      if (data.session) {
+        // 查询或创建用户资料
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', data.user?.id)
+          .single();
+
+        const userInfo: UserInfo = {
+          id: data.user?.id || generateUserId(),
+          name: profile?.name || `温暖用户${phone.slice(-4)}`,
+          avatar: profile?.avatar || DEFAULT_AVATAR,
+          bio: profile?.bio || '',
+          gender: profile?.gender || 'unknown',
+          birthYear: profile?.birth_year || null,
+          region: profile?.region || '',
+          phone: phone.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2'),
+          blessingValue: profile?.blessing_value || 0,
+          kindnessCount: profile?.kindness_count || 0,
+          witnessCount: profile?.witness_count || 0,
+          badges: profile?.badges || [],
+          circles: profile?.circles || [],
+          createdAt: data.user?.created_at || new Date().toISOString(),
+        };
+
+        console.log('[Auth] Supabase phone login success, userId:', userInfo.id);
+        return { token: data.session.access_token, userInfo };
+      }
+    } catch (e: any) {
+      console.error('[Auth] Supabase phone login error:', e);
+      if (e.message?.includes('验证码')) throw e;
+      // 其他错误 fallback 到模拟
+    }
+  }
+
+  // 模拟手机号登录
+  console.log('[Auth] Phone login (mock):', phone);
 
   const token = generateMockToken('phone');
-  // 手机号脱敏
   const maskedPhone = phone.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2');
 
   const userInfo: UserInfo = {
@@ -111,6 +178,20 @@ export const loginWithPhone = async (phone: string, code: string): Promise<Login
 
   console.log('[Auth] Phone login success, userId:', userInfo.id);
   return { token, userInfo };
+};
+
+/**
+ * Supabase 登出
+ */
+export const logoutFromSupabase = async (): Promise<void> => {
+  if (isSupabaseAvailable()) {
+    try {
+      await supabase.auth.signOut();
+      console.log('[Auth] Supabase logout success');
+    } catch (e) {
+      console.error('[Auth] Supabase logout error:', e);
+    }
+  }
 };
 
 /**

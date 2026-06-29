@@ -1,30 +1,35 @@
 // ============================================
-// 主题配色变量（第二阶段模型可修改此文件）
+// 主题配色变量 —— 中国传统美学暖金色系
+// 宣纸 · 墨色 · 朱砂 · 印章
 // ============================================
 
-// 品牌主题色：温暖治愈系
-$color-primary: #FF6B6B;
-$color-primary-light: #FFA07A;
-$color-primary-dark: #E55A5A;
+// 品牌主题色：暖金色系（源自传统印章、宣纸上金色题签）
+$color-primary: #C4956A;
+$color-primary-light: #D4A76A;
+$color-primary-dark: #A67B5B;
+
+// 朱砂红 —— 仅用于特殊标记、印章、强调
+$color-cinnabar: #D4534A;
+$color-cinnabar-light: #E87067;
 
 // 功能色
 $color-success: #52C41A;
 $color-warning: #FAAD14;
-$color-error: #FF4D4F;
-$color-info: #165dff;
+$color-error: #D4534A; // 与朱砂统一
+$color-info: #7B9E87; // 石青绿，辅助信息色
 
-// 背景色
-$color-bg-page: #F7F8FA;
-$color-bg-card: #ffffff;
-$color-bg-hover: #f2f3f5;
+// 背景色 —— 宣纸质感
+$color-bg-page: #F8F4EE;       // 宣纸白
+$color-bg-card: #FFFCF8;       // 暖白卡片
+$color-bg-hover: #F0EBE3;      // 暖灰悬停
 
-// 文本色
-$color-text-primary: #1A1A1A;
-$color-text-secondary: #666666;
-$color-text-tertiary: #999999;
-$color-text-disabled: #c9cdd4;
+// 文本色 —— 墨色层次
+$color-text-primary: #2C2419;   // 浓墨（标题）
+$color-text-secondary: #5C4D3C; // 中墨（正文）
+$color-text-tertiary: #9E8E7E;  // 淡墨（辅助）
+$color-text-disabled: #C4B8AA;
 $color-text-white: #ffffff;
 
-// 边框色
-$color-border: #E8E8E8;
-$color-divider: #f2f3f5;
+// 边框色 —— 淡墨晕染
+$color-border: #E5DDD3;
+$color-divider: #EDE8E0;

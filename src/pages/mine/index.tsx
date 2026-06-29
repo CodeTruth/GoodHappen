@@ -5,16 +5,20 @@ import { getCurrentUser } from '@/data/users';
 import { useFortuneStore } from '@/store/fortune';
 import { useUserStore, checkIsMinor } from '@/store/user';
 import { TITLES } from '@/utils/fortune';
+import { getLevelProgress } from '@/data/fortune-levels';
 import CustomTabBar from '@/components/CustomTabBar';
 import styles from './index.module.scss';
 
 const MinePage: React.FC = () => {
   // 更新自定义 tabBar 选中状态（H5环境中用useEffect替代useDidShow）
   useEffect(() => {
-    if (Taro.getTabBar) {
-      const tabbar = Taro.getTabBar<{ current: number }>();
-      if (tabbar) { tabbar.current = 3; }
-    }
+    try {
+      const page = Taro.getCurrentInstance().page;
+      if (page && Taro.getTabBar) {
+        const tabbar = Taro.getTabBar<{ current: number }>(page);
+        if (tabbar) { tabbar.current = 3; }
+      }
+    } catch { /* H5 环境不支持 getTabBar */ }
   }, []);
 
   // 兼容旧代码：未登录时使用 mock 数据展示
@@ -97,10 +101,40 @@ const MinePage: React.FC = () => {
     { icon: '🛡️', text: '账号安全', action: () => requireAuthAction('/pages/account-security/index') },
   ];
 
+  const protectionItems = [
+    { icon: '⚖️', text: '法律援助', action: () => Taro.navigateTo({ url: '/pages/legal-aid/index' }) },
+    { icon: '📸', text: '善行见证', action: () => Taro.navigateTo({ url: '/pages/witness-network/index' }) },
+    { icon: '🏥', text: '善行保险', action: () => Taro.navigateTo({ url: '/pages/insurance/index' }) },
+    { icon: '📋', text: '理赔流程', action: () => Taro.navigateTo({ url: '/pages/claim-flow/index' }) },
+  ];
+
+  const statsItems = [
+    { icon: '📊', text: '温暖统计', action: () => Taro.navigateTo({ url: '/pages/warmth-stats/index' }) },
+    { icon: '📈', text: '我的统计', action: () => Taro.navigateTo({ url: '/pages/my-stats/index' }) },
+    { icon: '🗺️', text: '温暖地图', action: () => Taro.navigateTo({ url: '/pages/warmth-map/index' }) },
+    { icon: '📖', text: '温暖故事', action: () => Taro.navigateTo({ url: '/pages/warmth-stories/index' }) },
+  ];
+
+  const otherItems = [
+    { icon: '✅', text: '每日签到', action: () => Taro.navigateTo({ url: '/pages/checkin/index' }) },
+    { icon: '🏆', text: '善行挑战', action: () => Taro.navigateTo({ url: '/pages/challenges/index' }) },
+    { icon: '🎁', text: '温暖商城', action: () => Taro.navigateTo({ url: '/pages/shop/index' }) },
+    { icon: '💝', text: '温暖基金', action: () => Taro.navigateTo({ url: '/pages/warmth-fund/index' }) },
+    { icon: '🏪', text: '合作商户', action: () => Taro.navigateTo({ url: '/pages/merchant-list/index' }) },
+    { icon: '👫', text: '公益基金', action: () => Taro.navigateTo({ url: '/pages/charity-fund/index' }) },
+    { icon: '🙋', text: '受助者', action: () => Taro.navigateTo({ url: '/pages/recipients/index' }) },
+    { icon: '📝', text: '公益任务', action: () => Taro.navigateTo({ url: '/pages/charity-tasks/index' }) },
+    { icon: '🎟️', text: '邀请好友', action: () => Taro.navigateTo({ url: '/pages/invite/index' }) },
+    { icon: '📅', text: '年度报告', action: () => Taro.navigateTo({ url: '/pages/annual-report/index' }) },
+  ];
+
   const nextTitle = TITLES.find(t => t.minFortune > totalFortune);
-  const progress = nextTitle
+  const titleProgress = nextTitle
     ? ((totalFortune - currentTitle.minFortune) / (nextTitle.minFortune - currentTitle.minFortune)) * 100
     : 100;
+
+  // 福气等级进度
+  const levelProgress = getLevelProgress(totalFortune);
 
   return (
     <View className={styles.pageWrapper}>
@@ -165,20 +199,33 @@ const MinePage: React.FC = () => {
           </View>
         </View>
 
-        {/* 称号进度条 */}
-        {nextTitle && (
-          <View className={styles.progressSection}>
-            <View className={styles.progressBar}>
-              <View
-                className={styles.progressFill}
-                style={{ width: `${Math.min(100, progress)}%` }}
-              />
-            </View>
-            <Text className={styles.progressText}>
-              距离「{nextTitle.name}」还差 {nextTitle.minFortune - totalFortune} 福气
+        {/* 福气等级进度条 */}
+        <View className={styles.progressSection}>
+          <View className={styles.levelHeader}>
+            <Text className={styles.levelBadge}>
+              {levelProgress.current.icon} {levelProgress.current.name}
             </Text>
+            {levelProgress.next && (
+              <Text className={styles.levelNext}>
+                下一级：{levelProgress.next.icon} {levelProgress.next.name}
+              </Text>
+            )}
           </View>
-        )}
+          <View className={styles.progressBar}>
+            <View
+              className={styles.progressFill}
+              style={{
+                width: `${levelProgress.progress}%`,
+                backgroundColor: levelProgress.current.color,
+              }}
+            />
+          </View>
+          <Text className={styles.progressText}>
+            {levelProgress.next
+              ? `距离「${levelProgress.next.name}」还差 ${levelProgress.remaining} 福气`
+              : '已达到最高等级，功德圆满 🌟'}
+          </Text>
+        </View>
       </View>
 
       {/* 连续记录信息 */}
@@ -200,6 +247,45 @@ const MinePage: React.FC = () => {
           {displayBadges.map((badge, index) => (
             <View key={index} className={styles.badge}>
               <Text className={styles.badgeText}>🏆 {badge}</Text>
+            </View>
+          ))}
+        </View>
+      </View>
+
+      {/* 善行保障 */}
+      <View className={styles.section}>
+        <Text className={styles.sectionTitle}>🛡️ 善行保障</Text>
+        <View className={styles.gridMenu}>
+          {protectionItems.map((item, index) => (
+            <View key={index} className={styles.gridItem} onClick={item.action}>
+              <Text className={styles.gridIcon}>{item.icon}</Text>
+              <Text className={styles.gridText}>{item.text}</Text>
+            </View>
+          ))}
+        </View>
+      </View>
+
+      {/* 温暖数据 */}
+      <View className={styles.section}>
+        <Text className={styles.sectionTitle}>📊 温暖数据</Text>
+        <View className={styles.gridMenu}>
+          {statsItems.map((item, index) => (
+            <View key={index} className={styles.gridItem} onClick={item.action}>
+              <Text className={styles.gridIcon}>{item.icon}</Text>
+              <Text className={styles.gridText}>{item.text}</Text>
+            </View>
+          ))}
+        </View>
+      </View>
+
+      {/* 更多功能 */}
+      <View className={styles.section}>
+        <Text className={styles.sectionTitle}>🎯 更多功能</Text>
+        <View className={styles.gridMenu}>
+          {otherItems.map((item, index) => (
+            <View key={index} className={styles.gridItem} onClick={item.action}>
+              <Text className={styles.gridIcon}>{item.icon}</Text>
+              <Text className={styles.gridText}>{item.text}</Text>
             </View>
           ))}
         </View>

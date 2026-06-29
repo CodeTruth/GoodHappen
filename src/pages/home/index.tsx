@@ -4,6 +4,7 @@ import Taro from '@tarojs/taro';
 import KindnessCard from '@/components/KindnessCard';
 import WarmPartnerCard from '@/components/WarmPartnerCard';
 import { getKindnessList } from '@/data/kindness';
+import { getTodaySuggestion } from '@/data/daily-kindness';
 import { getWeeklyWarmPartners } from '@/data/social';
 import { useSocialStore } from '@/store/social';
 import { useUserStore } from '@/store/user';
@@ -150,6 +151,27 @@ const HomePage: React.FC = () => {
     setSelectedRegion(selectedRegion === region ? '' : region);
     setRegionPickerOpen(false);
   };
+
+  // 每日善行建议卡片（独立组件，避免重渲染）
+  const DailyKindnessCard = React.memo(() => {
+    const today = getTodaySuggestion();
+    return (
+      <View
+        className={styles.dailyCard}
+        onClick={() => Taro.navigateTo({ url: '/pages/record/index' })}
+      >
+        <View className={styles.dailyHeader}>
+          <Text className={styles.dailyLabel}>📅 今日善行</Text>
+          <Text className={styles.dailyDate}>{today.date}</Text>
+        </View>
+        <Text className={styles.dailySuggestion}>{today.suggestion}</Text>
+        <View className={styles.dailyFooter}>
+          <Text className={styles.dailyQuote}>"{today.quote}"</Text>
+          <Text className={styles.dailyPersona}>—— {today.persona}</Text>
+        </View>
+      </View>
+    );
+  });
 
   // 是否显示筛选栏（"为你推荐"和"全部"显示）
   const showFilterBar = activeTab === 'all' || activeTab === 'recommend';
