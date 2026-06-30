@@ -32,6 +32,15 @@
   margin-bottom: $spacing-xs;
 }
 
+.anonymousBadge {
+  font-size: 20rpx;
+  color: $color-text-tertiary;
+  background: $color-bg-muted;
+  padding: 2rpx 10rpx;
+  border-radius: 8rpx;
+  margin-left: 8rpx;
+}
+
 .meta {
   font-size: $font-size-sm;
   color: $color-text-tertiary;

@@ -14,7 +14,12 @@ interface KindnessCardProps {
 }
 
 const KindnessCard: React.FC<KindnessCardProps> = ({ kindness, onClick, showComment = false }) => {
-  const { id, userName, userAvatar, content, type, tags, images, location, aiResponse, blessingValue, likes, comments, createdAt } = kindness;
+  const { id, userName, userAvatar, content, type, tags, images, location, aiResponse, blessingValue, likes, comments, createdAt, isAnonymous } = kindness;
+  // 匿名展示
+  const displayName = isAnonymous ? '善行使者' : userName;
+  const displayAvatar = isAnonymous
+    ? 'https://mmbiz.qpic.cn/mmbiz/icTdbqWNOwNRna4FI272DgxhvKb0S2pMvNJxR2U7kM4GHRt51oWqSKMxLvW6F7Q5GyB9DPiaNJ4V0AvfK8p2nOQ/0'
+    : userAvatar;
 
   // 点赞与评论状态
   const { hasLiked, toggleLike, getLikeCount, getCommentCount } = useInteractionStore();
@@ -46,14 +51,14 @@ const KindnessCard: React.FC<KindnessCardProps> = ({ kindness, onClick, showComm
     if (e && e.stopPropagation) {
       e.stopPropagation();
     }
-    const isLiking = toggleLike(id, userName, userAvatar);
-    // 点赞后发送通知（非免打扰时段）
-    if (isLiking && !isDndActive()) {
+    const isLiking = toggleLike(id, displayName, displayAvatar);
+    // 点赞后发送通知（非免打扰时段，匿名不发送）
+    if (isLiking && !isDndActive() && !isAnonymous) {
       addNotification({
         category: 'interaction',
         type: 'like',
         title: '新的温暖',
-        content: `你被 ${userName} 的善行温暖到了 🤍`,
+        content: `你被 ${displayName} 的善行温暖到了 🤍`,
         relatedId: id,
       });
     }
@@ -71,12 +76,13 @@ const KindnessCard: React.FC<KindnessCardProps> = ({ kindness, onClick, showComm
       {/* 用户信息 */}
       <View className={styles.header}>
         <Image
-          src={userAvatar}
+          src={displayAvatar}
           className={styles.avatar}
           mode="aspectFill"
         />
         <View className={styles.userInfo}>
-          <Text className={styles.userName}>{userName}</Text>
+          <Text className={styles.userName}>{displayName}</Text>
+          {isAnonymous && <Text className={styles.anonymousBadge}>匿名</Text>}
           <Text className={styles.meta}>
             {type === 'witness' ? '我见证的温暖' : '善行记录'} · {formatDate(createdAt)}
           </Text>

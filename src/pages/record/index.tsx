@@ -15,6 +15,7 @@ import { useMoralTaskStore } from '@/store/moral-task';
 import { CircleType, getCircleTypeConfig } from '@/config/circle-types';
 // import { PERSONAS } from '@/services/ai'; // 不再需要直接引用人设列表
 import { Kindness } from '@/types/kindness';
+import { detectRisk, RiskScenario } from '@/services/risk-detection';
 import MilestonePopup from '@/components/MilestonePopup';
 import CustomTabBar from '@/components/CustomTabBar';
 import styles from './index.module.scss';
@@ -132,6 +133,10 @@ const RecordPage: React.FC = () => {
   // 关联德育任务
   const [selectedTaskId, setSelectedTaskId] = useState<string>('');
   const [showTaskSelector, setShowTaskSelector] = useState(false);
+  // 匿名行善
+  const [isAnonymous, setIsAnonymous] = useState(false);
+  // 风险检测
+  const [riskScenario, setRiskScenario] = useState<RiskScenario | null>(null);
   const [phase, setPhase] = useState<FeedbackPhase>('input');
   const [fortune, setFortune] = useState(0);
   const [aiContent, setAiContent] = useState('');
@@ -316,7 +321,8 @@ const RecordPage: React.FC = () => {
     voiceText: voiceText || undefined,
     visibleScope,
     circleId: visibleScope === 'circle' ? selectedCircleId : undefined,
-  }), [content, recordType, selectedTags, images, videoPath, videoThumb, voicePath, voiceText, visibleScope, selectedCircleId]);
+    isAnonymous,
+  }), [content, recordType, selectedTags, images, videoPath, videoThumb, voicePath, voiceText, visibleScope, selectedCircleId, isAnonymous]);
 
   // 启动草稿自动保存（内容有变化时）
   useEffect(() => {
@@ -326,6 +332,16 @@ const RecordPage: React.FC = () => {
       stopAutoSave();
     };
   }, [phase, getFormData, startAutoSave, stopAutoSave]);
+
+  // 风险检测：内容变化时实时分析
+  useEffect(() => {
+    if (phase !== 'input') {
+      setRiskScenario(null);
+      return;
+    }
+    const scenario = detectRisk(content);
+    setRiskScenario(scenario);
+  }, [content, phase]);
 
   const tags = ['助人', '环保', '孝亲', '公益', '邻里互助', '关怀', '工作', '亲子'];
 
@@ -629,8 +645,8 @@ const RecordPage: React.FC = () => {
       const newKindness: Kindness = {
         id: newKindnessId,
         userId: userInfo?.id || 'currentUser',
-        userName,
-        userAvatar,
+        userName: isAnonymous ? '善行使者' : userName,
+        userAvatar: isAnonymous ? '' : userAvatar,
         content: content || voiceText || '',
         type: recordType,
         tags: selectedTags,
@@ -644,6 +660,7 @@ const RecordPage: React.FC = () => {
         likes: 0,
         comments: 0,
         createdAt: new Date().toISOString(),
+        isAnonymous,
       };
       addPublishedKindness(newKindness);
 
@@ -969,6 +986,34 @@ const RecordPage: React.FC = () => {
               </View>
             )}
 
+            {/* 风险提示横幅 */}
+            {riskScenario && (
+              <View className={styles.riskBanner} style={{ borderLeftColor: riskScenario.color }}>
+                <View className={styles.riskBannerHeader}>
+                  <Text className={styles.riskBannerIcon}>{riskScenario.icon}</Text>
+                  <View className={styles.riskBannerInfo}>
+                    <Text className={styles.riskBannerTitle} style={{ color: riskScenario.color }}>
+                      {riskScenario.level === 'high' ? '⚠️ 高风险善行场景' : '⚡ 注意保护'}
+                    </Text>
+                    <Text className={styles.riskBannerCategory}>
+                      检测到：{riskScenario.category} · {riskScenario.matchedKeyword}
+                    </Text>
+                  </View>
+                </View>
+                <View className={styles.riskBannerAdvice}>
+                  {riskScenario.advice.map((advice, index) => (
+                    <Text key={index} className={styles.riskBannerAdviceItem}>
+                      {index + 1}. {advice}
+                    </Text>
+                  ))}
+                </View>
+                <View className={styles.riskBannerFooter}>
+                  <Text className={styles.riskBannerShield}>🛡️ 系统为您兜底</Text>
+                  <Text className={styles.riskBannerHint}>事后如遇纠纷，平台保险+法律援助+见证网络全程护航</Text>
+                </View>
+              </View>
+            )}
+
             <View className={styles.formItem}>
               <Text className={styles.label}>标签（可多选）</Text>
               <View className={styles.tags}>
@@ -1063,6 +1108,23 @@ const RecordPage: React.FC = () => {
                     )}
                   </View>
                 )}
+
+                {/* 匿名行善开关 */}
+                <View className={styles.anonymousToggle}>
+                  <View className={styles.anonymousToggleLeft}>
+                    <Text className={styles.anonymousToggleIcon}>🛡️</Text>
+                    <View className={styles.anonymousToggleText}>
+                      <Text className={styles.anonymousToggleTitle}>匿名行善</Text>
+                      <Text className={styles.anonymousToggleDesc}>保护隐私，让善意无负担</Text>
+                    </View>
+                  </View>
+                  <View
+                    className={`${styles.anonymousSwitch} ${isAnonymous ? styles.anonymousSwitchOn : ''}`}
+                    onClick={() => setIsAnonymous(!isAnonymous)}
+                  >
+                    <View className={styles.anonymousSwitchThumb} />
+                  </View>
+                </View>
 
                 {/* 关联德育任务（仅在选择了班级圈时显示） */}
                 {visibleScope === 'circle' && selectedCircleId && (

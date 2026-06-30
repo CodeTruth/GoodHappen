@@ -123,13 +123,13 @@ const DetailPage: React.FC = () => {
   // 点赞逻辑
   const handleLike = () => {
     if (!kindness) return;
-    const isLiking = toggleLike(kindness.id, kindness.userName, kindness.userAvatar);
-    if (isLiking && !isDndActive()) {
+    const isLiking = toggleLike(kindness.id, displayName, displayAvatar);
+    if (isLiking && !isDndActive() && !isAnonymous) {
       addNotification({
         category: 'interaction',
         type: 'like',
         title: '新的温暖',
-        content: `你被 ${kindness.userName} 的善行温暖到了`,
+        content: `你被 ${displayName} 的善行温暖到了`,
         relatedId: kindness.id,
       });
     }
@@ -232,7 +232,14 @@ const DetailPage: React.FC = () => {
     aiResponse,
     blessingValue,
     createdAt,
+    isAnonymous,
   } = kindness;
+
+  // 匿名展示
+  const displayName = isAnonymous ? '善行使者' : userName;
+  const displayAvatar = isAnonymous
+    ? 'https://mmbiz.qpic.cn/mmbiz/icTdbqWNOwNRna4FI272DgxhvKb0S2pMvNJxR2U7kM4GHRt51oWqSKMxLvW6F7Q5GyB9DPiaNJ4V0AvfK8p2nOQ/0'
+    : userAvatar;
 
   return (
     <View className={styles.container}>
@@ -240,9 +247,14 @@ const DetailPage: React.FC = () => {
       <View className={styles.card}>
         {/* 用户信息 */}
         <View className={styles.header}>
-          <Image src={userAvatar} className={styles.avatar} mode="aspectFill" />
+          <Image src={displayAvatar} className={styles.avatar} mode="aspectFill" />
           <View className={styles.userInfo}>
-            <Text className={styles.userName}>{userName}</Text>
+            <View style={{ display: 'flex', alignItems: 'center' }}>
+              <Text className={styles.userName}>{displayName}</Text>
+              {isAnonymous && (
+                <Text style={{ fontSize: '20rpx', color: '#9E8E7E', background: '#F0EDE8', padding: '2rpx 10rpx', borderRadius: '8rpx', marginLeft: '8rpx' }}>匿名</Text>
+              )}
+            </View>
             <Text className={styles.meta}>
               {type === 'witness' ? '我见证的温暖' : '善行记录'} · {formatDate(createdAt)}
             </Text>

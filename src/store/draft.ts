@@ -26,6 +26,7 @@ export interface DraftFormData {
   voiceText?: string;
   visibleScope: 'private' | 'public' | 'followers' | 'circle'; // N2 三级可见范围
   circleId?: string; // 团体可见时所属的团体ID
+  isAnonymous?: boolean;
 }
 
 interface DraftState {

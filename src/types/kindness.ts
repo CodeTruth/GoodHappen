@@ -19,6 +19,8 @@ export interface Kindness {
   likes: number;
   comments: number;
   createdAt: string;
+  // 匿名行善：降低行善门槛，保护行善者隐私
+  isAnonymous?: boolean;
 }
 
 export type KindnessPersona = 'sudongpo' | 'confucius' | 'libai' | 'dufu' | 'zhuangzi' | 'liqingzhao' | 'taoyuanming' | 'wangwei';
