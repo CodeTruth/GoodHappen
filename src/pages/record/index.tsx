@@ -11,6 +11,8 @@ import { useDraftStore, DraftFormData } from '@/store/draft';
 import { useMilestoneStore } from '@/store/milestone';
 import { useCircleStore } from '@/store/circle';
 import { useRitualStore } from '@/store/ritual';
+import { useMoralTaskStore } from '@/store/moral-task';
+import { CATEGORY_CONFIG } from '@/data/mock-moral-tasks';
 // import { PERSONAS } from '@/services/ai'; // 不再需要直接引用人设列表
 import { Kindness } from '@/types/kindness';
 import MilestonePopup from '@/components/MilestonePopup';
@@ -39,6 +41,55 @@ const VIDEO_MAX_DURATION = 60;
 // 录音最大时长（秒）
 const VOICE_MAX_DURATION = 60;
 
+// 任务选择器子组件
+const TaskSelectorContent: React.FC<{
+  circleId: string;
+  selectedTaskId: string;
+  onSelect: (taskId: string) => void;
+}> = ({ circleId, selectedTaskId, onSelect }) => {
+  const { getActiveTasksByCircle } = useMoralTaskStore();
+  const tasks = getActiveTasksByCircle(circleId);
+
+  if (tasks.length === 0) {
+    return <Text className={styles.taskEmpty}>暂无本周德育任务</Text>;
+  }
+
+  return (
+    <View className={styles.taskSelectorList}>
+      {tasks.map((task) => {
+        const catConfig = CATEGORY_CONFIG[task.category];
+        return (
+          <View
+            key={task.id}
+            className={`${styles.taskOption} ${selectedTaskId === task.id ? styles.taskOptionActive : ''}`}
+            onClick={() => onSelect(selectedTaskId === task.id ? '' : task.id)}
+          >
+            <Text className={styles.taskOptionIcon}>{catConfig.icon}</Text>
+            <View className={styles.taskOptionInfo}>
+              <Text className={styles.taskOptionTitle}>{task.title}</Text>
+              <Text className={styles.taskOptionMeta}>
+                {catConfig.name} · {task.requireVideo ? '需视频' : '文字即可'} · 截止{task.weekRange.end.slice(5)}
+              </Text>
+            </View>
+            <Text className={styles.taskOptionCheck}>{selectedTaskId === task.id ? '✓' : ''}</Text>
+          </View>
+        );
+      })}
+      <View
+        className={`${styles.taskOption} ${selectedTaskId === '' ? styles.taskOptionActive : ''}`}
+        onClick={() => onSelect('')}
+      >
+        <Text className={styles.taskOptionIcon}>✨</Text>
+        <View className={styles.taskOptionInfo}>
+          <Text className={styles.taskOptionTitle}>自由记录（不关联任务）</Text>
+          <Text className={styles.taskOptionMeta}>记录额外的善行</Text>
+        </View>
+        <Text className={styles.taskOptionCheck}>{selectedTaskId === '' ? '✓' : ''}</Text>
+      </View>
+    </View>
+  );
+};
+
 const RecordPage: React.FC = () => {
   // 更新自定义 tabBar 选中状态（H5环境中用useEffect替代useDidShow）
   useEffect(() => {
@@ -58,6 +109,9 @@ const RecordPage: React.FC = () => {
   const [visibleScope, setVisibleScope] = useState<'private' | 'public' | 'followers' | 'circle'>('public');
   // N2 团体可见时选择的团体ID
   const [selectedCircleId, setSelectedCircleId] = useState<string>('');
+  // 关联德育任务
+  const [selectedTaskId, setSelectedTaskId] = useState<string>('');
+  const [showTaskSelector, setShowTaskSelector] = useState(false);
   const [phase, setPhase] = useState<FeedbackPhase>('input');
   const [fortune, setFortune] = useState(0);
   const [aiContent, setAiContent] = useState('');
@@ -461,6 +515,8 @@ const RecordPage: React.FC = () => {
       return;
     }
 
+
+
     // N2 团体可见时必须选择团体
     if (visibleScope === 'circle' && !selectedCircleId) {
       Taro.showToast({ title: '请选择要分享到的团体', icon: 'none' });
@@ -565,6 +621,21 @@ const RecordPage: React.FC = () => {
         createdAt: new Date().toISOString(),
       };
       addPublishedKindness(newKindness);
+
+      // 如果关联了德育任务，同时创建任务提交记录
+      if (selectedTaskId && selectedCircleId) {
+        const { addSubmission } = useMoralTaskStore.getState();
+        addSubmission({
+          taskId: selectedTaskId,
+          userId: userInfo?.id || 'currentUser',
+          userName: userInfo?.name || '我',
+          userAvatar: userInfo?.avatar || '',
+          circleId: selectedCircleId,
+          content: content || voiceText || '',
+          videoUrl: videoPath || undefined,
+          imageUrl: images.length > 0 ? images[0] : undefined,
+        });
+      }
 
       // 进入反馈阶段，启动严格时序动画
       setPhase('feedback');
@@ -671,6 +742,8 @@ const RecordPage: React.FC = () => {
     setFortune(0);
     setFeedbackStep('hidden');
     setSelectedCircleId('');
+    setSelectedTaskId('');
+    setShowTaskSelector(false);
     setSelectedMediaTypes(new Set(['text']));
     clearCurrent();
     Taro.switchTab({
@@ -784,6 +857,9 @@ const RecordPage: React.FC = () => {
                 maxlength={500}
                 showConfirmBar={false}
               />
+              {content.trim().length > 0 && content.trim().length < 10 && (
+                <Text className={styles.lengthHint}>💡 多写几句吧，说说具体做了什么、感受如何？（建议20字以上）</Text>
+              )}
             </View>
 
             {/* 任务1：语音录制区域（选择语音时显示） */}
@@ -959,6 +1035,31 @@ const RecordPage: React.FC = () => {
                     </View>
                     {userCircles.length > 1 && !selectedCircleId && (
                       <Text className={styles.circleHint}>请选择要分享到的团体</Text>
+                    )}
+                  </View>
+                )}
+
+                {/* 关联德育任务（仅在选择了班级圈时显示） */}
+                {visibleScope === 'circle' && selectedCircleId && (
+                  <View className={styles.taskSelector}>
+                    <View className={styles.taskSelectorHeader} onClick={() => setShowTaskSelector(!showTaskSelector)}>
+                      <Text className={styles.taskSelectorTitle}>
+                        {selectedTaskId ? '📋 已关联任务' : '📋 关联本周德育任务（可选）'}
+                      </Text>
+                      <Text className={styles.taskSelectorToggle}>{showTaskSelector ? '▲' : '▼'}</Text>
+                    </View>
+                    {showTaskSelector && (
+                      <TaskSelectorContent
+                        circleId={selectedCircleId}
+                        selectedTaskId={selectedTaskId}
+                        onSelect={setSelectedTaskId}
+                      />
+                    )}
+                    {selectedTaskId && (
+                      <Text className={styles.taskSelectedHint}>
+                        已关联：{useMoralTaskStore.getState().getTasksByCircle(selectedCircleId).find(t => t.id === selectedTaskId)?.title || ''}
+                        {useMoralTaskStore.getState().getTasksByCircle(selectedCircleId).find(t => t.id === selectedTaskId)?.requireVideo && ' · 需视频'}
+                      </Text>
                     )}
                   </View>
                 )}

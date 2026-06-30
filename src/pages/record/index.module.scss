@@ -943,3 +943,108 @@
   margin-top: $spacing-sm;
   display: block;
 }
+
+// ============================================
+// 德育任务关联选择器
+// ============================================
+.taskSelector {
+  margin-top: $spacing-md;
+  background: $color-bg-muted;
+  border-radius: $radius-md;
+  overflow: hidden;
+}
+
+.taskSelectorHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: $spacing-md;
+  cursor: pointer;
+}
+
+.taskSelectorTitle {
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+  font-weight: $font-weight-medium;
+}
+
+.taskSelectorToggle {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+}
+
+.taskSelectorList {
+  padding: 0 $spacing-md $spacing-md;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+}
+
+.taskOption {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  padding: $spacing-sm $spacing-md;
+  background: $color-bg-card;
+  border-radius: $radius-md;
+  border: 2rpx solid transparent;
+}
+
+.taskOptionActive {
+  border-color: $color-primary;
+  background: linear-gradient(135deg, #FFF5F5 0%, #FFE8E8 100%);
+}
+
+.taskOptionIcon {
+  font-size: 36rpx;
+  flex-shrink: 0;
+}
+
+.taskOptionInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.taskOptionTitle {
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+  font-weight: $font-weight-medium;
+  display: block;
+}
+
+.taskOptionMeta {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin-top: 2rpx;
+  display: block;
+}
+
+.taskOptionCheck {
+  font-size: $font-size-md;
+  color: $color-primary;
+  font-weight: $font-weight-bold;
+  flex-shrink: 0;
+}
+
+.taskEmpty {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+  text-align: center;
+  padding: $spacing-md;
+  display: block;
+}
+
+.taskSelectedHint {
+  font-size: $font-size-xs;
+  color: $color-primary;
+  padding: $spacing-sm $spacing-md;
+  background: rgba($color-primary, 0.08);
+  display: block;
+}
+
+.lengthHint {
+  font-size: $font-size-xs;
+  color: $color-warning;
+  margin-top: $spacing-sm;
+  display: block;
+}
