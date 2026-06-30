@@ -1,0 +1,555 @@
+@use '@/styles/variables.scss' as *;
+
+.page {
+  position: relative;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: $color-bg-page;
+}
+
+.container {
+  flex: 1;
+  overflow: hidden;
+}
+
+/* 头部 */
+.header {
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  padding: $spacing-xl $page-padding $spacing-lg;
+}
+
+.headerTitle {
+  font-size: $font-size-xxl;
+  font-weight: $font-weight-semibold;
+  color: $color-text-white;
+  margin-bottom: $spacing-xs;
+  display: block;
+}
+
+.headerSubtitle {
+  font-size: $font-size-sm;
+  color: rgba(255, 255, 255, 0.9);
+  line-height: $line-height-normal;
+  display: block;
+}
+
+/* 机构模板切换标签栏 */
+.tabBar {
+  margin: $spacing-md $page-padding;
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-sm;
+  box-shadow: $shadow-card;
+}
+
+.tabScroll {
+  white-space: nowrap;
+}
+
+.tabInner {
+  display: inline-flex;
+  gap: $spacing-sm;
+}
+
+.tabItem {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: $spacing-sm $spacing-md;
+  border-radius: $radius-button;
+  background: $color-bg-page;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tabItemActive {
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+}
+
+.tabItemText {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  white-space: nowrap;
+}
+
+.tabItemTextActive {
+  color: $color-text-white;
+  font-weight: $font-weight-medium;
+}
+
+/* 报告卡片 */
+.reportCard {
+  margin: 0 $page-padding $spacing-md;
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  box-shadow: $shadow-card;
+  border-top: 4rpx solid $color-primary;
+}
+
+.reportTitle {
+  font-size: $font-size-xl;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  text-align: center;
+  margin-bottom: $spacing-md;
+  display: block;
+}
+
+.reportMeta {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+  text-align: center;
+  line-height: $line-height-loose;
+  display: block;
+}
+
+.reportDivider {
+  height: 1rpx;
+  background: linear-gradient(90deg, transparent 0%, rgba(196, 149, 106, 0.3) 50%, transparent 100%);
+  margin: $spacing-md 0;
+}
+
+.reportHeaderText {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+  line-height: $line-height-loose;
+  text-align: center;
+  display: block;
+}
+
+/* 通用 Section */
+.section {
+  margin: 0 $page-padding $spacing-md;
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  box-shadow: $shadow-card;
+}
+
+.sectionTitle {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin-bottom: $spacing-md;
+  padding-bottom: $spacing-sm;
+  border-bottom: 1rpx solid rgba(196, 149, 106, 0.12);
+  display: block;
+}
+
+/* 信息行 */
+.infoRow {
+  display: flex;
+  flex-direction: column;
+  padding: $spacing-sm 0;
+}
+
+.infoRow + .infoRow {
+  border-top: 1rpx solid rgba(196, 149, 106, 0.06);
+}
+
+.infoLabel {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin-bottom: 4rpx;
+}
+
+.infoValue {
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+  line-height: $line-height-normal;
+}
+
+/* 证据链 */
+.evidenceItem {
+  padding: $spacing-md;
+  background: $color-bg-page;
+  border-radius: $radius-md;
+  margin-bottom: $spacing-sm;
+}
+
+.evidenceHeader {
+  display: flex;
+  align-items: center;
+  gap: $spacing-xs;
+  margin-bottom: $spacing-xs;
+}
+
+.evidenceNumber {
+  width: 36rpx;
+  height: 36rpx;
+  border-radius: $radius-round;
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  color: $color-text-white;
+  font-size: 22rpx;
+  font-weight: $font-weight-semibold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.evidenceType {
+  font-size: 20rpx;
+  color: $color-primary;
+  background: rgba(196, 149, 106, 0.1);
+  padding: 2rpx 8rpx;
+  border-radius: $radius-xs;
+}
+
+.evidenceTitle {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+  flex: 1;
+}
+
+.evidenceContent {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  line-height: $line-height-normal;
+  margin-bottom: $spacing-xs;
+  display: block;
+}
+
+.evidenceMetaRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-sm;
+  margin-bottom: 4rpx;
+}
+
+.evidenceMeta {
+  font-size: 20rpx;
+  color: $color-text-tertiary;
+}
+
+.evidenceSource {
+  font-size: 20rpx;
+  color: $color-text-tertiary;
+  display: block;
+}
+
+.evidenceConfidence {
+  font-size: 20rpx;
+  color: $color-primary;
+  font-weight: $font-weight-medium;
+  display: block;
+  margin-top: 4rpx;
+}
+
+/* 时间线 */
+.timeline {
+  position: relative;
+  padding-left: 40rpx;
+}
+
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 16rpx;
+  top: 0;
+  bottom: 0;
+  width: 2rpx;
+  background: linear-gradient(180deg, $color-primary 0%, rgba(196, 149, 106, 0.2) 100%);
+}
+
+.timelineItem {
+  position: relative;
+  padding-bottom: $spacing-md;
+}
+
+.timelineItem:last-child {
+  padding-bottom: 0;
+}
+
+.timelineDot {
+  position: absolute;
+  left: -32rpx;
+  top: 0;
+  width: 32rpx;
+  height: 32rpx;
+  border-radius: $radius-round;
+  background: $color-bg-card;
+  border: 2rpx solid $color-primary;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.timelineIcon {
+  font-size: 20rpx;
+}
+
+.timelineContent {
+  padding-left: $spacing-sm;
+}
+
+.timelineTime {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin-bottom: 2rpx;
+  display: block;
+}
+
+.timelineEvent {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+  display: block;
+}
+
+.timelineDetail {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+  line-height: $line-height-normal;
+  margin-top: 2rpx;
+  display: block;
+}
+
+/* 见证人卡片 */
+.witnessCard {
+  padding: $spacing-md;
+  background: $color-bg-page;
+  border-radius: $radius-md;
+  margin-bottom: $spacing-sm;
+}
+
+.witnessCard:last-child {
+  margin-bottom: 0;
+}
+
+.witnessHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: $spacing-xs;
+}
+
+.witnessName {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+}
+
+.witnessRelation {
+  font-size: 20rpx;
+  color: $color-text-white;
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  padding: 2rpx 8rpx;
+  border-radius: $radius-xs;
+}
+
+.witnessStatement {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  line-height: $line-height-normal;
+  margin-bottom: $spacing-xs;
+  display: block;
+}
+
+.witnessConfidence {
+  font-size: 20rpx;
+  color: $color-primary;
+  font-weight: $font-weight-medium;
+  display: block;
+}
+
+/* 媒体证据 */
+.mediaItem {
+  padding: $spacing-sm 0;
+  border-bottom: 1rpx solid rgba(196, 149, 106, 0.06);
+}
+
+.mediaItem:last-child {
+  border-bottom: none;
+}
+
+.mediaType {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+  margin-bottom: 4rpx;
+  display: block;
+}
+
+.mediaDesc {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+  line-height: $line-height-normal;
+  margin-bottom: 4rpx;
+  display: block;
+}
+
+.mediaTime {
+  font-size: 20rpx;
+  color: $color-text-tertiary;
+  display: block;
+}
+
+.mediaHash {
+  font-size: 18rpx;
+  color: $color-text-tertiary;
+  font-family: monospace;
+  margin-top: 4rpx;
+  display: block;
+}
+
+/* 结论 */
+.conclusionBox {
+  padding: $spacing-md;
+  background: linear-gradient(135deg, #FFF9F0 0%, #FFF3E0 100%);
+  border-radius: $radius-md;
+  border-left: 4rpx solid $color-primary;
+}
+
+.conclusionText {
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+  line-height: $line-height-loose;
+  display: block;
+}
+
+/* 附件 */
+.attachmentItem {
+  display: flex;
+  align-items: center;
+  padding: $spacing-sm 0;
+  border-bottom: 1rpx solid rgba(196, 149, 106, 0.06);
+}
+
+.attachmentItem:last-child {
+  border-bottom: none;
+}
+
+.attachmentNumber {
+  width: 36rpx;
+  height: 36rpx;
+  border-radius: $radius-round;
+  background: rgba(196, 149, 106, 0.1);
+  color: $color-primary;
+  font-size: 22rpx;
+  font-weight: $font-weight-semibold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: $spacing-sm;
+  flex-shrink: 0;
+}
+
+.attachmentName {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+}
+
+/* 报告尾部 */
+.reportFooter {
+  margin: 0 $page-padding $spacing-md;
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  box-shadow: $shadow-card;
+  text-align: center;
+}
+
+.reportFooterText {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+  line-height: $line-height-loose;
+  margin-bottom: $spacing-sm;
+  display: block;
+}
+
+.reportFooterMeta {
+  font-size: 20rpx;
+  color: $color-text-tertiary;
+  display: block;
+  line-height: $line-height-loose;
+}
+
+/* 底部留白 */
+.bottomSpacer {
+  height: 160rpx;
+}
+
+/* 底部固定操作栏 */
+.actionBar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: $spacing-md $page-padding calc(#{$spacing-md} + env(safe-area-inset-bottom));
+  background: $color-bg-card;
+  border-top: 1rpx solid rgba(196, 149, 106, 0.1);
+  display: flex;
+  gap: $spacing-md;
+  box-shadow: 0 -4rpx 20rpx rgba(0, 0, 0, 0.05);
+  z-index: 100;
+}
+
+.actionBtn {
+  flex: 1;
+  height: $button-height-md;
+  border-radius: $radius-button;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: $spacing-xs;
+  cursor: pointer;
+}
+
+.actionBtnPrimary {
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+}
+
+.actionBtnSecondary {
+  background: $color-bg-page;
+  border: 1rpx solid rgba(196, 149, 106, 0.2);
+}
+
+.actionBtnIcon {
+  font-size: 32rpx;
+}
+
+.actionBtnText {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $color-text-white;
+}
+
+.actionBtnSecondary .actionBtnText {
+  color: $color-text-primary;
+}
+
+/* 空状态 */
+.emptyContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  background: $color-bg-page;
+  padding: $spacing-xl;
+}
+
+.emptyIcon {
+  font-size: 80rpx;
+  margin-bottom: $spacing-md;
+  display: block;
+}
+
+.emptyTitle {
+  font-size: $font-size-md;
+  color: $color-text-secondary;
+  font-weight: $font-weight-medium;
+  margin-bottom: $spacing-xs;
+  display: block;
+}
+
+.emptyDesc {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  line-height: $line-height-normal;
+  text-align: center;
+  display: block;
+}

@@ -502,6 +502,26 @@ const WitnessNetworkPage: React.FC = () => {
             )}
           </View>
 
+          {/* 证据报告生成入口 */}
+          <View className={styles.section}>
+            <Text className={styles.sectionTitle}>📋 证据报告</Text>
+            <Text className={styles.infoText} style={{ marginBottom: '16rpx', display: 'block' }}>
+              材料收集完毕后，系统可自动整理成标准化证据报告，支持一键提交给公安机关、交警部门、人民法院等机构。
+            </Text>
+            <View
+              className={styles.broadcastBtn}
+              style={{ background: 'linear-gradient(135deg, #4A90A4 0%, #6CB8D0 100%)' }}
+              onClick={() => {
+                if (currentSos) {
+                  Taro.navigateTo({ url: `/pages/evidence-report/index?id=${currentSos.id}` });
+                }
+              }}
+            >
+              <Text className={styles.broadcastBtnIcon}>📋</Text>
+              <Text className={styles.broadcastBtnText}>生成证据报告</Text>
+            </View>
+          </View>
+
           {/* AI 多模态分析入口 */}
           <View className={styles.aiAnalysisSection}>
             {aiResults.length > 0 ? (

@@ -31,6 +31,7 @@ export default defineAppConfig({
     'pages/legal-aid/index',
     'pages/insurance/index',
     'pages/witness-network/index',
+    'pages/evidence-report/index',
     'pages/admin-review/index',
     'pages/admin-users/index',
     'pages/admin-config/index',
