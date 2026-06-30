@@ -27,6 +27,7 @@ import {
   genId,
   getCurrentGPS,
 } from '@/services/evidence';
+import type { AIMediaMatchResult, MediaEvidenceCard } from '@/services/ai-witness';
 
 const STORAGE_KEY = 'haoshi_protection_store';
 
@@ -100,6 +101,8 @@ interface ProtectionStoreState {
   witnessRecords: WitnessRecord[];
   // 见证匹配结果
   witnessMatches: WitnessMatch[];
+  aimMatchResults?: Record<string, AIMediaMatchResult[]>;  // key: sosRecordId
+  mediaEvidenceCards?: Record<string, MediaEvidenceCard[]>;  // key: sosRecordId
 
   // ===== 事前存证（P1）=====
   /** 为善行记录创建存证 */
@@ -128,6 +131,12 @@ interface ProtectionStoreState {
   getWitnessMatchBySos: (sosRecordId: string) => WitnessMatch | undefined;
   /** 获取被标记为善意证据的见证记录 */
   getNotifiedWitnesses: () => WitnessRecord[];
+  /** 获取 AI 匹配结果 */
+  getAIMatchResults: (sosRecordId: string) => AIMediaMatchResult[] | null;
+  /** 获取媒体证据卡片 */
+  getMediaEvidenceCards: (sosRecordId: string) => MediaEvidenceCard[];
+  /** 设置 AI 匹配结果 */
+  setAIMatchResults: (sosRecordId: string, results: AIMediaMatchResult[], cards: MediaEvidenceCard[]) => void;
 
   // ===== 律师匹配（P2）=====
   /** 匹配律师（模拟） */
@@ -148,54 +157,39 @@ interface ProtectionStoreState {
 const mockWitnessRecords: WitnessRecord[] = [
   {
     id: 'wit_001',
-    witnessUserId: 'user_w1',
+    witnessUserId: 'user_wit_001',
     witnessUserName: '路过的暖阳',
-    witnessUserAvatar: 'https://picsum.photos/id/100/200/200',
-    recordId: 'wit_rec_001',
-    timestamp: '2024-06-22T10:25:00Z',
-    gps: {
-      latitude: 39.9045,
-      longitude: 116.4078,
-      address: '北京市朝阳区·善行地点附近',
-      accuracy: 15,
-    },
-    description: '看到一个年轻人扶老人过马路，老人看起来很感激，年轻人很有耐心。',
+    witnessUserAvatar: '',
+    recordId: 'kindness_mock_002',
+    timestamp: '2024-06-22T10:28:00Z',
+    gps: { latitude: 39.9048, longitude: 116.4075, address: '北京市朝阳区善行地点附近' },
+    description: '当时正在拍街景视频，恰好拍到一位年轻人扶老人过马路，老人看起来很感激。视频记录下了完整过程',
     matched: false,
     notified: false,
     badgeGranted: false,
   },
   {
     id: 'wit_002',
-    witnessUserId: 'user_w2',
+    witnessUserId: 'user_wit_002',
     witnessUserName: '晨练的旁观者',
-    witnessUserAvatar: 'https://picsum.photos/id/200/200/200',
-    recordId: 'wit_rec_002',
+    witnessUserAvatar: '',
+    recordId: 'kindness_mock_003',
     timestamp: '2024-06-22T10:35:00Z',
-    gps: {
-      latitude: 39.9048,
-      longitude: 116.4071,
-      address: '北京市朝阳区·路口对面',
-      accuracy: 20,
-    },
-    description: '当时在晨练，看到那位善行者帮老人提东西，画面很温馨。',
+    gps: { latitude: 39.9043, longitude: 116.4080, address: '北京市朝阳区·路口对面' },
+    description: '路过看到有人帮老人，拍了照片发到小区群里问认不认识。照片里能清楚看到老人和年轻人',
     matched: false,
     notified: false,
     badgeGranted: false,
   },
   {
     id: 'wit_003',
-    witnessUserId: 'user_w3',
+    witnessUserId: 'user_wit_003',
     witnessUserName: '便利店店员',
-    witnessUserAvatar: 'https://picsum.photos/id/300/200/200',
-    recordId: 'wit_rec_003',
+    witnessUserAvatar: '',
+    recordId: 'kindness_mock_004',
     timestamp: '2024-06-22T10:40:00Z',
-    gps: {
-      latitude: 39.9050,
-      longitude: 116.4080,
-      address: '北京市朝阳区·便利店门口',
-      accuracy: 10,
-    },
-    description: '我在店里看到外面的善行，年轻人扶着老人慢慢走。',
+    gps: { latitude: 39.9040, longitude: 116.4082, address: '北京市朝阳区·便利店门口' },
+    description: '在店门口录了一段现场，听到年轻人说"奶奶您小心点"，老人说"谢谢谢谢"。录音很清楚',
     matched: false,
     notified: false,
     badgeGranted: false,
@@ -248,6 +242,8 @@ export const useProtectionStore = create<ProtectionStoreState>((set, get) => ({
   lawyerMatches: [],
   witnessRecords: [...mockWitnessRecords],
   witnessMatches: [],
+  aimMatchResults: {},
+  mediaEvidenceCards: {},
 
   // ============================================
   // 事前存证（P1）
@@ -420,6 +416,8 @@ export const useProtectionStore = create<ProtectionStoreState>((set, get) => ({
 
   /** 扫描见证网络 */
   scanWitnesses: (sosRecordId) => {
+    // TODO: 后续集成 aiEnhancedWitnessMatch 进行 AI 多模态匹配
+    // 当前使用基础文本匹配算法（calculateDescriptionMatch）
     const sosRecord = get().sosRecords.find(s => s.id === sosRecordId);
     if (!sosRecord) {
       return { success: false, matchCount: 0 };
@@ -474,6 +472,25 @@ export const useProtectionStore = create<ProtectionStoreState>((set, get) => ({
   /** 获取被标记为善意证据的见证记录 */
   getNotifiedWitnesses: () => {
     return get().witnessRecords.filter(w => w.notified);
+  },
+
+  /** 获取 AI 匹配结果 */
+  getAIMatchResults: (sosRecordId: string) => {
+    return get().aimMatchResults?.[sosRecordId] || null;
+  },
+
+  /** 获取媒体证据卡片 */
+  getMediaEvidenceCards: (sosRecordId: string) => {
+    return get().mediaEvidenceCards?.[sosRecordId] || [];
+  },
+
+  /** 设置 AI 匹配结果和媒体证据卡片 */
+  setAIMatchResults: (sosRecordId: string, results: AIMediaMatchResult[], cards: MediaEvidenceCard[]) => {
+    set((state) => ({
+      aimMatchResults: { ...state.aimMatchResults, [sosRecordId]: results },
+      mediaEvidenceCards: { ...state.mediaEvidenceCards, [sosRecordId]: cards },
+    }));
+    get().saveToStorage();
   },
 
   // ============================================
@@ -539,6 +556,8 @@ export const useProtectionStore = create<ProtectionStoreState>((set, get) => ({
           lawyerMatches: parsed.lawyerMatches || [],
           witnessRecords: parsed.witnessRecords || [...mockWitnessRecords],
           witnessMatches: parsed.witnessMatches || [],
+          aimMatchResults: parsed.aimMatchResults || {},
+          mediaEvidenceCards: parsed.mediaEvidenceCards || {},
         });
       }
       // 加载后检查保险资格
@@ -559,6 +578,8 @@ export const useProtectionStore = create<ProtectionStoreState>((set, get) => ({
         lawyerMatches: state.lawyerMatches,
         witnessRecords: state.witnessRecords,
         witnessMatches: state.witnessMatches,
+        aimMatchResults: state.aimMatchResults,
+        mediaEvidenceCards: state.mediaEvidenceCards,
       };
       Taro.setStorageSync(STORAGE_KEY, JSON.stringify(data));
     } catch (e) {

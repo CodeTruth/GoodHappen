@@ -5,6 +5,7 @@ import classnames from 'classnames';
 import { useProtectionStore } from '@/store/protection';
 import { WITNESS_MATCH_CONFIG, WitnessRecord, SOSRecord, WitnessMatch } from '@/services/evidence';
 import { useUserStore } from '@/store/user';
+import { aiWitnessMatching, getMediaEvidenceCards as fetchMediaEvidenceCards, AIMediaMatchResult, MediaEvidenceCard } from '@/services/ai-witness';
 import styles from './index.module.scss';
 
 /**
@@ -98,12 +99,19 @@ const WitnessNetworkPage: React.FC = () => {
     getWitnessMatchBySos,
     getNotifiedWitnesses,
     loadFromStorage,
+    getAIMatchResults,
+    getMediaEvidenceCards,
+    setAIMatchResults,
   } = useProtectionStore();
 
   const { loadFromStorage: loadUser } = useUserStore();
 
   const [activeSosId, setActiveSosId] = useState<string>('');
   const [expandedWitnessId, setExpandedWitnessId] = useState<string | null>(null);
+  const [aiResults, setAiResults] = useState<AIMediaMatchResult[]>([]);
+  const [mediaCards, setMediaCards] = useState<MediaEvidenceCard[]>([]);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiReport, setAiReport] = useState<string>('');
 
   useEffect(() => {
     loadFromStorage();
@@ -166,6 +174,46 @@ const WitnessNetworkPage: React.FC = () => {
       });
     } else {
       Taro.showToast({ title: '扫描失败', icon: 'none' });
+    }
+  };
+
+  // AI 多模态分析
+  const handleAIAnalysis = async () => {
+    if (!currentSos || aiLoading) return;
+    if (matchedWitnesses.length === 0) {
+      Taro.showToast({ title: '暂无见证记录可分析', icon: 'none' });
+      return;
+    }
+    setAiLoading(true);
+    try {
+      // 优先检查 store 中是否已有结果
+      const cached = getAIMatchResults(currentSos.id);
+      if (cached) {
+        setAiResults(cached);
+        setMediaCards(getMediaEvidenceCards(currentSos.id));
+        setAiLoading(false);
+        return;
+      }
+
+      // 执行 AI 匹配
+      const results = await aiWitnessMatching(currentSos.description, matchedWitnesses);
+      setAiResults(results);
+
+      const cards = fetchMediaEvidenceCards(matchedWitnesses, results);
+      setMediaCards(cards);
+
+      // 缓存到 store
+      setAIMatchResults(currentSos.id, results, cards);
+
+      // 生成推理报告
+      const { generateEvidenceChainReport } = await import('@/services/ai-witness');
+      const report = await generateEvidenceChainReport(currentSos.description, matchedWitnesses, results);
+      setAiReport(report);
+    } catch (e) {
+      console.error('[Witness] AI analysis failed:', e);
+      Taro.showToast({ title: 'AI分析失败', icon: 'none' });
+    } finally {
+      setAiLoading(false);
     }
   };
 
@@ -322,6 +370,94 @@ const WitnessNetworkPage: React.FC = () => {
                 </Text>
               </View>
             </View>
+          </View>
+
+          {/* AI 多模态分析入口 */}
+          <View className={styles.aiAnalysisSection}>
+            {aiResults.length > 0 ? (
+              /* 已有 AI 结果 */
+              <View className={styles.aiResultCard}>
+                <View className={styles.aiResultHeader}>
+                  <Text className={styles.aiResultIcon}>🤖</Text>
+                  <Text className={styles.aiResultTitle}>AI 多模态交叉验证</Text>
+                </View>
+
+                {/* AI 推理报告 */}
+                {aiReport && (
+                  <View className={styles.aiReportBanner}>
+                    <Text className={styles.aiReportText}>{aiReport}</Text>
+                  </View>
+                )}
+
+                {/* 综合置信度 */}
+                {(() => {
+                  const avgScore = aiResults.reduce((s, r) => s + r.overallConfidence, 0) / aiResults.length;
+                  const confidenceLevel = avgScore > 0.8 ? '高' : avgScore > 0.6 ? '中' : '低';
+                  return (
+                    <View className={styles.aiConfidenceRow}>
+                      <Text className={styles.aiConfidenceLabel}>综合置信度</Text>
+                      <View className={styles.aiConfidenceBar}>
+                        <View
+                          className={`${styles.aiConfidenceFill} ${
+                            avgScore > 0.8 ? styles.aiConfidenceHigh : avgScore > 0.6 ? styles.aiConfidenceMid : styles.aiConfidenceLow
+                          }`}
+                          style={{ width: `${Math.round(avgScore * 100)}%` }}
+                        />
+                      </View>
+                      <Text className={styles.aiConfidenceValue}>{Math.round(avgScore * 100)}% ({confidenceLevel})</Text>
+                    </View>
+                  );
+                })()}
+
+                {/* 媒体证据卡片列表 */}
+                {mediaCards.length > 0 && (
+                  <View className={styles.mediaEvidenceSection}>
+                    <Text className={styles.mediaEvidenceTitle}>📎 媒体证据清单</Text>
+                    <ScrollView scrollX enableFlex className={styles.mediaEvidenceScroll}>
+                      <View className={styles.mediaEvidenceInner}>
+                        {mediaCards.map((card, idx) => (
+                          <View key={`${card.witnessId}_${idx}`} className={styles.mediaEvidenceCard}>
+                            <View className={styles.mediaEvidenceHeader}>
+                              <Text className={styles.mediaEvidenceType}>
+                                {card.type === 'audio' ? '🎤 录音' : card.type === 'image' ? '📸 照片' : card.type === 'video' ? '🎬 视频' : '📝 文字'}
+                              </Text>
+                              <Text className={`${styles.mediaEvidenceScore} ${
+                                card.matchScore > 0.8 ? styles.scoreHigh : card.matchScore > 0.5 ? styles.scoreMid : styles.scoreLow
+                              }`}>
+                                {Math.round(card.matchScore * 100)}%
+                              </Text>
+                            </View>
+                            <Text className={styles.mediaEvidenceDesc}>{card.description}</Text>
+                            <Text className={styles.mediaEvidenceWitness}>— {card.witnessName}</Text>
+                          </View>
+                        ))}
+                      </View>
+                    </ScrollView>
+                  </View>
+                )}
+
+                {/* 每条见证的详细 AI 分析 */}
+                {aiResults.map((result, idx) => (
+                  <View key={idx} className={styles.aiDetailRow}>
+                    <Text className={styles.aiDetailLabel}>
+                      见证{idx + 1} ({matchedWitnesses[idx]?.witnessUserName || ''})
+                    </Text>
+                    <Text className={styles.aiDetailSummary}>{result.aiSummary}</Text>
+                  </View>
+                ))}
+              </View>
+            ) : (
+              /* 未分析时显示触发按钮 */
+              <View
+                className={`${styles.aiTriggerBtn} ${aiLoading ? styles.aiTriggerBtnLoading : ''}`}
+                onClick={aiLoading ? undefined : handleAIAnalysis}
+              >
+                <Text className={styles.aiTriggerIcon}>🤖</Text>
+                <Text className={styles.aiTriggerText}>
+                  {aiLoading ? 'AI 多模态分析中...' : 'AI 多模态交叉验证'}
+                </Text>
+              </View>
+            )}
           </View>
 
           {/* 匹配参数详情 */}

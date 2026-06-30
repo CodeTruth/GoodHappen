@@ -435,3 +435,225 @@
   color: #5D4E37;
   font-weight: 500;
 }
+
+/* === AI 多模态分析区域 === */
+.aiAnalysisSection {
+  margin: 24rpx;
+}
+
+.aiResultCard {
+  background: linear-gradient(135deg, #FEFCF3 0%, #FEF8E9 100%);
+  border-radius: 20rpx;
+  padding: 24rpx;
+  border: 1rpx solid rgba(196, 149, 106, 0.15);
+}
+
+.aiResultHeader {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16rpx;
+}
+
+.aiResultIcon {
+  font-size: 36rpx;
+  margin-right: 12rpx;
+}
+
+.aiResultTitle {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #5D4E37;
+}
+
+.aiReportBanner {
+  background: linear-gradient(135deg, #FFF9F0 0%, #FFF3E0 100%);
+  border-radius: 12rpx;
+  padding: 16rpx 20rpx;
+  margin-bottom: 16rpx;
+  border-left: 4rpx solid #C4956A;
+}
+
+.aiReportText {
+  font-size: 24rpx;
+  color: #5D4E37;
+  line-height: 1.6;
+}
+
+.aiConfidenceRow {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16rpx;
+}
+
+.aiConfidenceLabel {
+  font-size: 24rpx;
+  color: #8B7355;
+  margin-right: 12rpx;
+  min-width: 80rpx;
+}
+
+.aiConfidenceBar {
+  flex: 1;
+  height: 12rpx;
+  background: rgba(196, 149, 106, 0.1);
+  border-radius: 6rpx;
+  overflow: hidden;
+  margin-right: 12rpx;
+}
+
+.aiConfidenceFill {
+  height: 100%;
+  border-radius: 6rpx;
+  transition: width 0.6s ease;
+}
+
+.aiConfidenceHigh {
+  background: linear-gradient(90deg, #48BB78 0%, #68D391 100%);
+}
+
+.aiConfidenceMid {
+  background: linear-gradient(90deg, #C4956A 0%, #D4A76A 100%);
+}
+
+.aiConfidenceLow {
+  background: linear-gradient(90deg, #FC8181 0%, #F56565 100%);
+}
+
+.aiConfidenceValue {
+  font-size: 22rpx;
+  color: #5D4E37;
+  font-weight: 600;
+  min-width: 120rpx;
+  text-align: right;
+}
+
+/* === 媒体证据卡片 === */
+.mediaEvidenceSection {
+  margin-bottom: 16rpx;
+}
+
+.mediaEvidenceTitle {
+  font-size: 24rpx;
+  color: #5D4E37;
+  font-weight: 600;
+  display: block;
+  margin-bottom: 12rpx;
+}
+
+.mediaEvidenceScroll {
+  white-space: nowrap;
+}
+
+.mediaEvidenceInner {
+  display: inline-flex;
+  gap: 16rpx;
+  padding-bottom: 8rpx;
+}
+
+.mediaEvidenceCard {
+  display: inline-flex;
+  flex-direction: column;
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 16rpx;
+  min-width: 220rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.06);
+  border: 1rpx solid rgba(196, 149, 106, 0.1);
+}
+
+.mediaEvidenceHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8rpx;
+}
+
+.mediaEvidenceType {
+  font-size: 22rpx;
+  font-weight: 600;
+  color: #5D4E37;
+}
+
+.mediaEvidenceScore {
+  font-size: 20rpx;
+  font-weight: 700;
+  padding: 2rpx 10rpx;
+  border-radius: 12rpx;
+}
+
+.scoreHigh {
+  color: #48BB78;
+  background: rgba(72, 187, 120, 0.1);
+}
+
+.scoreMid {
+  color: #C4956A;
+  background: rgba(196, 149, 106, 0.1);
+}
+
+.scoreLow {
+  color: #FC8181;
+  background: rgba(252, 129, 129, 0.1);
+}
+
+.mediaEvidenceDesc {
+  font-size: 20rpx;
+  color: #8B7355;
+  line-height: 1.4;
+  margin-bottom: 4rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: normal;
+}
+
+.mediaEvidenceWitness {
+  font-size: 18rpx;
+  color: #A89880;
+  text-align: right;
+}
+
+/* === AI 触发按钮 === */
+.aiTriggerBtn {
+  background: linear-gradient(135deg, #C4956A 0%, #D4A76A 100%);
+  border-radius: 40rpx;
+  padding: 24rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12rpx;
+  cursor: pointer;
+}
+
+.aiTriggerBtnLoading {
+  opacity: 0.6;
+}
+
+.aiTriggerIcon {
+  font-size: 32rpx;
+}
+
+.aiTriggerText {
+  font-size: 28rpx;
+  color: #fff;
+  font-weight: 600;
+}
+
+/* === AI 详细分析行 === */
+.aiDetailRow {
+  display: flex;
+  flex-direction: column;
+  padding: 12rpx 0;
+  border-top: 1rpx solid rgba(196, 149, 106, 0.08);
+}
+
+.aiDetailLabel {
+  font-size: 22rpx;
+  color: #8B7355;
+  margin-bottom: 4rpx;
+}
+
+.aiDetailSummary {
+  font-size: 24rpx;
+  color: #5D4E37;
+  line-height: 1.5;
+}
