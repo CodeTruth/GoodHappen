@@ -27,3 +27,6 @@ Thumbs.db
 
 # Taro 缓存
 .taro_cache/
+
+# 设计文档构建产物
+design-doc/
