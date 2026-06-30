@@ -1,0 +1,568 @@
+@use '@/styles/variables.scss' as *;
+
+.container {
+  min-height: 100vh;
+  background: $color-bg-page;
+}
+
+// Tab切换栏
+.tabBar {
+  display: flex;
+  background: $color-bg-card;
+  padding: 0 $spacing-md;
+  border-bottom: 1rpx solid $color-border;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.tabItem {
+  flex: 1;
+  text-align: center;
+  padding: $spacing-md 0;
+  font-size: $font-size-md;
+  color: $color-text-secondary;
+  position: relative;
+  font-weight: $font-weight-medium;
+}
+
+.tabItemActive {
+  color: $color-primary;
+  font-weight: $font-weight-semibold;
+}
+
+.tabIndicator {
+  position: absolute;
+  bottom: 0;
+  left: 25%;
+  width: 50%;
+  height: 4rpx;
+  background: $color-primary;
+  border-radius: 2rpx;
+}
+
+// Tab内容
+.tabContent {
+  padding: $spacing-lg;
+}
+
+// ===== Tab1: 完成度排行 =====
+.headerCard {
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  border-radius: $radius-lg;
+  padding: $spacing-xl;
+  margin-bottom: $spacing-lg;
+  color: $color-text-white;
+}
+
+.headerTitle {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  margin-bottom: $spacing-sm;
+  display: block;
+}
+
+.headerSubtitle {
+  font-size: $font-size-sm;
+  opacity: 0.9;
+  margin-bottom: $spacing-md;
+  display: block;
+}
+
+.progressSection {
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+}
+
+.progressBar {
+  flex: 1;
+  height: 16rpx;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 8rpx;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: $color-text-white;
+  border-radius: 8rpx;
+}
+
+.progressText {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-bold;
+}
+
+.warningBanner {
+  background: rgba($color-warning, 0.1);
+  border-radius: $radius-md;
+  padding: $spacing-md;
+  margin-bottom: $spacing-lg;
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+}
+
+.warningIcon {
+  font-size: $font-size-lg;
+}
+
+.warningText {
+  font-size: $font-size-sm;
+  color: $color-warning;
+  flex: 1;
+}
+
+.warningBtn {
+  font-size: $font-size-xs;
+  color: $color-primary;
+  font-weight: $font-weight-medium;
+  padding: $spacing-xs $spacing-sm;
+  background: rgba($color-primary, 0.1);
+  border-radius: $radius-sm;
+}
+
+// 排行表
+.rankingTable {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-card;
+  overflow: hidden;
+}
+
+.tableHeader {
+  display: flex;
+  padding: $spacing-md;
+  background: $color-bg-muted;
+  border-bottom: 1rpx solid $color-border;
+}
+
+.tableHeaderCell {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  font-weight: $font-weight-medium;
+  text-align: center;
+}
+
+.tableRow {
+  display: flex;
+  padding: $spacing-md;
+  align-items: center;
+  border-bottom: 1rpx solid $color-border-light;
+}
+
+.tableRow:nth-child(even) {
+  background: rgba($color-bg-muted, 0.3);
+}
+
+.tableCell {
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+  text-align: center;
+}
+
+.rankCell {
+  width: 60rpx;
+  font-weight: $font-weight-bold;
+}
+
+.rankTop {
+  color: $color-primary;
+}
+
+.nameCell {
+  flex: 1;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+}
+
+.nameAvatar {
+  width: 48rpx;
+  height: 48rpx;
+  border-radius: 24rpx;
+  object-fit: cover;
+}
+
+.nameText {
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+}
+
+.taskCell {
+  width: 120rpx;
+}
+
+.freeCell {
+  width: 100rpx;
+}
+
+.streakCell {
+  width: 100rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: $spacing-xs;
+}
+
+.streakIcon {
+  font-size: $font-size-xs;
+}
+
+.streakText {
+  font-size: $font-size-sm;
+  color: $color-warning;
+  font-weight: $font-weight-medium;
+}
+
+// ===== Tab2: 班级周报 =====
+.weekHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: $spacing-lg;
+}
+
+.weekNav {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+}
+
+.weekNavBtn {
+  font-size: $font-size-md;
+  color: $color-primary;
+  padding: $spacing-xs $spacing-sm;
+}
+
+.weekTitle {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
+// 数据卡片
+.dataCards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: $spacing-md;
+  margin-bottom: $spacing-lg;
+}
+
+.dataCard {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  box-shadow: $shadow-card;
+  text-align: center;
+}
+
+.dataCardValue {
+  font-size: 48rpx;
+  font-weight: $font-weight-bold;
+  color: $color-primary;
+  display: block;
+  margin-bottom: $spacing-xs;
+}
+
+.dataCardLabel {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  display: block;
+}
+
+.dataCardChange {
+  font-size: $font-size-xs;
+  margin-top: $spacing-xs;
+  display: block;
+}
+
+.changeUp {
+  color: $color-success;
+}
+
+.changeDown {
+  color: $color-error;
+}
+
+// 分类占比
+.sectionCard {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  box-shadow: $shadow-card;
+  margin-bottom: $spacing-lg;
+}
+
+.sectionTitle {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin-bottom: $spacing-md;
+  display: block;
+}
+
+.categoryBar {
+  display: flex;
+  align-items: center;
+  margin-bottom: $spacing-sm;
+}
+
+.categoryBarLabel {
+  width: 120rpx;
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  display: flex;
+  align-items: center;
+  gap: $spacing-xs;
+}
+
+.categoryBarTrack {
+  flex: 1;
+  height: 20rpx;
+  background: $color-bg-muted;
+  border-radius: 10rpx;
+  overflow: hidden;
+  margin: 0 $spacing-sm;
+}
+
+.categoryBarFill {
+  height: 100%;
+  border-radius: 10rpx;
+}
+
+.categoryBarValue {
+  width: 60rpx;
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  text-align: right;
+}
+
+// 趋势
+.trendRow {
+  display: flex;
+  justify-content: space-around;
+  padding: $spacing-md 0;
+}
+
+.trendItem {
+  text-align: center;
+}
+
+.trendWeek {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin-bottom: $spacing-xs;
+  display: block;
+}
+
+.trendValue {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  display: block;
+}
+
+.trendUp {
+  color: $color-success;
+}
+
+// 善行之星
+.starCard {
+  background: linear-gradient(135deg, #FFF5E6 0%, #FFF0D9 100%);
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+  border: 2rpx solid rgba($color-primary, 0.2);
+}
+
+.starIcon {
+  font-size: 60rpx;
+}
+
+.starContent {
+  flex: 1;
+}
+
+.starTitle {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  display: block;
+}
+
+.starDesc {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  margin-top: $spacing-xs;
+  display: block;
+}
+
+// 操作按钮
+.actionButtons {
+  display: flex;
+  gap: $spacing-md;
+  margin-top: $spacing-lg;
+}
+
+.actionBtn {
+  flex: 1;
+  height: 88rpx;
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  border-radius: $radius-lg;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: $spacing-xs;
+}
+
+.actionBtnText {
+  font-size: $font-size-md;
+  font-weight: $font-weight-medium;
+  color: $color-text-white;
+}
+
+// ===== Tab3: 榜样墙 =====
+.weekSelector {
+  display: flex;
+  gap: $spacing-sm;
+  margin-bottom: $spacing-lg;
+  overflow-x: auto;
+}
+
+.weekChip {
+  padding: $spacing-sm $spacing-md;
+  border-radius: $radius-lg;
+  background: $color-bg-muted;
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.weekChipActive {
+  background: rgba($color-primary, 0.15);
+  color: $color-primary;
+  font-weight: $font-weight-medium;
+}
+
+.exampleCard {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  box-shadow: $shadow-card;
+  margin-bottom: $spacing-lg;
+  border-left: 6rpx solid $color-primary;
+}
+
+.exampleHeader {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  margin-bottom: $spacing-md;
+}
+
+.exampleAvatar {
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: 28rpx;
+  object-fit: cover;
+}
+
+.exampleName {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  flex: 1;
+}
+
+.exampleBadge {
+  font-size: $font-size-xs;
+  color: $color-primary;
+  background: rgba($color-primary, 0.1);
+  padding: $spacing-xs $spacing-sm;
+  border-radius: $radius-sm;
+  font-weight: $font-weight-medium;
+}
+
+.exampleContent {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  line-height: $line-height-normal;
+  margin-bottom: $spacing-md;
+}
+
+.exampleVideo {
+  width: 100%;
+  height: 300rpx;
+  background: $color-bg-muted;
+  border-radius: $radius-md;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: $spacing-md;
+}
+
+.exampleVideoHint {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+}
+
+.exampleComment {
+  background: $color-bg-muted;
+  border-radius: $radius-md;
+  padding: $spacing-md;
+  margin-bottom: $spacing-md;
+}
+
+.exampleCommentLabel {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin-bottom: $spacing-xs;
+  display: block;
+}
+
+.exampleCommentText {
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+  font-style: italic;
+}
+
+.exampleFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.exampleDate {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.exampleLikes {
+  display: flex;
+  align-items: center;
+  gap: $spacing-xs;
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+}
+
+.empty {
+  text-align: center;
+  padding: $spacing-xl 0;
+}
+
+.emptyIcon {
+  font-size: 80rpx;
+  margin-bottom: $spacing-md;
+  display: block;
+}
+
+.emptyText {
+  font-size: $font-size-md;
+  color: $color-text-tertiary;
+}

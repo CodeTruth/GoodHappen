@@ -114,17 +114,40 @@ const CircleDetailPage: React.FC = () => {
         </View>
       </View>
 
-      {/* 快捷操作 */}
+      {/* 快捷操作 - 按角色显示不同入口 */}
       <View className={styles.actionBar}>
-        <View className={styles.actionBtn} onClick={handleGoCheckin}>
-          <Text className={styles.actionIcon}>📝</Text>
-          <Text className={styles.actionText}>善行打卡</Text>
-        </View>
-        {canViewSummary && (
-          <View className={styles.actionBtn} onClick={handleGoAdmin}>
-            <Text className={styles.actionIcon}>📊</Text>
-            <Text className={styles.actionText}>团体管理</Text>
-          </View>
+        {canViewSummary ? (
+          <>
+            {/* 老师端入口 */}
+            <View className={styles.actionBtn} onClick={handleGoCheckin}>
+              <Text className={styles.actionIcon}>📝</Text>
+              <Text className={styles.actionText}>善行打卡</Text>
+            </View>
+            <View className={styles.actionBtn} onClick={() => Taro.navigateTo({ url: `/pages/circle-moral-tasks/index?id=${id}` })}>
+              <Text className={styles.actionIcon}>📋</Text>
+              <Text className={styles.actionText}>任务管理</Text>
+            </View>
+            <View className={styles.actionBtn} onClick={() => Taro.navigateTo({ url: `/pages/circle-dashboard/index?id=${id}` })}>
+              <Text className={styles.actionIcon}>📊</Text>
+              <Text className={styles.actionText}>德育看板</Text>
+            </View>
+          </>
+        ) : (
+          <>
+            {/* 学生端入口 */}
+            <View className={styles.actionBtn} onClick={() => {
+              Taro.navigateTo({
+                url: `/pages/record/index?circleId=${id}`,
+              });
+            }}>
+              <Text className={styles.actionIcon}>📝</Text>
+              <Text className={styles.actionText}>提交善行</Text>
+            </View>
+            <View className={styles.actionBtn} onClick={() => Taro.navigateTo({ url: `/pages/student-profile/index?circleId=${id}` })}>
+              <Text className={styles.actionIcon}>📖</Text>
+              <Text className={styles.actionText}>我的档案</Text>
+            </View>
+          </>
         )}
       </View>
 

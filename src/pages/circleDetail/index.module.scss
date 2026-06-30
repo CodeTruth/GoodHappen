@@ -109,12 +109,14 @@
 // 快捷操作栏
 .actionBar {
   display: flex;
+  flex-wrap: wrap;
   gap: $spacing-md;
   margin-bottom: $spacing-md;
 }
 
 .actionBtn {
   flex: 1;
+  min-width: 160rpx;
   background: $color-bg-card;
   border-radius: $radius-lg;
   padding: $spacing-md;
