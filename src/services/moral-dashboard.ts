@@ -227,9 +227,7 @@ export const getStudentProfile = (userId: string, circleId: string): StudentMora
   }
 
   // 分类分布
-  const categoryCount: Record<MoralCategory, number> = {
-    housework: 0, help_others: 0, environmental: 0, respect_elders: 0, reading: 0, custom: 0,
-  };
+  const categoryCount: Record<string, number> = {};
   const { tasks: allTasks } = useMoralTaskStore.getState();
 
   submissions.forEach((s) => {
@@ -238,7 +236,7 @@ export const getStudentProfile = (userId: string, circleId: string): StudentMora
       const task = allTasks.find((t) => t.id === s.taskId);
       if (task) category = task.category;
     }
-    categoryCount[category]++;
+    categoryCount[category] = (categoryCount[category] || 0) + 1;
   });
 
   const categoryDistribution = Object.entries(categoryCount)

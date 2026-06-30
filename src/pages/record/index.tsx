@@ -12,7 +12,7 @@ import { useMilestoneStore } from '@/store/milestone';
 import { useCircleStore } from '@/store/circle';
 import { useRitualStore } from '@/store/ritual';
 import { useMoralTaskStore } from '@/store/moral-task';
-import { CATEGORY_CONFIG } from '@/data/mock-moral-tasks';
+import { CircleType, getCircleTypeConfig } from '@/config/circle-types';
 // import { PERSONAS } from '@/services/ai'; // 不再需要直接引用人设列表
 import { Kindness } from '@/types/kindness';
 import MilestonePopup from '@/components/MilestonePopup';
