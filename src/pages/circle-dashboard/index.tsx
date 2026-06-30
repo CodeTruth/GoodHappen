@@ -1,21 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { View, Text, Image, ScrollView } from '@tarojs/components';
 import Taro, { useRouter } from '@tarojs/taro';
 import { useCircleStore } from '@/store/circle';
 import { useUserStore } from '@/store/user';
 import { getRanking, getWeeklyReport, getExampleWall, getUnsubmittedStudents } from '@/services/moral-dashboard';
 import { StudentRankingItem, WeeklyReportData, ExampleWallItem } from '@/services/moral-dashboard';
-import { CATEGORY_CONFIG } from '@/data/mock-moral-tasks';
+import { getCircleTypeConfig, CircleType } from '@/config/circle-types';
 import { mockWeeklyReports } from '@/data/mock-moral-tasks';
 import styles from './index.module.scss';
 
 type TabType = 'ranking' | 'report' | 'examples';
-
-const TABS = [
-  { key: 'ranking' as TabType, label: '完成度排行' },
-  { key: 'report' as TabType, label: '班级周报' },
-  { key: 'examples' as TabType, label: '榜样墙' },
-];
 
 const CircleDashboardPage: React.FC = () => {
   const router = useRouter();
@@ -23,6 +17,17 @@ const CircleDashboardPage: React.FC = () => {
 
   const { getCircleById, hasPermission } = useCircleStore();
   const { userInfo } = useUserStore();
+
+  // 圈子类型配置
+  const circle = getCircleById(circleId);
+  const circleType: CircleType = (circle?.type as CircleType) || 'public';
+  const typeConfig = useMemo(() => getCircleTypeConfig(circleType), [circleType]);
+
+  const TABS = useMemo(() => [
+    { key: 'ranking' as TabType, label: `${typeConfig.labels.ranking}排行` },
+    { key: 'report' as TabType, label: `${typeConfig.labels.taskShort}周报` },
+    { key: 'examples' as TabType, label: `${typeConfig.labels.example}墙` },
+  ], [typeConfig]);
 
   const [activeTab, setActiveTab] = useState<TabType>('ranking');
   const [isAdmin, setIsAdmin] = useState(false);
@@ -210,20 +215,20 @@ const CircleDashboardPage: React.FC = () => {
         <View className={styles.sectionCard}>
           <Text className={styles.sectionTitle}>分类占比</Text>
           {categories.map(([cat, count]) => {
-            const config = CATEGORY_CONFIG[cat as keyof typeof CATEGORY_CONFIG];
+            const config = typeConfig.categories.find((c) => c.key === cat) || typeConfig.categories[0];
             const percentage = report.totalCount > 0 ? Math.round((count / report.totalCount) * 100) : 0;
             return (
               <View key={cat} className={styles.categoryBar}>
                 <Text className={styles.categoryBarLabel}>
-                  <Text>{config.icon}</Text>
-                  <Text> {config.name}</Text>
+                  <Text>{config?.icon || '✨'}</Text>
+                  <Text> {config?.name || cat}</Text>
                 </Text>
                 <View className={styles.categoryBarTrack}>
                   <View
                     className={styles.categoryBarFill}
                     style={{
                       width: `${maxCount > 0 ? (count / maxCount) * 100 : 0}%`,
-                      background: config.color,
+                      background: config?.color || '#C4956A',
                     }}
                   />
                 </View>

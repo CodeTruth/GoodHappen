@@ -48,27 +48,35 @@ const TaskSelectorContent: React.FC<{
   onSelect: (taskId: string) => void;
 }> = ({ circleId, selectedTaskId, onSelect }) => {
   const { getActiveTasksByCircle } = useMoralTaskStore();
+  const { getCircleById } = useCircleStore();
   const tasks = getActiveTasksByCircle(circleId);
 
+  // 获取圈子类型配置
+  const circle = getCircleById(circleId);
+  const circleType: CircleType = (circle?.type as CircleType) || 'public';
+  const typeConfig = getCircleTypeConfig(circleType);
+  const categoryMap: Record<string, typeof typeConfig.categories[0]> = {};
+  typeConfig.categories.forEach((c) => { categoryMap[c.key] = c; });
+
   if (tasks.length === 0) {
-    return <Text className={styles.taskEmpty}>暂无本周德育任务</Text>;
+    return <Text className={styles.taskEmpty}>暂无本周{typeConfig.labels.task}</Text>;
   }
 
   return (
     <View className={styles.taskSelectorList}>
       {tasks.map((task) => {
-        const catConfig = CATEGORY_CONFIG[task.category];
+        const catConfig = categoryMap[task.category] || typeConfig.categories[0];
         return (
           <View
             key={task.id}
             className={`${styles.taskOption} ${selectedTaskId === task.id ? styles.taskOptionActive : ''}`}
             onClick={() => onSelect(selectedTaskId === task.id ? '' : task.id)}
           >
-            <Text className={styles.taskOptionIcon}>{catConfig.icon}</Text>
+            <Text className={styles.taskOptionIcon}>{catConfig?.icon || '✨'}</Text>
             <View className={styles.taskOptionInfo}>
               <Text className={styles.taskOptionTitle}>{task.title}</Text>
               <Text className={styles.taskOptionMeta}>
-                {catConfig.name} · {task.requireVideo ? '需视频' : '文字即可'} · 截止{task.weekRange.end.slice(5)}
+                {catConfig?.name || '其他'} · {task.requireVideo ? '需视频' : '文字即可'} · 截止{task.weekRange.end.slice(5)}
               </Text>
             </View>
             <Text className={styles.taskOptionCheck}>{selectedTaskId === task.id ? '✓' : ''}</Text>
@@ -81,8 +89,8 @@ const TaskSelectorContent: React.FC<{
       >
         <Text className={styles.taskOptionIcon}>✨</Text>
         <View className={styles.taskOptionInfo}>
-          <Text className={styles.taskOptionTitle}>自由记录（不关联任务）</Text>
-          <Text className={styles.taskOptionMeta}>记录额外的善行</Text>
+          <Text className={styles.taskOptionTitle}>自由记录（不关联{typeConfig.labels.taskShort}）</Text>
+          <Text className={styles.taskOptionMeta}>记录额外的{typeConfig.labels.taskShort}</Text>
         </View>
         <Text className={styles.taskOptionCheck}>{selectedTaskId === '' ? '✓' : ''}</Text>
       </View>

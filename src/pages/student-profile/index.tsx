@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { View, Text, Image, Input } from '@tarojs/components';
 import Taro, { useRouter } from '@tarojs/taro';
 import { useCircleStore } from '@/store/circle';
@@ -6,7 +6,7 @@ import { useUserStore } from '@/store/user';
 import { useMoralTaskStore } from '@/store/moral-task';
 import { getStudentProfile } from '@/services/moral-dashboard';
 import { StudentMoralProfile } from '@/services/moral-dashboard';
-import { CATEGORY_CONFIG } from '@/data/mock-moral-tasks';
+import { getCircleTypeConfig, CircleType } from '@/config/circle-types';
 import styles from './index.module.scss';
 
 const StudentProfilePage: React.FC = () => {
@@ -16,7 +16,17 @@ const StudentProfilePage: React.FC = () => {
 
   const { getCircleById, hasPermission } = useCircleStore();
   const { userInfo } = useUserStore();
-  const { markExample, addTeacherComment, getSubmissionById } = useMoralTaskStore();
+  const { markExample, addTeacherComment } = useMoralTaskStore();
+
+  // 圈子类型配置
+  const circle = getCircleById(circleId);
+  const circleType: CircleType = (circle?.type as CircleType) || 'public';
+  const typeConfig = useMemo(() => getCircleTypeConfig(circleType), [circleType]);
+  const categoryMap = useMemo(() => {
+    const map: Record<string, typeof typeConfig.categories[0]> = {};
+    typeConfig.categories.forEach((c) => { map[c.key] = c; });
+    return map;
+  }, [typeConfig]);
 
   const [profile, setProfile] = useState<StudentMoralProfile | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -113,11 +123,11 @@ const StudentProfilePage: React.FC = () => {
         <View className={styles.sectionCard}>
           <Text className={styles.sectionTitle}>善行分类分布</Text>
           {profile.categoryDistribution.map((cat) => {
-            const config = CATEGORY_CONFIG[cat.category];
+            const config = categoryMap[cat.category] || typeConfig.categories[0];
             return (
               <View key={cat.category} className={styles.categoryBar}>
                 <Text className={styles.categoryBarLabel}>
-                  <Text>{config.icon}</Text>
+                  <Text>{config?.icon || '✨'}</Text>
                   <Text> {cat.name}</Text>
                 </Text>
                 <View className={styles.categoryBarTrack}>
@@ -125,7 +135,7 @@ const StudentProfilePage: React.FC = () => {
                     className={styles.categoryBarFill}
                     style={{
                       width: `${maxCategoryCount > 0 ? (cat.count / maxCategoryCount) * 100 : 0}%`,
-                      background: config.color,
+                      background: config?.color || '#C4956A',
                     }}
                   />
                 </View>

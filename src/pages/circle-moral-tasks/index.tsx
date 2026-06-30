@@ -1,13 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { View, Text, Input, Textarea, Switch, ScrollView } from '@tarojs/components';
 import Taro, { useRouter } from '@tarojs/taro';
 import { useMoralTaskStore } from '@/store/moral-task';
 import { useCircleStore } from '@/store/circle';
 import { useUserStore } from '@/store/user';
-import { CATEGORY_CONFIG, MoralCategory } from '@/data/mock-moral-tasks';
+import { getCircleTypeConfig, CircleType } from '@/config/circle-types';
 import styles from './index.module.scss';
-
-const CATEGORY_KEYS: MoralCategory[] = ['housework', 'help_others', 'environmental', 'respect_elders', 'reading', 'custom'];
 
 const CircleMoralTasksPage: React.FC = () => {
   const router = useRouter();
@@ -17,6 +15,12 @@ const CircleMoralTasksPage: React.FC = () => {
   const { getCircleById, hasPermission } = useCircleStore();
   const { userInfo } = useUserStore();
 
+  // 获取圈子类型配置
+  const circle = getCircleById(circleId);
+  const circleType: CircleType = (circle?.type as CircleType) || 'public';
+  const typeConfig = useMemo(() => getCircleTypeConfig(circleType), [circleType]);
+  const categoryList = typeConfig.categories;
+
   const [tasks, setTasks] = useState<any[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -24,7 +28,7 @@ const CircleMoralTasksPage: React.FC = () => {
   // 表单状态
   const [formTitle, setFormTitle] = useState('');
   const [formDesc, setFormDesc] = useState('');
-  const [formCategory, setFormCategory] = useState<MoralCategory>('housework');
+  const [formCategory, setFormCategory] = useState<string>(categoryList[0]?.key || 'custom');
   const [formRequireVideo, setFormRequireVideo] = useState(false);
 
   useEffect(() => {
@@ -85,7 +89,7 @@ const CircleMoralTasksPage: React.FC = () => {
   const resetForm = () => {
     setFormTitle('');
     setFormDesc('');
-    setFormCategory('housework');
+    setFormCategory(categoryList[0]?.key || 'custom');
     setFormRequireVideo(false);
   };
 
@@ -99,7 +103,7 @@ const CircleMoralTasksPage: React.FC = () => {
       <View className={styles.container}>
         <View className={styles.empty}>
           <Text className={styles.emptyIcon}>🔒</Text>
-          <Text className={styles.emptyText}>仅班级管理员可管理德育任务</Text>
+          <Text className={styles.emptyText}>仅{typeConfig.labels.admin}可管理{typeConfig.labels.task}</Text>
         </View>
       </View>
     );
@@ -109,7 +113,7 @@ const CircleMoralTasksPage: React.FC = () => {
     <View className={styles.container}>
       {/* 头部 */}
       <View className={styles.header}>
-        <Text className={styles.title}>本周德育任务</Text>
+        <Text className={styles.title}>本周{typeConfig.labels.task}</Text>
         <View className={styles.addBtn} onClick={() => setShowModal(true)}>
           <Text className={styles.addBtnText}>➕ 发布</Text>
         </View>
@@ -119,7 +123,7 @@ const CircleMoralTasksPage: React.FC = () => {
       <View className={styles.taskList}>
         {tasks.length > 0 ? (
           tasks.map((task) => {
-            const catConfig = CATEGORY_CONFIG[task.category];
+            const catConfig = categoryList.find((c) => c.key === task.category) || categoryList[categoryList.length - 1];
             const totalMembers = getCircleById(circleId)?.members.filter((m) => m.role !== 'admin').length || 0;
             const progress = totalMembers > 0 ? Math.round((task.submissionCount / totalMembers) * 100) : 0;
 
@@ -128,11 +132,11 @@ const CircleMoralTasksPage: React.FC = () => {
                 key={task.id}
                 className={`${styles.taskCard} ${task.status === 'expired' ? styles.taskCardExpired : ''}`}
               >
-                <View className={styles.taskAccent} style={{ background: catConfig.color }} />
+                <View className={styles.taskAccent} style={{ background: catConfig?.color || '#C4956A' }} />
                 <View className={styles.taskContent}>
                   <View className={styles.taskHeader}>
                     <Text className={styles.taskTitle}>
-                      <Text>{catConfig.icon}</Text>
+                      <Text>{catConfig?.icon || '✨'}</Text>
                       <Text> {task.title}</Text>
                     </Text>
                     <Text
@@ -149,13 +153,15 @@ const CircleMoralTasksPage: React.FC = () => {
                       <Text className={styles.metaIcon}>📅</Text>
                       <Text className={styles.metaText}>截止 {formatDate(task.weekRange.end)}</Text>
                     </View>
-                    <View className={styles.metaItem}>
-                      <Text className={styles.metaIcon}>📹</Text>
-                      <Text className={styles.metaText}>{task.requireVideo ? '需视频' : '文字即可'}</Text>
-                    </View>
+                    {typeConfig.showVideoOption && (
+                      <View className={styles.metaItem}>
+                        <Text className={styles.metaIcon}>📹</Text>
+                        <Text className={styles.metaText}>{task.requireVideo ? '需视频' : '文字即可'}</Text>
+                      </View>
+                    )}
                     <View className={styles.metaItem}>
                       <Text className={styles.metaIcon}>🏷️</Text>
-                      <Text className={styles.metaText}>{catConfig.name}</Text>
+                      <Text className={styles.metaText}>{catConfig?.name || '其他'}</Text>
                     </View>
                   </View>
 
@@ -181,7 +187,7 @@ const CircleMoralTasksPage: React.FC = () => {
         ) : (
           <View className={styles.empty}>
             <Text className={styles.emptyIcon}>📋</Text>
-            <Text className={styles.emptyText}>暂无德育任务</Text>
+            <Text className={styles.emptyText}>暂无{typeConfig.labels.task}</Text>
           </View>
         )}
       </View>
@@ -190,13 +196,13 @@ const CircleMoralTasksPage: React.FC = () => {
       {showModal && (
         <View className={styles.modalOverlay} onClick={() => setShowModal(false)}>
           <View className={styles.modalPanel} onClick={(e) => e.stopPropagation()}>
-            <Text className={styles.modalTitle}>发布德育任务</Text>
+            <Text className={styles.modalTitle}>发布{typeConfig.labels.task}</Text>
 
             <View className={styles.formItem}>
-              <Text className={styles.formLabel}>任务标题</Text>
+              <Text className={styles.formLabel}>{typeConfig.labels.taskShort}标题</Text>
               <Input
                 className={styles.formInput}
-                placeholder="如：帮父母做家务"
+                placeholder={`如：${typeConfig.categories[0]?.name || '完成一项善行'}`}
                 value={formTitle}
                 onInput={(e) => setFormTitle(e.detail.value)}
                 maxlength={30}
@@ -204,7 +210,7 @@ const CircleMoralTasksPage: React.FC = () => {
             </View>
 
             <View className={styles.formItem}>
-              <Text className={styles.formLabel}>任务描述</Text>
+              <Text className={styles.formLabel}>{typeConfig.labels.taskShort}描述</Text>
               <Textarea
                 className={styles.formTextarea}
                 placeholder="描述具体要求..."
@@ -215,33 +221,35 @@ const CircleMoralTasksPage: React.FC = () => {
             </View>
 
             <View className={styles.formItem}>
-              <Text className={styles.formLabel}>善行类别</Text>
+              <Text className={styles.formLabel}>类别</Text>
               <View className={styles.categoryList}>
-                {CATEGORY_KEYS.map((cat) => (
+                {categoryList.map((cat) => (
                   <Text
-                    key={cat}
-                    className={`${styles.categoryOption} ${formCategory === cat ? styles.categoryOptionActive : ''}`}
-                    onClick={() => setFormCategory(cat)}
+                    key={cat.key}
+                    className={`${styles.categoryOption} ${formCategory === cat.key ? styles.categoryOptionActive : ''}`}
+                    onClick={() => setFormCategory(cat.key)}
                   >
-                    {CATEGORY_CONFIG[cat].icon} {CATEGORY_CONFIG[cat].name}
+                    {cat.icon} {cat.name}
                   </Text>
                 ))}
               </View>
             </View>
 
-            <View className={styles.formItem}>
-              <View className={styles.switchRow}>
-                <Text className={styles.switchLabel}>是否要求拍摄视频</Text>
-                <Switch
-                  checked={formRequireVideo}
-                  onChange={(e) => setFormRequireVideo(e.detail.value)}
-                  color="#C4956A"
-                />
+            {typeConfig.showVideoOption && (
+              <View className={styles.formItem}>
+                <View className={styles.switchRow}>
+                  <Text className={styles.switchLabel}>是否要求拍摄视频</Text>
+                  <Switch
+                    checked={formRequireVideo}
+                    onChange={(e) => setFormRequireVideo(e.detail.value)}
+                    color="#C4956A"
+                  />
+                </View>
               </View>
-            </View>
+            )}
 
             <View className={styles.submitBtn} onClick={handleAddTask}>
-              <Text className={styles.submitBtnText}>发布任务</Text>
+              <Text className={styles.submitBtnText}>发布{typeConfig.labels.taskShort}</Text>
             </View>
           </View>
         </View>
