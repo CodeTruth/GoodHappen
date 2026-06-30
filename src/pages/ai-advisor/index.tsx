@@ -1,5 +1,5 @@
-import React, { useState, useCallback } from 'react'
-import { View, Text, ScrollView, Input, Picker } from '@tarojs/components'
+import React, { useState, useCallback, useRef } from 'react'
+import { View, Text, ScrollView } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import {
   consultAIAdvisor,
@@ -13,67 +13,24 @@ import {
 import styles from './index.module.scss'
 
 // ============================================
-// 常量定义
+// 类型定义
 // ============================================
 
-type PageStep = 'form' | 'loading' | 'result'
+type PageStep = 'idle' | 'sensing' | 'analyzing' | 'result'
 
-/** 身体状况选项 */
-const PHYSICAL_CONDITION_OPTIONS: { value: UserProfile['physicalCondition']; label: string }[] = [
-  { value: 'good', label: '身体良好' },
-  { value: 'normal', label: '一般' },
-  { value: 'weak', label: '体弱' },
-  { value: 'disabled', label: '残障' },
-]
-
-/** 快捷场景 */
-const QUICK_SCENES = [
-  '老人摔倒',
-  '交通事故',
-  '有人晕倒',
-  '遇到小偷',
-  '水域救援',
-  '纠纷调解',
-]
-
-/** 环境选项 */
-const TIME_OPTIONS = [
-  { value: 'afternoon', label: '白天' },
-  { value: 'night', label: '晚上' },
-  { value: 'late_night', label: '深夜' },
-]
-
-const PEOPLE_OPTIONS = [
-  { value: 0, label: '无人' },
-  { value: 2, label: '较少' },
-  { value: 5, label: '较多' },
-  { value: 10, label: '很多人' },
-]
-
-const LOCATION_OPTIONS = [
-  { value: 'busy', label: '繁华街道' },
-  { value: 'community', label: '小区' },
-  { value: 'isolated', label: '偏僻路段' },
-]
-
-const CCTV_OPTIONS = [
-  { value: 'yes', label: '有' },
-  { value: 'no', label: '没有' },
-  { value: 'unknown', label: '不确定' },
-]
-
-/** 对方情况选项 */
-const SUBJECT_COUNT_OPTIONS = [
-  { value: 1, label: '1人' },
-  { value: 3, label: '多人' },
-]
-
-const SUBJECT_BEHAVIOR_OPTIONS = [
-  { value: 'calm', label: '平静' },
-  { value: 'anxious', label: '焦虑' },
-  { value: 'aggressive', label: '激动' },
-  { value: 'unconscious', label: '昏迷' },
-]
+/** 模拟感知提取的数据 */
+interface PerceivedData {
+  description: string
+  sceneType: string
+  urgency: KindnessAction['urgency']
+  timeOfDay: EnvironmentContext['timeOfDay']
+  nearbyPeople: number
+  subjectCount: number
+  subjectBehavior: SubjectInfo['behavior']
+  subjectConsciousness: SubjectInfo['consciousness']
+  isIsolated: boolean
+  hasCCTV: boolean
+}
 
 // ============================================
 // 页面组件
@@ -81,94 +38,114 @@ const SUBJECT_BEHAVIOR_OPTIONS = [
 
 export default function AIAdvisorPage() {
   // 页面步骤
-  const [step, setStep] = useState<PageStep>('form')
+  const [step, setStep] = useState<PageStep>('idle')
   const [result, setResult] = useState<AIAdvisorResult | null>(null)
 
-  // ===== 表单数据 =====
-  const [description, setDescription] = useState('')
-  const [activeScene, setActiveScene] = useState('')
+  // 感知状态
+  const [isRecording, setIsRecording] = useState(false)
+  const [voiceText, setVoiceText] = useState('')
+  const [perceivedDots, setPerceivedDots] = useState(0)
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
-  // 自身状况
-  const [physicalCondition, setPhysicalCondition] = useState<UserProfile['physicalCondition']>('normal')
-
-  // 环境
-  const [timeOfDay, setTimeOfDay] = useState<string>('afternoon')
-  const [nearbyPeople, setNearbyPeople] = useState<number>(5)
-  const [locationType, setLocationType] = useState<string>('busy')
-  const [cctvStatus, setCctvStatus] = useState<string>('yes')
-
-  // 对方情况
-  const [subjectCount, setSubjectCount] = useState<number>(1)
-  const [subjectBehavior, setSubjectBehavior] = useState<string>('calm')
-
-  // ===== Picker 相关 =====
-  const [physicalPickerVisible, setPhysicalPickerVisible] = useState(false)
-  const [physicalPickerRange] = useState(PHYSICAL_CONDITION_OPTIONS.map(o => o.label))
-  const [physicalPickerIndex, setPhysicalPickerIndex] = useState(1) // 默认 '一般'
-
-  // ===== 快捷场景点击 =====
-  const handleQuickScene = useCallback((scene: string) => {
-    setActiveScene(scene)
-    setDescription(scene)
+  // ===== 开始感知 =====
+  const handleStartSensing = useCallback(() => {
+    setStep('sensing')
+    setVoiceText('')
+    setPerceivedDots(0)
   }, [])
 
-  // ===== Picker 变更 =====
-  const handlePhysicalChange = useCallback((e: any) => {
-    const index = e.detail.value as number
-    setPhysicalPickerIndex(index)
-    setPhysicalCondition(PHYSICAL_CONDITION_OPTIONS[index].value)
+  // ===== 按住说话 =====
+  const handleVoiceStart = useCallback(() => {
+    setIsRecording(true)
+    // 模拟语音输入过程
+    timerRef.current = setInterval(() => {
+      setVoiceText((prev) => {
+        const phrases = [
+          '看到',
+          '看到一位',
+          '看到一位老人',
+          '看到一位老人摔倒',
+          '看到一位老人摔倒在路边',
+          '看到一位老人摔倒在路边，',
+          '看到一位老人摔倒在路边，似乎',
+          '看到一位老人摔倒在路边，似乎无法',
+          '看到一位老人摔倒在路边，似乎无法起身',
+        ]
+        const idx = Math.min(phrases.length - 1, Math.floor(prev.length / 3) + 1)
+        return phrases[idx] || phrases[phrases.length - 1]
+      })
+    }, 300)
+  }, [])
+
+  const handleVoiceEnd = useCallback(() => {
+    setIsRecording(false)
+    if (timerRef.current) {
+      clearInterval(timerRef.current)
+      timerRef.current = null
+    }
+    // 模拟语音识别完成
+    setVoiceText('看到一位老人摔倒在路边，似乎无法起身')
   }, [])
 
   // ===== AI 分析 =====
   const handleAnalyze = useCallback(() => {
-    if (!description.trim()) {
-      Taro.showToast({ title: '请描述你想做的善行', icon: 'none' })
-      return
-    }
+    const finalVoice = voiceText.trim() || '看到一位老人摔倒在路边，似乎无法起身'
 
-    setStep('loading')
+    setStep('analyzing')
 
     // 模拟分析延迟
     setTimeout(() => {
+      // 从语音描述中自动提取信息
+      const perceived = extractFromVoice(finalVoice)
+      // 从摄像头感知中自动推断（模拟）
+      const cameraData = inferFromCamera()
+      // 合并感知数据
+      const merged = { ...perceived, ...cameraData }
+
+      // 自动生成参数
       const userProfile: UserProfile = {
-        physicalCondition,
+        physicalCondition: 'normal',
         experienceLevel: 'normal',
       }
 
-      const isIsolated = locationType === 'isolated'
-      const hasCCTV = cctvStatus === 'yes'
-
       const env: EnvironmentContext = {
-        timeOfDay: timeOfDay as EnvironmentContext['timeOfDay'],
+        timeOfDay: merged.timeOfDay,
         isWeekday: true,
-        location: locationType === 'busy' ? '繁华街道' : locationType === 'community' ? '小区' : '偏僻路段',
-        nearbyPeople,
-        isIsolated,
-        hasCCTV,
+        location: merged.isIsolated ? '偏僻路段' : '繁华街道',
+        nearbyPeople: merged.nearbyPeople,
+        isIsolated: merged.isIsolated,
+        hasCCTV: merged.hasCCTV,
       }
 
       const subject: SubjectInfo = {
-        count: subjectCount,
-        behavior: subjectBehavior as SubjectInfo['behavior'],
-        consciousness: subjectBehavior === 'unconscious' ? 'unconscious' : 'alert',
+        count: merged.subjectCount,
+        behavior: merged.subjectBehavior,
+        consciousness: merged.subjectConsciousness,
       }
 
       const action: KindnessAction = {
-        type: guessActionType(description),
-        description: description.trim(),
-        urgency: guessUrgency(description),
+        type: guessActionType(finalVoice),
+        description: finalVoice,
+        urgency: merged.urgency,
       }
 
       const advisorResult = consultAIAdvisor(userProfile, env, subject, action)
       setResult(advisorResult)
       setStep('result')
     }, 1500)
-  }, [description, physicalCondition, timeOfDay, nearbyPeople, locationType, cctvStatus, subjectCount, subjectBehavior])
+  }, [voiceText])
 
   // ===== 重新评估 =====
   const handleReset = useCallback(() => {
-    setStep('form')
+    setStep('idle')
     setResult(null)
+    setVoiceText('')
+    setPerceivedDots(0)
+    setIsRecording(false)
+    if (timerRef.current) {
+      clearInterval(timerRef.current)
+      timerRef.current = null
+    }
   }, [])
 
   // ===== 底部按钮操作 =====
@@ -207,200 +184,160 @@ export default function AIAdvisorPage() {
     return 'linear-gradient(90deg, #FF7A45 0%, #F44336 100%)'
   }
 
+  // ===== 感知中动画点 =====
+  React.useEffect(() => {
+    if (step !== 'sensing') return
+    const interval = setInterval(() => {
+      setPerceivedDots((prev) => (prev + 1) % 4)
+    }, 500)
+    return () => clearInterval(interval)
+  }, [step])
+
   // ============================================
   // 渲染
   // ============================================
 
   return (
     <View className={styles.pageWrapper}>
-      {step === 'form' && (
-        <ScrollView scrollY className={styles.container}>
-          {/* 引导卡片 */}
-          <View className={`${styles.introCard} ${styles.fadeIn}`}>
-            <View className={styles.introIcon}>🔮</View>
-            <View className={styles.introTitle}>做好事前先问AI</View>
-            <View className={styles.introDesc}>
-              描述你想做的善行和周围环境，AI顾问将综合评判安全性，指导你如何安全地行善。
+      {/* ===== 初始状态：大圆形按钮 ===== */}
+      {step === 'idle' && (
+        <View className={styles.idleContainer}>
+          <View className={styles.idleInner}>
+            <View className={styles.idleIcon}>🔮</View>
+            <View className={styles.idleTitle}>AI 善行顾问</View>
+            <View className={styles.idleDesc}>
+              打开摄像头和麦克风，让AI感知周围环境，智能分析最佳行善方案
             </View>
-          </View>
-
-          {/* 善行描述 */}
-          <View className={`${styles.formSection} ${styles.fadeIn}`}>
-            <View className={styles.sectionTitle}>描述场景</View>
-            <Input
-              className={styles.descInput}
-              placeholder='描述你想做的善行，如：看到老人摔倒在路边'
-              value={description}
-              onInput={(e: any) => {
-                setDescription(e.detail.value)
-                setActiveScene('')
-              }}
-            />
-
-            {/* 快捷场景 */}
-            <View className={styles.quickScenes}>
-              <View className={styles.quickScenesLabel}>快捷场景</View>
-              <ScrollView scrollX className={styles.quickScenesScroll}>
-                <View className={styles.quickScenesInner}>
-                  {QUICK_SCENES.map((scene) => (
-                    <View
-                      key={scene}
-                      className={`${styles.quickSceneBtn} ${activeScene === scene ? styles.active : ''}`}
-                      onClick={() => handleQuickScene(scene)}
-                    >
-                      {scene}
-                    </View>
-                  ))}
-                </View>
-              </ScrollView>
-            </View>
-          </View>
-
-          {/* 自身状况 */}
-          <View className={`${styles.formSection} ${styles.fadeIn}`}>
-            <View className={styles.sectionTitle}>自身状况</View>
-            <Picker
-              mode='selector'
-              range={physicalPickerRange}
-              value={physicalPickerIndex}
-              onChange={handlePhysicalChange}
+            <View
+              className={styles.startBtn}
+              onClick={handleStartSensing}
             >
-              <View className={styles.pickerRow}>
-                <Text className={styles.pickerLabel}>身体状况</Text>
-                <View style={{ display: 'flex', alignItems: 'center' }}>
-                  <Text className={styles.pickerValue}>
-                    {PHYSICAL_CONDITION_OPTIONS[physicalPickerIndex].label}
-                  </Text>
-                  <Text className={styles.pickerArrow}> ▾</Text>
-                </View>
-              </View>
-            </Picker>
+              <Text className={styles.startBtnIcon}>📷</Text>
+              <Text className={styles.startBtnText}>打开摄像头和麦克风</Text>
+            </View>
           </View>
+        </View>
+      )}
 
-          {/* 环境 */}
-          <View className={`${styles.formSection} ${styles.fadeIn}`}>
-            <View className={styles.sectionTitle}>环境信息</View>
-
-            {/* 时间 */}
-            <View className={styles.envOptions}>
-              <View className={styles.envLabel}>时间</View>
-              <View className={styles.envBtnGroup}>
-                {TIME_OPTIONS.map((opt) => (
-                  <View
-                    key={opt.value}
-                    className={`${styles.envBtn} ${timeOfDay === opt.value ? styles.active : ''}`}
-                    onClick={() => setTimeOfDay(opt.value)}
-                  >
-                    {opt.label}
-                  </View>
-                ))}
+      {/* ===== 感知中状态 ===== */}
+      {step === 'sensing' && (
+        <View className={styles.sensingContainer}>
+          {/* 摄像头预览区域 */}
+          <View className={styles.cameraPreview}>
+            <View className={styles.cameraOverlay}>
+              <View className={styles.cameraGrid}>
+                <View className={styles.cameraGridLineH} />
+                <View className={styles.cameraGridLineH} />
+                <View className={styles.cameraGridLineV} />
+                <View className={styles.cameraGridLineV} />
               </View>
-            </View>
-
-            {/* 周围人数 */}
-            <View className={styles.envOptions}>
-              <View className={styles.envLabel}>周围人数</View>
-              <View className={styles.envBtnGroup}>
-                {PEOPLE_OPTIONS.map((opt) => (
-                  <View
-                    key={opt.value}
-                    className={`${styles.envBtn} ${nearbyPeople === opt.value ? styles.active : ''}`}
-                    onClick={() => setNearbyPeople(opt.value)}
-                  >
-                    {opt.label}
-                  </View>
-                ))}
+              <View className={`${styles.cameraCorner} ${styles.cameraCornerTL}`} />
+              <View className={`${styles.cameraCorner} ${styles.cameraCornerTR}`} />
+              <View className={`${styles.cameraCorner} ${styles.cameraCornerBL}`} />
+              <View className={`${styles.cameraCorner} ${styles.cameraCornerBR}`} />
+              <View className={styles.recordingBadge}>
+                <View className={styles.recordingDot} />
+                <Text className={styles.recordingText}>录制中</Text>
               </View>
-            </View>
-
-            {/* 地点类型 */}
-            <View className={styles.envOptions}>
-              <View className={styles.envLabel}>地点类型</View>
-              <View className={styles.envBtnGroup}>
-                {LOCATION_OPTIONS.map((opt) => (
-                  <View
-                    key={opt.value}
-                    className={`${styles.envBtn} ${locationType === opt.value ? styles.active : ''}`}
-                    onClick={() => setLocationType(opt.value)}
-                  >
-                    {opt.label}
-                  </View>
-                ))}
-              </View>
-            </View>
-
-            {/* 是否有监控 */}
-            <View className={styles.envOptions}>
-              <View className={styles.envLabel}>是否有监控</View>
-              <View className={styles.envBtnGroup}>
-                {CCTV_OPTIONS.map((opt) => (
-                  <View
-                    key={opt.value}
-                    className={`${styles.envBtn} ${cctvStatus === opt.value ? styles.active : ''}`}
-                    onClick={() => setCctvStatus(opt.value)}
-                  >
-                    {opt.label}
-                  </View>
-                ))}
+              <View className={styles.cameraStatus}>
+                <Text className={styles.cameraStatusText}>
+                  AI正在感知环境{'.'.repeat(perceivedDots + 1)}
+                </Text>
               </View>
             </View>
           </View>
 
-          {/* 对方情况 */}
-          <View className={`${styles.formSection} ${styles.fadeIn}`}>
-            <View className={styles.sectionTitle}>对方情况</View>
-
-            <View className={styles.envOptions}>
-              <View className={styles.envLabel}>对方人数</View>
-              <View className={styles.envBtnGroup}>
-                {SUBJECT_COUNT_OPTIONS.map((opt) => (
-                  <View
-                    key={opt.value}
-                    className={`${styles.envBtn} ${subjectCount === opt.value ? styles.active : ''}`}
-                    onClick={() => setSubjectCount(opt.value)}
-                  >
-                    {opt.label}
-                  </View>
-                ))}
+          {/* 语音识别区域 */}
+          <View className={styles.voiceSection}>
+            <View className={styles.voiceLabel}>按住说话描述场景</View>
+            {voiceText ? (
+              <View className={styles.voiceTextBox}>
+                <Text className={styles.voiceText}>{voiceText}</Text>
               </View>
+            ) : (
+              <View className={styles.voiceHint}>
+                <Text>请描述你看到的场景，例如"看到一位老人摔倒"</Text>
+              </View>
+            )}
+            <View
+              className={`${styles.voiceBtn} ${isRecording ? styles.recording : ''}`}
+              onTouchStart={handleVoiceStart}
+              onTouchEnd={handleVoiceEnd}
+            >
+              <Text className={styles.voiceBtnIcon}>🎙️</Text>
+              <Text className={styles.voiceBtnText}>
+                {isRecording ? '正在聆听...' : '按住说话'}
+              </Text>
             </View>
+          </View>
 
-            <View className={styles.envOptions}>
-              <View className={styles.envLabel}>对方状态</View>
-              <View className={styles.envBtnGroup}>
-                {SUBJECT_BEHAVIOR_OPTIONS.map((opt) => (
-                  <View
-                    key={opt.value}
-                    className={`${styles.envBtn} ${subjectBehavior === opt.value ? styles.active : ''}`}
-                    onClick={() => setSubjectBehavior(opt.value)}
-                  >
-                    {opt.label}
-                  </View>
-                ))}
+          {/* 感知信息 */}
+          <View className={styles.perceivedSection}>
+            <View className={styles.perceivedTitle}>已感知信息</View>
+            <View className={styles.perceivedTags}>
+              <View className={styles.perceivedTag}>
+                <Text className={styles.perceivedTagLabel}>场景</Text>
+                <Text className={styles.perceivedTagValue}>
+                  {voiceText ? guessActionType(voiceText) === 'elder_help' ? '老人求助' : '现场情况' : '...'}
+                </Text>
+              </View>
+              <View className={styles.perceivedTag}>
+                <Text className={styles.perceivedTagLabel}>时间</Text>
+                <Text className={styles.perceivedTagValue}>
+                  {new Date().getHours() >= 6 && new Date().getHours() < 18 ? '白天' : '晚上'}
+                </Text>
+              </View>
+              <View className={styles.perceivedTag}>
+                <Text className={styles.perceivedTagLabel}>人数</Text>
+                <Text className={styles.perceivedTagValue}>自动推断</Text>
+              </View>
+              <View className={styles.perceivedTag}>
+                <Text className={styles.perceivedTagLabel}>监控</Text>
+                <Text className={styles.perceivedTagValue}>检测中</Text>
               </View>
             </View>
           </View>
 
           {/* AI分析按钮 */}
           <View
-            className={`${styles.analyzeBtn} ${styles.fadeIn}`}
+            className={styles.analyzeBtn}
             onClick={handleAnalyze}
           >
             <Text className={styles.analyzeBtnIcon}>🔍</Text>
             <Text>AI 分析</Text>
           </View>
-        </ScrollView>
+        </View>
       )}
 
-      {step === 'loading' && (
-        <View className={styles.loadingOverlay}>
-          <View className={styles.loadingCard}>
-            <View className={styles.loadingIcon}>🔮</View>
-            <View className={styles.loadingText}>AI 正在分析场景...</View>
+      {/* ===== 分析中状态 ===== */}
+      {step === 'analyzing' && (
+        <View className={styles.analyzingContainer}>
+          <View className={styles.analyzingCard}>
+            <View className={styles.analyzingWave}>
+              <View className={styles.waveCircle} />
+              <View className={styles.waveCircle} />
+              <View className={styles.waveCircle} />
+            </View>
+            <View className={styles.analyzingTitle}>AI 正在分析场景...</View>
+            <View className={styles.analyzingSteps}>
+              <View className={styles.analyzingStep}>
+                <Text className={styles.analyzingStepIcon}>✅</Text>
+                <Text className={styles.analyzingStepText}>提取语音信息</Text>
+              </View>
+              <View className={styles.analyzingStep}>
+                <Text className={styles.analyzingStepIcon}>✅</Text>
+                <Text className={styles.analyzingStepText}>分析环境画面</Text>
+              </View>
+              <View className={styles.analyzingStep}>
+                <Text className={styles.analyzingStepIcon}>🔄</Text>
+                <Text className={styles.analyzingStepText}>综合评估风险</Text>
+              </View>
+            </View>
           </View>
         </View>
       )}
 
+      {/* ===== 结果展示 ===== */}
       {step === 'result' && result && (
         <View className={styles.resultContainer}>
           <ScrollView scrollY className={styles.container}>
@@ -570,6 +507,66 @@ export default function AIAdvisorPage() {
 // 辅助函数
 // ============================================
 
+/** 从语音描述中提取信息 */
+function extractFromVoice(desc: string): PerceivedData {
+  const hour = new Date().getHours()
+  let timeOfDay: EnvironmentContext['timeOfDay'] = 'afternoon'
+  if (hour >= 5 && hour < 12) timeOfDay = 'morning'
+  else if (hour >= 12 && hour < 17) timeOfDay = 'afternoon'
+  else if (hour >= 17 && hour < 20) timeOfDay = 'evening'
+  else if (hour >= 20 && hour < 24) timeOfDay = 'night'
+  else timeOfDay = 'late_night'
+
+  let urgency: KindnessAction['urgency'] = 'low'
+  if (/紧急|救命|昏迷|落水|溺水|心脏骤停|大出血/.test(desc)) urgency = 'critical'
+  else if (/撞|摔倒|事故|流血|疼痛难忍/.test(desc)) urgency = 'high'
+  else if (/偷|抢|纠纷|争吵|激烈/.test(desc)) urgency = 'medium'
+
+  let subjectCount = 1
+  if (/多人|两三|几个|一群/.test(desc)) subjectCount = 3
+  else if (/两人|2人|两个/.test(desc)) subjectCount = 2
+
+  let subjectBehavior: SubjectInfo['behavior'] = 'calm'
+  if (/激动|大喊|打人|暴力|冲突|争吵/.test(desc)) subjectBehavior = 'aggressive'
+  else if (/焦虑|不安|慌张|着急|哭/.test(desc)) subjectBehavior = 'anxious'
+  else if (/昏迷|晕倒|无意识|不动/.test(desc)) subjectBehavior = 'unconscious'
+
+  let subjectConsciousness: SubjectInfo['consciousness'] = 'alert'
+  if (/昏迷|晕倒|无意识|不省人事/.test(desc)) subjectConsciousness = 'unconscious'
+  else if (/迷糊|昏沉|迷迷糊糊/.test(desc)) subjectConsciousness = 'drowsy'
+
+  return {
+    description: desc,
+    sceneType: guessActionType(desc),
+    urgency,
+    timeOfDay,
+    nearbyPeople: 0, // 由摄像头推断
+    subjectCount,
+    subjectBehavior,
+    subjectConsciousness,
+    isIsolated: false, // 由摄像头推断
+    hasCCTV: false, // 由摄像头推断
+  }
+}
+
+/** 从摄像头感知推断环境（模拟） */
+function inferFromCamera(): Partial<PerceivedData> {
+  // 模拟周围人数推断（随机但偏向合理值）
+  const nearbyPeople = Math.random() > 0.5 ? 5 : Math.random() > 0.5 ? 2 : 0
+
+  // 模拟是否有监控（城市环境大概率有）
+  const hasCCTV = Math.random() > 0.3
+
+  // 模拟是否偏僻
+  const isIsolated = nearbyPeople <= 2 && Math.random() > 0.5
+
+  return {
+    nearbyPeople,
+    isIsolated,
+    hasCCTV,
+  }
+}
+
 function guessActionType(desc: string): string {
   if (/老人|扶|摔倒/.test(desc)) return 'elder_help'
   if (/车|交通|撞/.test(desc)) return 'traffic'
@@ -578,11 +575,4 @@ function guessActionType(desc: string): string {
   if (/晕|急救|心脏/.test(desc)) return 'medical'
   if (/偷|抢/.test(desc)) return 'crime'
   return 'general'
-}
-
-function guessUrgency(desc: string): KindnessAction['urgency'] {
-  if (/紧急|救命|昏迷|落水|溺水/.test(desc)) return 'critical'
-  if (/撞|摔倒|事故/.test(desc)) return 'high'
-  if (/偷|抢|纠纷/.test(desc)) return 'medium'
-  return 'low'
 }
