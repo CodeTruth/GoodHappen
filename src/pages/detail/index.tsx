@@ -7,6 +7,7 @@ import { getMockComments, MockComment } from '@/data/mockComments';
 import { useKindnessStore } from '@/store/kindness';
 import { useInteractionStore } from '@/store/interaction';
 import { useNotificationStore } from '@/store/notification';
+import { useProtectionStore } from '@/store/protection';
 import styles from './index.module.scss';
 
 // AI 人设图标映射
@@ -27,12 +28,22 @@ const DetailPage: React.FC = () => {
   const [kindness, setKindness] = useState<Kindness | null>(null);
   const [notFound, setNotFound] = useState(false);
   const [commentText, setCommentText] = useState('');
+  const [sosLoading, setSosLoading] = useState(false);
+  const [sosActive, setSosActive] = useState(false);
+  const [witnessStatus, setWitnessStatus] = useState<{
+    matchCount: number;
+    evidenceChainFormed: boolean;
+  } | null>(null);
 
   // 从 store 获取已发布的善行（用于查找用户自己发布的）
   const publishedList = useKindnessStore((s) => s.publishedList);
   // 互动 store
   const { hasLiked, toggleLike, getLikeCount, getCommentCount, addComment, getCommentList } = useInteractionStore();
   const { addNotification, isDndActive } = useNotificationStore();
+  const {
+    sosRecords,
+    getWitnessMatchBySos,
+  } = useProtectionStore();
 
   useEffect(() => {
     if (id) {
@@ -51,6 +62,22 @@ const DetailPage: React.FC = () => {
       }
     }
   }, [id, publishedList]);
+
+  useEffect(() => {
+    if (!kindness || kindness.type !== 'self') return;
+    // 检查是否已有 SOS 记录
+    const existingSos = sosRecords.find(s => s.recordId === kindness.id);
+    if (existingSos) {
+      setSosActive(true);
+      const match = getWitnessMatchBySos(existingSos.id);
+      if (match) {
+        setWitnessStatus({
+          matchCount: match.witnessRecordIds.length,
+          evidenceChainFormed: match.evidenceChainFormed,
+        });
+      }
+    }
+  }, [kindness?.id, sosRecords]);
 
   // Mock 评论数据
   const mockComments = useMemo<MockComment[]>(() => {
@@ -128,6 +155,39 @@ const DetailPage: React.FC = () => {
   // 分享
   const handleShare = () => {
     Taro.showToast({ title: '已复制链接', icon: 'success' });
+  };
+
+  const handleTriggerSOS = () => {
+    if (!kindness) return;
+    
+    Taro.showModal({
+      title: '⚠️ 确认发起求助',
+      content: '发起后系统将自动锁存当前善行记录，扫描事发时段±30分钟、半径100米内的见证网络。',
+      confirmText: '确认发起',
+      cancelText: '取消',
+      success: (res) => {
+        if (res.confirm) {
+          setSosLoading(true);
+          // 模拟触发 SOS
+          setTimeout(() => {
+            try {
+              // 调用 store 的方法（实际场景会走 triggerSOS）
+              // 模拟：直接设置 SOS 活跃状态并触发扫描
+              setSosActive(true);
+              setWitnessStatus({
+                matchCount: 3,
+                evidenceChainFormed: true,
+              });
+              setSosLoading(false);
+              Taro.showToast({ title: '已锁定证据，匹配到3条见证', icon: 'success' });
+            } catch (e) {
+              setSosLoading(false);
+              Taro.showToast({ title: '发起失败', icon: 'none' });
+            }
+          }, 1500);
+        }
+      },
+    });
   };
 
   // 加载中
@@ -277,6 +337,63 @@ const DetailPage: React.FC = () => {
           <Text className={styles.statLabel}>福气值</Text>
         </View>
       </View>
+
+      {/* ===== 善行保护 / SOS 区域 ===== */}
+      {kindness.type === 'self' && (
+        <View className={styles.protectionSection}>
+          {sosActive ? (
+            /* 已发起 SOS 状态 */
+            <View className={styles.sosActiveCard}>
+              <View className={styles.sosActiveHeader}>
+                <Text className={styles.sosActiveIcon}>🛡️</Text>
+                <Text className={styles.sosActiveTitle}>善行已被保护</Text>
+              </View>
+              {witnessStatus && (
+                <View className={styles.sosActiveStats}>
+                  <View className={styles.sosActiveStat}>
+                    <Text className={styles.sosActiveStatValue}>{witnessStatus.matchCount}</Text>
+                    <Text className={styles.sosActiveStatLabel}>见证记录</Text>
+                  </View>
+                  <View className={styles.sosActiveDivider} />
+                  <View className={styles.sosActiveStat}>
+                    <Text className={styles.sosActiveStatValue}>
+                      {witnessStatus.evidenceChainFormed ? '✅' : '⏳'}
+                    </Text>
+                    <Text className={styles.sosActiveStatLabel}>证据链</Text>
+                  </View>
+                </View>
+              )}
+              <View
+                className={styles.sosViewDetail}
+                onClick={() => Taro.navigateTo({ url: `/pages/witness-network/index` })}
+              >
+                <Text className={styles.sosViewDetailText}>查看见证详情 →</Text>
+              </View>
+            </View>
+          ) : (
+            /* 未发起 SOS */
+            <View className={styles.sosTriggerCard}>
+              <View className={styles.sosTriggerContent}>
+                <Text className={styles.sosTriggerIcon}>🛡️</Text>
+                <View className={styles.sosTriggerTextWrapper}>
+                  <Text className={styles.sosTriggerTitle}>善行保护</Text>
+                  <Text className={styles.sosTriggerDesc}>
+                    被误解或遭遇不公？善行见证网络帮你还原真相
+                  </Text>
+                </View>
+              </View>
+              <View
+                className={`${styles.sosTriggerBtn} ${sosLoading ? styles.sosLoadingBtn : ''}`}
+                onClick={sosLoading ? undefined : handleTriggerSOS}
+              >
+                <Text className={styles.sosTriggerBtnText}>
+                  {sosLoading ? '发起中...' : '我被讹了'}
+                </Text>
+              </View>
+            </View>
+          )}
+        </View>
+      )}
 
       {/* ===== 评论区 ===== */}
       <View className={styles.commentSection}>

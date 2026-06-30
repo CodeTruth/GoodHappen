@@ -520,3 +520,133 @@
   font-size: $font-size-xl;
   color: $color-text-secondary;
 }
+
+/* === 善行保护 / SOS 区域 === */
+.protectionSection {
+  margin: 24rpx 24rpx 0;
+}
+
+.sosActiveCard {
+  background: linear-gradient(135deg, #F0FFF4 0%, #E6FFED 100%);
+  border-radius: 20rpx;
+  padding: 24rpx;
+  border-left: 6rpx solid #48BB78;
+}
+
+.sosActiveHeader {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16rpx;
+}
+
+.sosActiveIcon {
+  font-size: 36rpx;
+  margin-right: 12rpx;
+}
+
+.sosActiveTitle {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #276749;
+}
+
+.sosActiveStats {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16rpx;
+}
+
+.sosActiveStat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 120rpx;
+}
+
+.sosActiveStatValue {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: #48BB78;
+}
+
+.sosActiveStatLabel {
+  font-size: 22rpx;
+  color: #68D391;
+  margin-top: 4rpx;
+}
+
+.sosActiveDivider {
+  width: 2rpx;
+  height: 40rpx;
+  background: rgba(72, 187, 120, 0.2);
+  margin: 0 40rpx;
+}
+
+.sosViewDetail {
+  text-align: center;
+  padding-top: 12rpx;
+  border-top: 1rpx solid rgba(72, 187, 120, 0.15);
+}
+
+.sosViewDetailText {
+  font-size: 24rpx;
+  color: #48BB78;
+  font-weight: 500;
+}
+
+.sosTriggerCard {
+  background: linear-gradient(135deg, #FFF5F5 0%, #FFE8E8 100%);
+  border-radius: 20rpx;
+  padding: 24rpx;
+  border-left: 6rpx solid #FC8181;
+}
+
+.sosTriggerContent {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 16rpx;
+}
+
+.sosTriggerIcon {
+  font-size: 36rpx;
+  margin-right: 12rpx;
+  margin-top: 2rpx;
+}
+
+.sosTriggerTextWrapper {
+  flex: 1;
+}
+
+.sosTriggerTitle {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #9B2C2C;
+  display: block;
+  margin-bottom: 4rpx;
+}
+
+.sosTriggerDesc {
+  font-size: 22rpx;
+  color: #C53030;
+  line-height: 1.5;
+}
+
+.sosTriggerBtn {
+  background: linear-gradient(135deg, #FC8181 0%, #F56565 100%);
+  border-radius: 40rpx;
+  padding: 16rpx 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sosLoadingBtn {
+  opacity: 0.6;
+}
+
+.sosTriggerBtnText {
+  font-size: 26rpx;
+  color: #fff;
+  font-weight: 600;
+}

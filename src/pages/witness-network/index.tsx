@@ -103,6 +103,7 @@ const WitnessNetworkPage: React.FC = () => {
   const { loadFromStorage: loadUser } = useUserStore();
 
   const [activeSosId, setActiveSosId] = useState<string>('');
+  const [expandedWitnessId, setExpandedWitnessId] = useState<string | null>(null);
 
   useEffect(() => {
     loadFromStorage();
@@ -182,6 +183,33 @@ const WitnessNetworkPage: React.FC = () => {
         </Text>
       </View>
 
+      {/* ===== 全平台见证统计 ===== */}
+      <View className={styles.platformStats}>
+        <ScrollView scrollX enableFlex className={styles.platformStatsScroll}>
+          <View className={styles.platformStatsInner}>
+            <View className={styles.platformStatItem}>
+              <Text className={styles.platformStatNumber}>1,256</Text>
+              <Text className={styles.platformStatLabel}>已形成证据链</Text>
+            </View>
+            <View className={styles.platformStatDivider} />
+            <View className={styles.platformStatItem}>
+              <Text className={styles.platformStatNumber}>3,489</Text>
+              <Text className={styles.platformStatLabel}>见证记录总数</Text>
+            </View>
+            <View className={styles.platformStatDivider} />
+            <View className={styles.platformStatItem}>
+              <Text className={styles.platformStatNumber}>892</Text>
+              <Text className={styles.platformStatLabel}>善行者已保护</Text>
+            </View>
+            <View className={styles.platformStatDivider} />
+            <View className={styles.platformStatItem}>
+              <Text className={styles.platformStatNumber}>2,156</Text>
+              <Text className={styles.platformStatLabel}>温暖见证人</Text>
+            </View>
+          </View>
+        </ScrollView>
+      </View>
+
       {/* 见证网络说明 */}
       <View className={styles.infoCard}>
         <Text className={styles.infoTitle}>🌐 见证网络如何工作</Text>
@@ -251,6 +279,17 @@ const WitnessNetworkPage: React.FC = () => {
                 </Text>
                 <Text className={styles.overviewStatLabel}>描述吻合</Text>
               </View>
+            </View>
+
+            {/* 匹配时间标识 */}
+            <View className={styles.matchTimeRow}>
+              <Text className={styles.matchTimeDot}>⚡</Text>
+              <Text className={styles.matchTimeText}>
+                匹配耗时：{matchResult.timeDiffMinutes < 3 ? '极速' : matchResult.timeDiffMinutes < 10 ? '快速' : '标准'}匹配
+              </Text>
+              <Text className={styles.matchTimeTimestamp}>
+                {matchResult.createdAt ? formatTime(matchResult.createdAt) : ''}
+              </Text>
             </View>
 
             {/* 证据链状态 */}
@@ -328,20 +367,48 @@ const WitnessNetworkPage: React.FC = () => {
             {matchedWitnesses.length > 0 ? (
               matchedWitnesses.map((witness) => (
                 <View key={witness.id} className={styles.witnessItem}>
-                  <Image className={styles.witnessAvatar} src={witness.witnessUserAvatar} mode='aspectFill' />
-                  <View className={styles.witnessInfo}>
-                    <View className={styles.witnessHeader}>
-                      <Text className={styles.witnessName}>{witness.witnessUserName}</Text>
-                      {witness.badgeGranted && (
-                        <Text className={styles.witnessBadge}>温暖见证人</Text>
-                      )}
+                  <View
+                    className={styles.witnessClickableRow}
+                    onClick={() => setExpandedWitnessId(expandedWitnessId === witness.id ? null : witness.id)}
+                  >
+                    <Image className={styles.witnessAvatar} src={witness.witnessUserAvatar} mode='aspectFill' />
+                    <View className={styles.witnessInfo}>
+                      <View className={styles.witnessHeader}>
+                        <Text className={styles.witnessName}>{witness.witnessUserName}</Text>
+                        {witness.badgeGranted && (
+                          <Text className={styles.witnessBadge}>温暖见证人</Text>
+                        )}
+                      </View>
+                      <Text className={styles.witnessDesc}>{witness.description}</Text>
+                      <Text className={styles.witnessMeta}>
+                        见证时间：{formatTime(witness.timestamp)}{'\n'}
+                        见证地点：{witness.gps.address}
+                      </Text>
                     </View>
-                    <Text className={styles.witnessDesc}>{witness.description}</Text>
-                    <Text className={styles.witnessMeta}>
-                      见证时间：{formatTime(witness.timestamp)}{'\n'}
-                      见证地点：{witness.gps.address}
+                    <Text className={styles.witnessExpand}>
+                      {expandedWitnessId === witness.id ? '收起' : '详情'}
                     </Text>
                   </View>
+                  {expandedWitnessId === witness.id && (
+                    <View className={styles.witnessDetail}>
+                      <View className={styles.witnessDetailRow}>
+                        <Text className={styles.witnessDetailLabel}>见证地点</Text>
+                        <Text className={styles.witnessDetailValue}>{witness.gps.address}</Text>
+                      </View>
+                      <View className={styles.witnessDetailRow}>
+                        <Text className={styles.witnessDetailLabel}>匹配状态</Text>
+                        <Text className={styles.witnessDetailValue}>{witness.matched ? '✅ 已匹配' : '⏳ 待匹配'}</Text>
+                      </View>
+                      <View className={styles.witnessDetailRow}>
+                        <Text className={styles.witnessDetailLabel}>通知状态</Text>
+                        <Text className={styles.witnessDetailValue}>{witness.notified ? '✅ 已通知' : '⏳ 待通知'}</Text>
+                      </View>
+                      <View className={styles.witnessDetailRow}>
+                        <Text className={styles.witnessDetailLabel}>徽章授予</Text>
+                        <Text className={styles.witnessDetailValue}>{witness.badgeGranted ? '🏅 已授予' : '⏳ 未授予'}</Text>
+                      </View>
+                    </View>
+                  )}
                 </View>
               ))
             ) : (

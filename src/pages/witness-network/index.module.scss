@@ -319,3 +319,119 @@
   background: $color-bg-hover;
   color: $color-text-secondary;
 }
+
+/* === 全平台见证统计 === */
+.platformStats {
+  margin: 16rpx 24rpx;
+  background: linear-gradient(135deg, #FFF9F0 0%, #FFF3E0 100%);
+  border-radius: 20rpx;
+  padding: 20rpx 0;
+  border-left: 6rpx solid #C4956A;
+}
+
+.platformStatsScroll {
+  white-space: nowrap;
+}
+
+.platformStatsInner {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 24rpx;
+}
+
+.platformStatItem {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 140rpx;
+}
+
+.platformStatNumber {
+  font-size: 36rpx;
+  font-weight: 700;
+  color: #C4956A;
+  line-height: 1.2;
+}
+
+.platformStatLabel {
+  font-size: 22rpx;
+  color: #8B7355;
+  margin-top: 4rpx;
+}
+
+.platformStatDivider {
+  width: 2rpx;
+  height: 48rpx;
+  background: rgba(196, 149, 106, 0.2);
+  margin: 0 24rpx;
+}
+
+/* === 匹配时间标识 === */
+.matchTimeRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16rpx 24rpx 0;
+  gap: 8rpx;
+}
+
+.matchTimeDot {
+  font-size: 24rpx;
+}
+
+.matchTimeText {
+  font-size: 22rpx;
+  color: #8B7355;
+}
+
+.matchTimeTimestamp {
+  font-size: 20rpx;
+  color: #A89880;
+}
+
+/* === 见证者详情展开 === */
+.witnessClickableRow {
+  display: flex;
+  align-items: center;
+  padding: 20rpx 0;
+  cursor: pointer;
+}
+
+.witnessExpand {
+  font-size: 22rpx;
+  color: #C4956A;
+  margin-left: auto;
+  min-width: 48rpx;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.witnessDetail {
+  padding: 0 24rpx 20rpx;
+  background: rgba(196, 149, 106, 0.04);
+  border-top: 1rpx solid rgba(196, 149, 106, 0.08);
+  margin: 0 24rpx;
+  border-radius: 0 0 12rpx 12rpx;
+}
+
+.witnessDetailRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12rpx 0;
+}
+
+.witnessDetailRow + .witnessDetailRow {
+  border-top: 1rpx solid rgba(196, 149, 106, 0.06);
+}
+
+.witnessDetailLabel {
+  font-size: 24rpx;
+  color: #8B7355;
+}
+
+.witnessDetailValue {
+  font-size: 24rpx;
+  color: #5D4E37;
+  font-weight: 500;
+}
