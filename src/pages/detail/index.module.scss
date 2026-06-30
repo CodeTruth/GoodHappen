@@ -650,3 +650,102 @@
   color: #fff;
   font-weight: 600;
 }
+
+/* === 事前学习卡片 === */
+.learnCard {
+  margin: 24rpx 24rpx 0;
+  background: linear-gradient(135deg, #FFFBF5 0%, #FFF5EB 100%);
+  border-radius: 20rpx;
+  padding: 24rpx;
+  border-left: 6rpx solid #E07A5F;
+}
+
+.learnHeader {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16rpx;
+}
+
+.learnIcon {
+  font-size: 36rpx;
+  margin-right: 12rpx;
+}
+
+.learnTitle {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #5D4E37;
+}
+
+.learnTag {
+  padding: 4rpx 12rpx;
+  border-radius: 8rpx;
+  margin-left: auto;
+}
+
+.learnTagText {
+  font-size: 20rpx;
+  color: #FFFFFF;
+  font-weight: 500;
+}
+
+.learnDesc {
+  font-size: 24rpx;
+  color: #8B7355;
+  line-height: 1.5;
+  margin-bottom: 16rpx;
+  display: block;
+}
+
+.learnAdviceList {
+  display: flex;
+  flex-direction: column;
+  gap: 10rpx;
+  margin-bottom: 16rpx;
+}
+
+.learnAdviceItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 12rpx;
+  padding: 10rpx 14rpx;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 10rpx;
+}
+
+.learnAdviceNum {
+  width: 32rpx;
+  height: 32rpx;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #C4956A 0%, #D4A76A 100%);
+  color: #fff;
+  font-size: 20rpx;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.learnAdviceText {
+  font-size: 24rpx;
+  color: #5D4E37;
+  line-height: 1.5;
+  flex: 1;
+}
+
+.learnAction {
+  background: linear-gradient(135deg, #C4956A 0%, #D4A76A 100%);
+  border-radius: 40rpx;
+  padding: 18rpx 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.learnActionText {
+  font-size: 26rpx;
+  color: #fff;
+  font-weight: 600;
+}

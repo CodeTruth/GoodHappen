@@ -8,6 +8,7 @@ import { useKindnessStore } from '@/store/kindness';
 import { useInteractionStore } from '@/store/interaction';
 import { useNotificationStore } from '@/store/notification';
 import { useProtectionStore } from '@/store/protection';
+import { detectRisk, RiskScenario } from '@/services/risk-detection';
 import styles from './index.module.scss';
 
 // AI 人设图标映射
@@ -156,6 +157,12 @@ const DetailPage: React.FC = () => {
   const handleShare = () => {
     Taro.showToast({ title: '已复制链接', icon: 'success' });
   };
+
+  // 根据善行内容检测风险场景（事前学习）
+  const riskScenario = useMemo<RiskScenario | null>(() => {
+    if (!kindness) return null;
+    return detectRisk(kindness.content);
+  }, [kindness?.content]);
 
   const handleTriggerSOS = () => {
     if (!kindness) return;
@@ -404,6 +411,33 @@ const DetailPage: React.FC = () => {
               </View>
             </View>
           )}
+        </View>
+      )}
+
+      {/* ===== 事前学习：从他人善行中学习风险防护 ===== */}
+      {riskScenario && (
+        <View className={styles.learnCard}>
+          <View className={styles.learnHeader}>
+            <Text className={styles.learnIcon}>📚</Text>
+            <Text className={styles.learnTitle}>事前学习</Text>
+            <View className={styles.learnTag} style={{ background: riskScenario.color }}>
+              <Text className={styles.learnTagText}>{riskScenario.icon} {riskScenario.category}</Text>
+            </View>
+          </View>
+          <Text className={styles.learnDesc}>
+            这件善行涉及"{riskScenario.category}"场景。如果您也想做类似的事，建议提前了解以下保护要点：
+          </Text>
+          <View className={styles.learnAdviceList}>
+            {riskScenario.advice.map((advice, index) => (
+              <View key={index} className={styles.learnAdviceItem}>
+                <Text className={styles.learnAdviceNum}>{index + 1}</Text>
+                <Text className={styles.learnAdviceText}>{advice}</Text>
+              </View>
+            ))}
+          </View>
+          <View className={styles.learnAction} onClick={() => Taro.navigateTo({ url: '/pages/record/index' })}>
+            <Text className={styles.learnActionText}>🛡️ 我也要做这件事 → 先开启保护</Text>
+          </View>
         </View>
       )}
 
