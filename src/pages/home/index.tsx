@@ -6,6 +6,7 @@ import WarmPartnerCard from '@/components/WarmPartnerCard';
 import { getKindnessList } from '@/data/kindness';
 import { getWeeklyWarmPartners } from '@/data/social';
 import { getTodaySuggestion } from '@/data/daily-kindness';
+import { isRepresentative } from '@/services/risk-detection';
 import { useSocialStore } from '@/store/social';
 import { useUserStore } from '@/store/user';
 import { useInteractionStore } from '@/store/interaction';
@@ -323,13 +324,18 @@ const HomePage: React.FC = () => {
   const DailySuggestionCard = React.memo(() => {
     const suggestion = useMemo(() => getTodaySuggestion(), []);
     const [visible, setVisible] = useState(true);
+    // 仅代表性建议才展示风险标签
+    const showRisk = useMemo(() => {
+      if (!suggestion.risk) return false;
+      return isRepresentative(suggestion.suggestion, suggestion.risk).representative;
+    }, [suggestion]);
     if (!visible) return null;
     return (
       <View className={styles.dailyCard}>
         <View className={styles.dailyHeader}>
           <Text className={styles.dailyIcon}>💡</Text>
           <Text className={styles.dailyTitle}>今日善行灵感</Text>
-          {suggestion.risk && (
+          {showRisk && suggestion.risk && (
             <View className={styles.dailyRiskTag} style={{ background: suggestion.risk.color }}>
               <Text className={styles.dailyRiskTagText}>{suggestion.risk.icon} {suggestion.risk.level === 'high' ? '高风险' : '注意'}</Text>
             </View>
@@ -337,7 +343,7 @@ const HomePage: React.FC = () => {
           <Text className={styles.dailyClose} onClick={() => setVisible(false)}>✕</Text>
         </View>
         <Text className={styles.dailyContent}>{suggestion.suggestion}</Text>
-        {suggestion.risk && (
+        {showRisk && suggestion.risk && (
           <View className={styles.dailyRiskBanner}>
             <Text className={styles.dailyRiskAdvice}>💡 {suggestion.risk.advice[0]}</Text>
             <Text className={styles.dailyRiskShield}>🛡️ 做好事前开启保护模式，系统全程兜底</Text>

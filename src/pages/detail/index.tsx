@@ -8,7 +8,7 @@ import { useKindnessStore } from '@/store/kindness';
 import { useInteractionStore } from '@/store/interaction';
 import { useNotificationStore } from '@/store/notification';
 import { useProtectionStore } from '@/store/protection';
-import { detectRisk, RiskScenario } from '@/services/risk-detection';
+import { detectRisk, isRepresentative, generateLearnSummary } from '@/services/risk-detection';
 import styles from './index.module.scss';
 
 // AI 人设图标映射
@@ -158,10 +158,14 @@ const DetailPage: React.FC = () => {
     Taro.showToast({ title: '已复制链接', icon: 'success' });
   };
 
-  // 根据善行内容检测风险场景（事前学习）
-  const riskScenario = useMemo<RiskScenario | null>(() => {
+  // 根据善行内容检测风险场景（事前学习）—— 仅代表性善行展示
+  const learnInfo = useMemo(() => {
     if (!kindness) return null;
-    return detectRisk(kindness.content);
+    const scenario = detectRisk(kindness.content);
+    const { representative, reason, twistScore } = isRepresentative(kindness.content, scenario);
+    if (!representative || !scenario) return null;
+    const summary = generateLearnSummary(scenario, twistScore);
+    return { scenario, reason, twistScore, summary };
   }, [kindness?.content]);
 
   const handleTriggerSOS = () => {
@@ -415,20 +419,22 @@ const DetailPage: React.FC = () => {
       )}
 
       {/* ===== 事前学习：从他人善行中学习风险防护 ===== */}
-      {riskScenario && (
+      {learnInfo && (
         <View className={styles.learnCard}>
           <View className={styles.learnHeader}>
             <Text className={styles.learnIcon}>📚</Text>
             <Text className={styles.learnTitle}>事前学习</Text>
-            <View className={styles.learnTag} style={{ background: riskScenario.color }}>
-              <Text className={styles.learnTagText}>{riskScenario.icon} {riskScenario.category}</Text>
+            <View className={styles.learnTag} style={{ background: learnInfo.scenario.color }}>
+              <Text className={styles.learnTagText}>{learnInfo.scenario.icon} {learnInfo.scenario.category}</Text>
             </View>
           </View>
-          <Text className={styles.learnDesc}>
-            这件善行涉及"{riskScenario.category}"场景。如果您也想做类似的事，建议提前了解以下保护要点：
-          </Text>
+          <View className={styles.learnReason}>
+            <Text className={styles.learnReasonIcon}>💡</Text>
+            <Text className={styles.learnReasonText}>{learnInfo.reason}</Text>
+          </View>
+          <Text className={styles.learnDesc}>{learnInfo.summary}</Text>
           <View className={styles.learnAdviceList}>
-            {riskScenario.advice.map((advice, index) => (
+            {learnInfo.scenario.advice.map((advice, index) => (
               <View key={index} className={styles.learnAdviceItem}>
                 <Text className={styles.learnAdviceNum}>{index + 1}</Text>
                 <Text className={styles.learnAdviceText}>{advice}</Text>

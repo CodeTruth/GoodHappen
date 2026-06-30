@@ -169,3 +169,87 @@ export const getProtectionAdviceSummary = (scenario: RiskScenario): string => {
   }
   return `检测到"${scenario.category}"场景，建议您注意保护自身权益。`;
 };
+
+// ============================================
+// 代表性判断（P4增强：不是每条记录都弹提醒）
+// ============================================
+
+/** 曲折度关键词 —— 表明善行过程有波折、有教训 */
+const TWIST_INDICATORS = [
+  '犹豫', '纠结', '害怕', '紧张', '担心', '本来不想',
+  '差点', '幸好', '后来', '结果', '没想到', '没想到',
+  '被误解', '被怀疑', '被讹', '被质疑', '被围观',
+  '有人拍照', '有人录视频', '路人围观', '围观',
+  '报警', '警察来了', '120', '救护车', '去医院',
+  '家人来了', '家属', '老伴', '子女',
+  '反悔', '翻脸', '不承认', '倒打一耙',
+  '纠缠', '后续', '处理', '解决了',
+];
+
+/** 典型性关键词 —— 表明这是常见高频善行场景 */
+const TYPICAL_INDICATORS = [
+  '扶老人', '老人摔倒', '过马路', '老人',
+  '交通事故', '车祸', '撞人', '肇事',
+  '救人', '溺水', '落水',
+  '小偷', '抢劫', '见义勇为',
+  '晕倒', '急救', '心肺复苏',
+];
+
+/**
+ * 判断一条善行是否具有"代表性"
+ * 只有有代表性、有曲折经历的善行才展示事前学习卡片
+ * 避免每条记录都弹提醒导致用户麻木
+ */
+export const isRepresentative = (
+  text: string,
+  scenario: RiskScenario | null
+): { representative: boolean; reason: string; twistScore: number } => {
+  if (!scenario) {
+    return { representative: false, reason: '', twistScore: 0 };
+  }
+
+  const lowerText = text.toLowerCase();
+
+  // 高风险场景默认有代表性（即使描述简短，场景本身就值得学习）
+  if (scenario.level === 'high') {
+    const twistCount = TWIST_INDICATORS.filter(k => lowerText.includes(k)).length;
+    return {
+      representative: true,
+      reason: twistCount > 0 ? '经历曲折，有经验教训' : '高风险场景，值得学习防护要点',
+      twistScore: twistCount,
+    };
+  }
+
+  // 中风险场景：需要"曲折度"或"典型性"达标才展示
+  const twistCount = TWIST_INDICATORS.filter(k => lowerText.includes(k)).length;
+  const typicalCount = TYPICAL_INDICATORS.filter(k => lowerText.includes(k)).length;
+  const totalScore = twistCount * 2 + typicalCount;
+
+  // 阈值：曲折关键词≥2 或 典型关键词≥2 或 总分≥4
+  if (totalScore >= 4) {
+    return {
+      representative: true,
+      reason: twistCount >= 2 ? '经历曲折，有经验教训值得学习' : '典型高频场景，建议提前了解',
+      twistScore: twistCount,
+    };
+  }
+
+  return { representative: false, reason: '', twistScore: twistCount };
+};
+
+/**
+ * 生成事前学习摘要（展示在学习卡片中）
+ * 根据曲折度和风险场景生成简短引导语
+ */
+export const generateLearnSummary = (
+  scenario: RiskScenario,
+  twistScore: number
+): string => {
+  if (twistScore >= 3) {
+    return `这位善行者的经历有不少波折，后来者做类似善行时建议提前做好准备。`;
+  }
+  if (twistScore >= 1) {
+    return `这位善行者遇到了一些意外情况。如果您也想做类似的事，建议提前了解保护要点：`;
+  }
+  return `这是一件"${scenario.category}"类的善行。如果您也想做类似的事，建议提前了解以下保护要点：`;
+};
