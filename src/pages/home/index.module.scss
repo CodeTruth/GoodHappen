@@ -88,6 +88,41 @@
   font-style: italic;
 }
 
+.dailyRiskTag {
+  padding: 4rpx 12rpx;
+  border-radius: 8rpx;
+  margin-right: auto;
+  margin-left: 12rpx;
+}
+
+.dailyRiskTagText {
+  font-size: 20rpx;
+  color: #FFFFFF;
+  font-weight: $font-weight-medium;
+}
+
+.dailyRiskBanner {
+  margin: $spacing-sm 0;
+  padding: $spacing-sm $spacing-md;
+  background: rgba(224, 122, 95, 0.06);
+  border-radius: $radius-sm;
+  border-left: 4rpx solid #E07A5F;
+}
+
+.dailyRiskAdvice {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+  line-height: 1.5;
+  display: block;
+}
+
+.dailyRiskShield {
+  font-size: 20rpx;
+  color: $color-primary;
+  margin-top: 4rpx;
+  display: block;
+}
+
 .dailyPersona {
   font-size: $font-size-xs;
   color: $color-text-tertiary;
@@ -133,6 +168,56 @@
 }
 
 // 可滚动的Tab栏
+.protectionEntry {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: $spacing-md $spacing-lg;
+  margin-bottom: $spacing-lg;
+  background: linear-gradient(135deg, #E8F4F8 0%, #F0F8F5 100%);
+  border-radius: $radius-lg;
+  border-left: 4rpx solid #4A90A4;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.protectionEntry:active {
+  transform: scale(0.98);
+}
+
+.protectionEntryLeft {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+}
+
+.protectionEntryIcon {
+  font-size: 44rpx;
+}
+
+.protectionEntryText {
+  display: flex;
+  flex-direction: column;
+  gap: 2rpx;
+}
+
+.protectionEntryTitle {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: #3A7A8A;
+}
+
+.protectionEntryDesc {
+  font-size: $font-size-xs;
+  color: #6A9A9A;
+}
+
+.protectionEntryArrow {
+  font-size: $font-size-lg;
+  color: #4A90A4;
+  font-weight: $font-weight-bold;
+}
+
 .tabs {
   white-space: nowrap;
   margin-bottom: $spacing-lg;

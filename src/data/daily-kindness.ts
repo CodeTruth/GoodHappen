@@ -1,8 +1,11 @@
+import { detectRisk, RiskScenario } from '@/services/risk-detection';
+
 export interface DailyKindness {
   date: string;      // MM-DD格式
   suggestion: string;
   quote: string;
   persona: string;
+  risk?: RiskScenario | null; // 事前风险检测（P4增强）
 }
 
 // 365天善行建议（简化版，实际可扩展为完整365条）
@@ -57,5 +60,6 @@ export function getTodaySuggestion(): DailyKindness {
   return {
     date: `${month}-${day}`,
     ...s,
+    risk: detectRisk(s.suggestion),
   };
 }

@@ -987,32 +987,63 @@ const RecordPage: React.FC = () => {
             )}
 
             {/* 风险提示横幅 */}
-            {riskScenario && (
-              <View className={styles.riskBanner} style={{ borderLeftColor: riskScenario.color }}>
-                <View className={styles.riskBannerHeader}>
-                  <Text className={styles.riskBannerIcon}>{riskScenario.icon}</Text>
-                  <View className={styles.riskBannerInfo}>
-                    <Text className={styles.riskBannerTitle} style={{ color: riskScenario.color }}>
-                      {riskScenario.level === 'high' ? '⚠️ 高风险善行场景' : '⚡ 注意保护'}
+                {riskScenario && (
+                  <View className={styles.riskBanner} style={{ borderLeftColor: riskScenario.color }}>
+                    <View className={styles.riskBannerHeader}>
+                      <Text className={styles.riskBannerIcon}>{riskScenario.icon}</Text>
+                      <View className={styles.riskBannerInfo}>
+                        <Text className={styles.riskBannerTitle} style={{ color: riskScenario.color }}>
+                          {riskScenario.level === 'high' ? '⚠️ 高风险善行场景' : '⚡ 注意保护'}
+                        </Text>
+                        <Text className={styles.riskBannerCategory}>
+                          检测到：{riskScenario.category} · {riskScenario.matchedKeyword}
+                        </Text>
+                      </View>
+                    </View>
+                    <View className={styles.riskBannerAdvice}>
+                      {riskScenario.advice.map((advice, index) => (
+                        <Text key={index} className={styles.riskBannerAdviceItem}>
+                          {index + 1}. {advice}
+                        </Text>
+                      ))}
+                    </View>
+                    <View className={styles.riskBannerFooter}>
+                      <Text className={styles.riskBannerShield}>🛡️ 系统为您兜底</Text>
+                      <Text className={styles.riskBannerHint}>事后如遇纠纷，平台保险+法律援助+见证网络全程护航</Text>
+                    </View>
+                  </View>
+                )}
+
+                {/* 事后补录引导：引导用户补充关键证据 */}
+                {riskScenario && (
+                  <View className={styles.postHocGuide}>
+                    <Text className={styles.postHocGuideTitle}>📋 事后补录检查清单</Text>
+                    <Text className={styles.postHocGuideDesc}>
+                      您正在记录一件已经发生的善行。如事后遇纠纷，以下证据至关重要：
                     </Text>
-                    <Text className={styles.riskBannerCategory}>
-                      检测到：{riskScenario.category} · {riskScenario.matchedKeyword}
+                    <View className={styles.postHocChecklist}>
+                      <View className={styles.postHocCheckItem}>
+                        <Text className={styles.postHocCheckIcon}>📷</Text>
+                        <Text className={styles.postHocCheckText}>是否有现场照片/视频？（如有请上传）</Text>
+                      </View>
+                      <View className={styles.postHocCheckItem}>
+                        <Text className={styles.postHocCheckIcon}>📍</Text>
+                        <Text className={styles.postHocCheckText}>是否记得具体地点？（系统已自动定位）</Text>
+                      </View>
+                      <View className={styles.postHocCheckItem}>
+                        <Text className={styles.postHocCheckIcon}>🕐</Text>
+                        <Text className={styles.postHocCheckText}>是否记得大致时间？（尽量准确填写）</Text>
+                      </View>
+                      <View className={styles.postHocCheckItem}>
+                        <Text className={styles.postHocCheckIcon}>👁️</Text>
+                        <Text className={styles.postHocCheckText}>是否有目击者在场？（可在描述中注明）</Text>
+                      </View>
+                    </View>
+                    <Text className={styles.postHocGuideTip}>
+                      💡 下次做好事前，可先开启"善行保护模式"自动存证
                     </Text>
                   </View>
-                </View>
-                <View className={styles.riskBannerAdvice}>
-                  {riskScenario.advice.map((advice, index) => (
-                    <Text key={index} className={styles.riskBannerAdviceItem}>
-                      {index + 1}. {advice}
-                    </Text>
-                  ))}
-                </View>
-                <View className={styles.riskBannerFooter}>
-                  <Text className={styles.riskBannerShield}>🛡️ 系统为您兜底</Text>
-                  <Text className={styles.riskBannerHint}>事后如遇纠纷，平台保险+法律援助+见证网络全程护航</Text>
-                </View>
-              </View>
-            )}
+                )}
 
             <View className={styles.formItem}>
               <Text className={styles.label}>标签（可多选）</Text>

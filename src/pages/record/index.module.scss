@@ -1212,3 +1212,64 @@
   margin-top: 4rpx;
   display: block;
 }
+
+// ============================================
+// 事后补录引导
+// ============================================
+.postHocGuide {
+  margin: $spacing-md 0;
+  padding: $spacing-md $spacing-lg;
+  background: linear-gradient(135deg, #F8F6F3 0%, #F5F2EE 100%);
+  border-radius: $radius-md;
+  border: 2rpx solid rgba($color-primary, 0.15);
+}
+
+.postHocGuideTitle {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin-bottom: $spacing-xs;
+  display: block;
+}
+
+.postHocGuideDesc {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  margin-bottom: $spacing-sm;
+  line-height: 1.5;
+  display: block;
+}
+
+.postHocChecklist {
+  display: flex;
+  flex-direction: column;
+  gap: 10rpx;
+  margin-bottom: $spacing-sm;
+}
+
+.postHocCheckItem {
+  display: flex;
+  align-items: flex-start;
+  gap: $spacing-sm;
+  padding: 8rpx 12rpx;
+  background: rgba($color-bg-base, 0.5);
+  border-radius: $radius-sm;
+}
+
+.postHocCheckIcon {
+  font-size: 32rpx;
+  flex-shrink: 0;
+}
+
+.postHocCheckText {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  line-height: 1.4;
+}
+
+.postHocGuideTip {
+  font-size: $font-size-xs;
+  color: $color-primary;
+  text-align: center;
+  display: block;
+}

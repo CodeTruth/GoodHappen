@@ -329,9 +329,20 @@ const HomePage: React.FC = () => {
         <View className={styles.dailyHeader}>
           <Text className={styles.dailyIcon}>💡</Text>
           <Text className={styles.dailyTitle}>今日善行灵感</Text>
+          {suggestion.risk && (
+            <View className={styles.dailyRiskTag} style={{ background: suggestion.risk.color }}>
+              <Text className={styles.dailyRiskTagText}>{suggestion.risk.icon} {suggestion.risk.level === 'high' ? '高风险' : '注意'}</Text>
+            </View>
+          )}
           <Text className={styles.dailyClose} onClick={() => setVisible(false)}>✕</Text>
         </View>
         <Text className={styles.dailyContent}>{suggestion.suggestion}</Text>
+        {suggestion.risk && (
+          <View className={styles.dailyRiskBanner}>
+            <Text className={styles.dailyRiskAdvice}>💡 {suggestion.risk.advice[0]}</Text>
+            <Text className={styles.dailyRiskShield}>🛡️ 做好事前开启保护模式，系统全程兜底</Text>
+          </View>
+        )}
         <Text className={styles.dailyQuote}>—— {suggestion.persona}：「{suggestion.quote}」</Text>
       </View>
     );
@@ -374,6 +385,21 @@ const HomePage: React.FC = () => {
 
       {/* 平台善行数据概览 */}
       <PlatformStatsBar />
+
+      {/* 事前保护快速入口 */}
+      <View
+        className={styles.protectionEntry}
+        onClick={() => Taro.navigateTo({ url: '/pages/record/index' })}
+      >
+        <View className={styles.protectionEntryLeft}>
+          <Text className={styles.protectionEntryIcon}>🛡️</Text>
+          <View className={styles.protectionEntryText}>
+            <Text className={styles.protectionEntryTitle}>做好事前，先开启保护</Text>
+            <Text className={styles.protectionEntryDesc}>GPS定位自动存证，事后遇纠纷系统全程兜底</Text>
+          </View>
+        </View>
+        <Text className={styles.protectionEntryArrow}>→</Text>
+      </View>
 
       {/* 标签切换 */}
       <ScrollView className={styles.tabs} scrollX enableFlex>
