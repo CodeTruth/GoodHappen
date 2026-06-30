@@ -403,3 +403,91 @@
   font-size: $font-size-xs;
   color: $color-text-secondary;
 }
+
+// ===== 近期趋势柱状图 =====
+.trendChart {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-around;
+  height: 200rpx;
+  padding-top: $spacing-md;
+}
+
+.trendBarItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+}
+
+.trendBarTrack {
+  width: 40rpx;
+  height: 140rpx;
+  background: $color-bg-muted;
+  border-radius: $radius-sm;
+  display: flex;
+  align-items: flex-end;
+  overflow: hidden;
+}
+
+.trendBarFill {
+  width: 100%;
+  background: linear-gradient(180deg, $color-primary 0%, lighten($color-primary, 20%) 100%);
+  border-radius: $radius-sm;
+  transition: height 0.3s ease;
+}
+
+.trendBarCount {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+  margin-top: $spacing-xs;
+}
+
+.trendBarLabel {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin-top: $spacing-xs;
+}
+
+// ===== 打卡日历 =====
+.calendarGrid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: $spacing-xs;
+  padding-top: $spacing-md;
+}
+
+.calendarWeekday {
+  text-align: center;
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  padding: $spacing-xs 0;
+}
+
+.calendarDay {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: $radius-md;
+  background: $color-bg-muted;
+}
+
+.calendarDayText {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+}
+
+.calendarDayActive {
+  background: linear-gradient(135deg, $color-primary 0%, lighten($color-primary, 15%) 100%);
+}
+
+.calendarDayActive .calendarDayText {
+  color: #FFFFFF;
+  font-weight: $font-weight-medium;
+}
+
+.calendarDayToday {
+  border: 2rpx solid $color-primary;
+}

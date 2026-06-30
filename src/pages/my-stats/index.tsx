@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo } from 'react';
 import { View, Text, ScrollView } from '@tarojs/components';
-import Taro from '@tarojs/taro';
 import { useFortuneStore } from '@/store/fortune';
 import { FortuneTransaction } from '@/store/fortune';
 import styles from './index.module.scss';

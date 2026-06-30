@@ -89,13 +89,6 @@ const CircleDetailPage: React.FC = () => {
     });
   };
 
-  // 跳转到管理员仪表盘
-  const handleGoAdmin = () => {
-    Taro.navigateTo({
-      url: `/pages/circle-admin/index?id=${id}`
-    });
-  };
-
   // 格式化时间
   const formatTime = (dateStr: string): string => {
     const date = new Date(dateStr);

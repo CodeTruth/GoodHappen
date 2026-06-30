@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { View, Text, ScrollView } from '@tarojs/components';
-import Taro, { useRouter } from '@tarojs/taro';
+import { useRouter } from '@tarojs/taro';
 import { PERSONAS, PersonaType } from '@/services/ai';
 import {
   ChatSession,
@@ -53,7 +53,6 @@ const AiChatPage: React.FC = () => {
     const circleIds = ['circle1', 'circle2', 'circle3'];
     let exampleCount = 0;
     let isTopRank = false;
-    let circleName = '';
 
     for (const cid of circleIds) {
       const subs = getSubmissionsByUser(currentUserId, cid);
@@ -66,7 +65,6 @@ const AiChatPage: React.FC = () => {
       const ranking = getRanking(cid);
       if (ranking.length > 0 && ranking[0].userId === currentUserId) {
         isTopRank = true;
-        circleName = ranking[0].userName;
       }
     }
 
@@ -183,6 +181,8 @@ const AiChatPage: React.FC = () => {
 
   const modes: ChatMode[] = ['free', 'counsel', 'discuss', 'guide'];
 
+  const EditableView = View as any;
+
   return (
     <View className={styles.page}>
       {/* 人物头部 */}
@@ -284,13 +284,13 @@ const AiChatPage: React.FC = () => {
           scrollY
           style={{ maxHeight: '200rpx' }}
         >
-          <View
-            contentEditable
+          <EditableView
+            contentEditable={'true'}
             onInput={(e: any) => setInputText(e.detail.value)}
             style={{ minHeight: '40rpx', padding: '4rpx 0' }}
           >
             {inputText}
-          </View>
+          </EditableView>
         </ScrollView>
         <View
           className={`${styles.sendBtn} ${!inputText.trim() ? styles.sendBtnDisabled : ''}`}

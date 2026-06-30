@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { View, Text, Image, ScrollView } from '@tarojs/components';
+import { View, Text, Image, ScrollView, Input } from '@tarojs/components';
 import Taro, { useRouter } from '@tarojs/taro';
 import { useCircleStore } from '@/store/circle';
 import { useUserStore } from '@/store/user';
 import { useMoralTaskStore } from '@/store/moral-task';
 import { getRanking, getWeeklyReport, getExampleWall, getUnsubmittedStudents } from '@/services/moral-dashboard';
 import { StudentRankingItem, WeeklyReportData, ExampleWallItem } from '@/services/moral-dashboard';
+import { generateWeeklySummary } from '@/services/ai-circle';
 import { getCircleTypeConfig, CircleType } from '@/config/circle-types';
 import { mockWeeklyReports } from '@/data/mock-moral-tasks';
 import styles from './index.module.scss';
@@ -55,6 +56,23 @@ const CircleDashboardPage: React.FC = () => {
     topUsers: { userName: string; count: number }[];
   } | null>(null);
 
+  // AI 周报总结
+  const [aiSummary, setAiSummary] = useState<string>('');
+  const [aiSummaryLoading, setAiSummaryLoading] = useState(false);
+
+  // 评论弹窗
+  const [showCommentModal, setShowCommentModal] = useState(false);
+
+  // 学生筛选
+  const [studentFilter, setStudentFilter] = useState('');
+  const filteredRanking = useMemo(() => {
+    if (!studentFilter.trim()) return ranking;
+    return ranking.filter((r) => r.userName.includes(studentFilter.trim()));
+  }, [ranking, studentFilter]);
+  const [commentTargetId, setCommentTargetId] = useState<string | null>(null);
+  const [commentInput, setCommentInput] = useState('');
+  const [commentList, setCommentList] = useState<any[]>([]);
+
   useEffect(() => {
     if (circleId && userInfo) {
       setIsAdmin(hasPermission(circleId, userInfo.id, 'create_checkin_task'));
@@ -86,8 +104,8 @@ const CircleDashboardPage: React.FC = () => {
     }
   }, [circleId, selectedWeekIdx]);
 
-  const circle = getCircleById(circleId);
-  const totalMembers = circle?.members.filter((m) => m.role !== 'admin').length || 0;
+  const circleInfo = getCircleById(circleId);
+  const totalMembers = circleInfo?.members.filter((m) => m.role !== 'admin').length || 0;
   const submittedCount = totalMembers - unsubmitted.length;
   const participationRate = totalMembers > 0 ? Math.round((submittedCount / totalMembers) * 100) : 0;
 
@@ -138,6 +156,19 @@ const CircleDashboardPage: React.FC = () => {
         </View>
       )}
 
+      {/* 学生筛选 */}
+      <View className={styles.filterRow}>
+        <Input
+          className={styles.filterInput}
+          placeholder="🔍 搜索学生姓名"
+          value={studentFilter}
+          onInput={(e) => setStudentFilter(e.detail.value)}
+        />
+        {studentFilter && (
+          <Text className={styles.filterClear} onClick={() => setStudentFilter('')}>清除</Text>
+        )}
+      </View>
+
       {/* 排行表 */}
       <View className={styles.rankingTable}>
         <View className={styles.tableHeader}>
@@ -147,7 +178,7 @@ const CircleDashboardPage: React.FC = () => {
           <Text className={`${styles.tableHeaderCell} ${styles.freeCell}`}>自由善行</Text>
           <Text className={`${styles.tableHeaderCell} ${styles.streakCell}`}>连续</Text>
         </View>
-        {ranking.map((item) => (
+        {filteredRanking.map((item) => (
           <View key={item.userId} className={styles.tableRow} onClick={() => handleStudentClick(item.userId)}>
             <Text className={`${styles.tableCell} ${styles.rankCell} ${item.rank <= 3 ? styles.rankTop : ''}`}>
               {item.rank}
@@ -205,6 +236,36 @@ const CircleDashboardPage: React.FC = () => {
               →
             </Text>
           </View>
+        </View>
+
+        {/* AI 周报总结 */}
+        <View className={styles.aiSummaryCard}>
+          {aiSummary ? (
+            <View>
+              <Text className={styles.aiSummaryLabel}>🤖 AI 老师总结</Text>
+              <Text className={styles.aiSummaryText}>{aiSummary}</Text>
+            </View>
+          ) : (
+            <View
+              className={styles.aiSummaryTrigger}
+              onClick={async () => {
+                if (aiSummaryLoading) return;
+                setAiSummaryLoading(true);
+                try {
+                  const summary = await generateWeeklySummary(report, ranking, circle?.name || '善行圈');
+                  setAiSummary(summary);
+                } catch (e) {
+                  Taro.showToast({ title: '生成失败', icon: 'none' });
+                } finally {
+                  setAiSummaryLoading(false);
+                }
+              }}
+            >
+              <Text className={styles.aiSummaryTriggerText}>
+                {aiSummaryLoading ? '🤖 AI 正在思考中...' : '🤖 点击生成 AI 周报总结'}
+              </Text>
+            </View>
+          )}
         </View>
 
         {/* 核心数据 */}
@@ -347,21 +408,37 @@ const CircleDashboardPage: React.FC = () => {
               )}
               <View className={styles.exampleFooter}>
                 <Text className={styles.exampleDate}>{formatDate(ex.createdAt)}</Text>
-                <View
-                  className={`${styles.likeBtn} ${(ex.likedBy || []).includes(userInfo?.id || '') ? styles.likeBtnActive : ''}`}
-                  onClick={() => {
-                    const { toggleLike } = useMoralTaskStore.getState();
-                    const liked = toggleLike(ex.id, userInfo?.id || 'currentUser');
-                    Taro.showToast({ title: liked ? '已点赞 ❤️' : '取消点赞', icon: 'none' });
-                    // 刷新榜样墙数据
-                    const weekReport = mockWeeklyReports.find((r) => r.weekIndex === selectedWeekIdx);
-                    if (weekReport) {
-                      setExamples(getExampleWall(circleId, weekReport.weekRange));
-                    }
-                  }}
-                >
-                  <Text className={styles.likeBtnIcon}>👍</Text>
-                  <Text className={styles.likeBtnCount}>{ex.likes || 0}</Text>
+                <View className={styles.exampleActions}>
+                  <View
+                    className={`${styles.likeBtn} ${(ex.likedBy || []).includes(userInfo?.id || '') ? styles.likeBtnActive : ''}`}
+                    onClick={() => {
+                      const { toggleLike } = useMoralTaskStore.getState();
+                      const liked = toggleLike(ex.id, userInfo?.id || 'currentUser');
+                      Taro.showToast({ title: liked ? '已点赞 ❤️' : '取消点赞', icon: 'none' });
+                      // 刷新榜样墙数据
+                      const weekReport = mockWeeklyReports.find((r) => r.weekIndex === selectedWeekIdx);
+                      if (weekReport) {
+                        setExamples(getExampleWall(circleId, weekReport.weekRange));
+                      }
+                    }}
+                  >
+                    <Text className={styles.likeBtnIcon}>👍</Text>
+                    <Text className={styles.likeBtnCount}>{ex.likes || 0}</Text>
+                  </View>
+                  <View
+                    className={styles.commentBtn}
+                    onClick={() => {
+                      const { submissions } = useMoralTaskStore.getState();
+                      const sub = submissions.find((s) => s.id === ex.id);
+                      setCommentTargetId(ex.id);
+                      setCommentList(sub?.comments || []);
+                      setCommentInput('');
+                      setShowCommentModal(true);
+                    }}
+                  >
+                    <Text className={styles.commentBtnIcon}>💬</Text>
+                    <Text className={styles.commentBtnCount}>{ex.comments?.length || 0}</Text>
+                  </View>
                 </View>
               </View>
             </View>
@@ -443,6 +520,58 @@ const CircleDashboardPage: React.FC = () => {
 
             <View className={styles.shareHint}>
               <Text className={styles.shareHintText}>👆 点击空白处关闭，长按保存截图</Text>
+            </View>
+          </View>
+        </View>
+      )}
+
+      {/* 评论弹窗 */}
+      {showCommentModal && commentTargetId && (
+        <View className={styles.commentOverlay} onClick={() => setShowCommentModal(false)}>
+          <View className={styles.commentCard} onClick={(e) => e.stopPropagation()}>
+            <Text className={styles.commentTitle}>💬 评论</Text>
+            <ScrollView scrollY style={{ maxHeight: '40vh', marginBottom: '20rpx' }}>
+              {commentList.length > 0 ? (
+                commentList.map((c) => (
+                  <View key={c.id} className={styles.commentItem}>
+                    <Text className={styles.commentUser}>{c.userName}</Text>
+                    <Text className={styles.commentContent}>{c.content}</Text>
+                    <Text className={styles.commentTime}>{c.createdAt.split('T')[0]}</Text>
+                  </View>
+                ))
+              ) : (
+                <Text className={styles.emptyText}>暂无评论，来说两句吧～</Text>
+              )}
+            </ScrollView>
+
+            <View className={styles.commentInputRow}>
+              <Input
+                className={styles.commentInput}
+                placeholder="写下你的评论..."
+                value={commentInput}
+                onInput={(e) => setCommentInput(e.detail.value)}
+                maxlength={100}
+              />
+              <View
+                className={styles.commentSendBtn}
+                onClick={() => {
+                  if (!commentInput.trim() || !commentTargetId) return;
+                  const { addComment } = useMoralTaskStore.getState();
+                  addComment(commentTargetId, {
+                    userId: userInfo?.id || 'currentUser',
+                    userName: userInfo?.name || '温暖小太阳',
+                    content: commentInput.trim(),
+                  });
+                  // 刷新评论列表
+                  const { submissions } = useMoralTaskStore.getState();
+                  const sub = submissions.find((s) => s.id === commentTargetId);
+                  setCommentList(sub?.comments || []);
+                  setCommentInput('');
+                  Taro.showToast({ title: '评论成功', icon: 'success' });
+                }}
+              >
+                <Text className={styles.commentSendBtnText}>发送</Text>
+              </View>
             </View>
           </View>
         </View>

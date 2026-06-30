@@ -172,12 +172,6 @@ export const generateMultiAIResponseStream = async (
           callbacks.firstChunk?.(chunk);
         },
         onComplete: () => {
-          const resp1: AIResponse = {
-            persona: personas[0].id,
-            personaName: personas[0].name,
-            content: content1,
-            createdAt: now
-          };
           callbacks.firstComplete?.(content1, personas[0]);
         },
         onError: callbacks.onError

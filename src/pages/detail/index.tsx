@@ -64,6 +64,7 @@ const DetailPage: React.FC = () => {
       id: c.id,
       userId: c.userId,
       userName: c.userName,
+      userAvatar: (c as any).userAvatar || '',
       content: c.content,
       createdAt: c.createdAt,
     }));

@@ -4,7 +4,7 @@ import Taro from '@tarojs/taro';
 import { getCurrentUser } from '@/data/users';
 import { useFortuneStore } from '@/store/fortune';
 import { useUserStore, checkIsMinor } from '@/store/user';
-import { TITLES } from '@/utils/fortune';
+
 import { getLevelProgress } from '@/data/fortune-levels';
 import CustomTabBar from '@/components/CustomTabBar';
 import styles from './index.module.scss';
@@ -127,11 +127,6 @@ const MinePage: React.FC = () => {
     { icon: '🎟️', text: '邀请好友', action: () => Taro.navigateTo({ url: '/pages/invite/index' }) },
     { icon: '📅', text: '年度报告', action: () => Taro.navigateTo({ url: '/pages/annual-report/index' }) },
   ];
-
-  const nextTitle = TITLES.find(t => t.minFortune > totalFortune);
-  const titleProgress = nextTitle
-    ? ((totalFortune - currentTitle.minFortune) / (nextTitle.minFortune - currentTitle.minFortune)) * 100
-    : 100;
 
   // 福气等级进度
   const levelProgress = getLevelProgress(totalFortune);

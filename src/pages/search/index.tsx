@@ -117,14 +117,6 @@ const SearchPage: React.FC = () => {
     }
   };
 
-  const handleRegionClick = (region: string) => {
-    const newRegion = activeRegion === region ? '' : region;
-    setActiveRegion(newRegion);
-    if (keyword || activeTag || newRegion) {
-      executeSearch(keyword, activeTag, newRegion);
-    }
-  };
-
   const handleInputChange = (e: any) => {
     setKeyword(e.detail.value);
     if (error) setError('');

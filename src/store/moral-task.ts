@@ -23,11 +23,12 @@ interface MoralTaskState {
 
   // 操作
   addTask: (task: Omit<MoralTask, 'id' | 'status' | 'createdAt'>) => MoralTask;
-  addSubmission: (submission: Omit<TaskSubmission, 'id' | 'isExample' | 'needsRevision' | 'likes' | 'likedBy' | 'createdAt'>) => TaskSubmission;
+  addSubmission: (submission: Omit<TaskSubmission, 'id' | 'isExample' | 'needsRevision' | 'likes' | 'likedBy' | 'comments' | 'createdAt'>) => TaskSubmission;
   markExample: (submissionId: string, isExample: boolean) => void;
   addTeacherComment: (submissionId: string, comment: string) => void;
   markNeedsRevision: (submissionId: string) => void;
   toggleLike: (submissionId: string, userId: string) => boolean;
+  addComment: (submissionId: string, comment: Omit<NonNullable<TaskSubmission['comments']>[number], 'id' | 'createdAt'>) => void;
 
   // 持久化
   loadFromStorage: () => void;
@@ -43,6 +44,7 @@ export const useMoralTaskStore = create<MoralTaskState>((set, get) => ({
     ...s,
     likes: s.likes || (s.isExample ? Math.floor(Math.random() * 15) + 3 : 0),
     likedBy: s.likedBy || [],
+    comments: s.comments || [],
   })),
 
   getTasksByCircle: (circleId) => {
@@ -95,6 +97,7 @@ export const useMoralTaskStore = create<MoralTaskState>((set, get) => ({
       needsRevision: false,
       likes: 0,
       likedBy: [],
+      comments: [],
       createdAt: new Date().toISOString(),
     };
     set((state) => ({ submissions: [...state.submissions, newSubmission] }));
@@ -168,6 +171,22 @@ export const useMoralTaskStore = create<MoralTaskState>((set, get) => ({
     set((state) => ({
       submissions: state.submissions.map((s) =>
         s.id === submissionId ? { ...s, needsRevision: true } : s
+      ),
+    }));
+    get().saveToStorage();
+  },
+
+  addComment: (submissionId, comment) => {
+    const newComment = {
+      ...comment,
+      id: `c_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+      createdAt: new Date().toISOString(),
+    };
+    set((state) => ({
+      submissions: state.submissions.map((s) =>
+        s.id === submissionId
+          ? ({ ...s, comments: [...(s.comments || []), newComment] } as TaskSubmission)
+          : s
       ),
     }));
     get().saveToStorage();

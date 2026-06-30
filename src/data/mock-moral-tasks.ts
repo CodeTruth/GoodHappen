@@ -91,6 +91,7 @@ export interface TaskSubmission {
   needsRevision: boolean;
   likes?: number; // 点赞数
   likedBy?: string[]; // 点赞用户ID列表
+  comments?: { id: string; userId: string; userName: string; content: string; createdAt: string }[];
   createdAt: string;
 }
 

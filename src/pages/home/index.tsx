@@ -1,10 +1,9 @@
-import React, { useState, useMemo, useEffect } from 'react';
-import { View, Text, ScrollView, Switch } from '@tarojs/components';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import { View, Text, ScrollView, Switch, Image } from '@tarojs/components';
 import Taro from '@tarojs/taro';
 import KindnessCard from '@/components/KindnessCard';
 import WarmPartnerCard from '@/components/WarmPartnerCard';
 import { getKindnessList } from '@/data/kindness';
-import { getTodaySuggestion } from '@/data/daily-kindness';
 import { getWeeklyWarmPartners } from '@/data/social';
 import { useSocialStore } from '@/store/social';
 import { useUserStore } from '@/store/user';
@@ -12,8 +11,8 @@ import { useInteractionStore } from '@/store/interaction';
 import { useKindnessStore } from '@/store/kindness';
 import CustomTabBar from '@/components/CustomTabBar';
 import { useNotificationStore } from '@/store/notification';
-import { useMoralTaskStore } from '@/store/moral-task';
 import { useCircleStore } from '@/store/circle';
+import { useProtectionStore } from '@/store/protection';
 import { getExampleWall } from '@/services/moral-dashboard';
 import { getCircleTypeConfig, CircleType } from '@/config/circle-types';
 import { Kindness } from '@/types/kindness';
@@ -46,6 +45,7 @@ const HomePage: React.FC = () => {
   const [selectedRegion, setSelectedRegion] = useState<string>('');
   const [onlyFollowing, setOnlyFollowing] = useState(false);
   const [regionPickerOpen, setRegionPickerOpen] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   const { followingIds, isFollowing, loadFromStorage: loadSocial } = useSocialStore();
   const { userInfo, loadFromStorage: loadUser } = useUserStore();
@@ -63,6 +63,22 @@ const HomePage: React.FC = () => {
     loadMockNotification();
     cleanupExpired();
   }, []);
+
+  // 下拉刷新
+  const handleRefresh = useCallback(() => {
+    setRefreshing(true);
+    setTimeout(() => {
+      loadUser();
+      loadSocial();
+      loadInteraction();
+      loadKindness();
+      loadNotification();
+      loadMockNotification();
+      cleanupExpired();
+      setRefreshing(false);
+      Taro.showToast({ title: '已刷新', icon: 'success' });
+    }, 800);
+  }, [loadUser, loadSocial, loadInteraction, loadKindness, loadNotification, loadMockNotification, cleanupExpired]);
 
   // 原始善行列表 = mock数据 + 用户本地发布的新善行（用户善行优先排列）
   const allKindness = useMemo(() => {
@@ -156,27 +172,6 @@ const HomePage: React.FC = () => {
     setRegionPickerOpen(false);
   };
 
-  // 每日善行建议卡片（独立组件，避免重渲染）
-  const DailyKindnessCard = React.memo(() => {
-    const today = getTodaySuggestion();
-    return (
-      <View
-        className={styles.dailyCard}
-        onClick={() => Taro.navigateTo({ url: '/pages/record/index' })}
-      >
-        <View className={styles.dailyHeader}>
-          <Text className={styles.dailyLabel}>📅 今日善行</Text>
-          <Text className={styles.dailyDate}>{today.date}</Text>
-        </View>
-        <Text className={styles.dailySuggestion}>{today.suggestion}</Text>
-        <View className={styles.dailyFooter}>
-          <Text className={styles.dailyQuote}>"{today.quote}"</Text>
-          <Text className={styles.dailyPersona}>—— {today.persona}</Text>
-        </View>
-      </View>
-    );
-  });
-
   // 本周圈子榜样推荐位
   const CircleExampleCard = React.memo(() => {
     const { getCircleById } = useCircleStore();
@@ -241,6 +236,52 @@ const HomePage: React.FC = () => {
     );
   });
 
+  // 善行保护快捷入口
+  const ProtectionCard = React.memo(() => {
+    const { insurance, loadFromStorage: loadProtection } = useProtectionStore();
+    useEffect(() => { loadProtection(); }, []);
+    const isProtected = insurance?.active;
+    return (
+      <View className={styles.protectionCard}>
+        <View className={styles.protectionHeader}>
+          <Text className={styles.protectionTitle}>🛡️ 善行保护</Text>
+          <Text
+            className={styles.protectionMore}
+            onClick={() => Taro.navigateTo({ url: '/pages/insurance/index' })}
+          >
+            详情 →
+          </Text>
+        </View>
+        <View className={styles.protectionItems}>
+          <View
+            className={`${styles.protectionItem} ${isProtected ? styles.protectionItemActive : ''}`}
+            onClick={() => Taro.navigateTo({ url: '/pages/insurance/index' })}
+          >
+            <Text className={styles.protectionItemIcon}>🏥</Text>
+            <Text className={styles.protectionItemName}>善行保险</Text>
+            <Text className={styles.protectionItemStatus}>{isProtected ? '已生效' : '未达标'}</Text>
+          </View>
+          <View
+            className={styles.protectionItem}
+            onClick={() => Taro.navigateTo({ url: '/pages/legal-aid/index' })}
+          >
+            <Text className={styles.protectionItemIcon}>⚖️</Text>
+            <Text className={styles.protectionItemName}>法律援助</Text>
+            <Text className={styles.protectionItemStatus}>绿色通道</Text>
+          </View>
+          <View
+            className={styles.protectionItem}
+            onClick={() => Taro.navigateTo({ url: '/pages/witness-network/index' })}
+          >
+            <Text className={styles.protectionItemIcon}>📸</Text>
+            <Text className={styles.protectionItemName}>网络见证</Text>
+            <Text className={styles.protectionItemStatus}>独立证据链</Text>
+          </View>
+        </View>
+      </View>
+    );
+  });
+
   // 是否显示筛选栏（"为你推荐"和"全部"显示）
   const showFilterBar = activeTab === 'all' || activeTab === 'recommend';
 
@@ -257,6 +298,9 @@ const HomePage: React.FC = () => {
       className={styles.container}
       scrollY
       enableBackToTop
+      refresherEnabled
+      refresherTriggered={refreshing}
+      onRefresherRefresh={handleRefresh}
     >
       {/* 页面头部 */}
       <View className={styles.header}>
@@ -383,6 +427,9 @@ const HomePage: React.FC = () => {
 
       {/* 本周圈子榜样推荐 */}
       <CircleExampleCard />
+
+      {/* 善行保护入口 */}
+      <ProtectionCard />
 
       {/* 善行列表 */}
       <View className={styles.kindnessList}>

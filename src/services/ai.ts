@@ -207,7 +207,7 @@ async function streamChatMini(
     });
 
     // 监听分块数据到达
-    requestTask.onChunkedResponse?.((res) => {
+    (requestTask as any).onChunkedResponse?.((_res: any) => {
       // 部分 Taro 版本支持 onHeadersReceived 来确认分块传输
     });
 
@@ -250,7 +250,7 @@ async function streamChatMini(
 export const deepseekChatStream = async (
   messages: ChatMessage[],
   callbacks: StreamCallbacks
-): Promise<void> => {
+): Promise<string> => {
   callbacks.onStart?.();
 
   let fullContent = '';
@@ -272,6 +272,8 @@ export const deepseekChatStream = async (
     callbacks.onError?.(error as Error);
     callbacks.onComplete?.('AI小伙伴今天有点忙，但你的温暖已经被记住了 ✨');
   }
+
+  return fullContent || 'AI小伙伴今天有点忙，但你的温暖已经被记住了 ✨';
 };
 
 export type PersonaType = 'sudongpo' | 'confucius' | 'libai' | 'dufu' | 'zhuangzi' | 'liqingzhao' | 'taoyuanming' | 'wangwei';

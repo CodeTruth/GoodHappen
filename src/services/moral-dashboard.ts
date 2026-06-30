@@ -1,6 +1,6 @@
 import { useMoralTaskStore } from '@/store/moral-task';
 import { useCircleStore } from '@/store/circle';
-import { TaskSubmission, MoralCategory, CATEGORY_CONFIG, mockWeeklyReports, mockSemesterProfiles, WeeklyReport, SemesterProfile } from '@/data/mock-moral-tasks';
+import { MoralCategory, CATEGORY_CONFIG, mockWeeklyReports, mockSemesterProfiles, WeeklyReport, SemesterProfile } from '@/data/mock-moral-tasks';
 
 // ========== 学生排行项 ==========
 export interface StudentRankingItem {
@@ -34,6 +34,7 @@ export interface ExampleWallItem {
   categoryColor: string;
   likes: number;
   likedBy: string[];
+  comments?: { id: string; userId: string; userName: string; content: string; createdAt: string }[];
   createdAt: string;
 }
 
@@ -136,7 +137,7 @@ export const getRanking = (circleId: string): StudentRankingItem[] => {
 
 // ========== 未提交学生 ==========
 export const getUnsubmittedStudents = (circleId: string, taskId: string): { userId: string; userName: string; userAvatar: string }[] => {
-  const { getSubmissionsByTask, getTasksByCircle } = useMoralTaskStore.getState();
+  const { getSubmissionsByTask } = useMoralTaskStore.getState();
   const { getCircleById } = useCircleStore.getState();
 
   const submissions = getSubmissionsByTask(taskId);

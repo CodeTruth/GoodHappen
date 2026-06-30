@@ -6,6 +6,7 @@ import { useCircleStore } from '@/store/circle';
 import { useUserStore } from '@/store/user';
 import { getCircleTypeConfig, CircleType } from '@/config/circle-types';
 import { MoralCategory } from '@/data/mock-moral-tasks';
+import { generateImprovementSuggestion } from '@/services/ai-circle';
 import styles from './index.module.scss';
 
 interface TaskTemplate {
@@ -51,7 +52,7 @@ const CircleMoralTasksPage: React.FC = () => {
   const router = useRouter();
   const circleId = router.params.id || '';
 
-  const { getTasksByCircle, addTask, getSubmissionsByTask, loadFromStorage } = useMoralTaskStore();
+  const { getTasksByCircle, addTask, getSubmissionsByTask, getSubmissionsByCircle, loadFromStorage } = useMoralTaskStore();
   const { getCircleById, hasPermission } = useCircleStore();
   const { userInfo } = useUserStore();
 
@@ -64,6 +65,16 @@ const CircleMoralTasksPage: React.FC = () => {
   const [tasks, setTasks] = useState<any[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+
+  // 提交列表弹窗
+  const [showSubmissions, setShowSubmissions] = useState(false);
+  const [selectedTask, setSelectedTask] = useState<any>(null);
+  const [taskSubmissions, setTaskSubmissions] = useState<any[]>([]);
+
+  // AI 建议
+  const [aiSuggestion, setAiSuggestion] = useState<string>('');
+  const [aiSuggestLoading, setAiSuggestLoading] = useState(false);
+  const [aiSuggestTarget, setAiSuggestTarget] = useState<string | null>(null);
 
   // 表单状态
   const [formTitle, setFormTitle] = useState('');
@@ -215,9 +226,12 @@ const CircleMoralTasksPage: React.FC = () => {
                       </Text>
                     </View>
                     <Text className={styles.viewBtn} onClick={() => {
-                      Taro.showToast({ title: '查看提交列表', icon: 'none' });
+                      const subs = getSubmissionsByCircle(circleId).filter((s) => s.taskId === task.id);
+                      setSelectedTask(task);
+                      setTaskSubmissions(subs);
+                      setShowSubmissions(true);
                     }}>
-                      查看提交
+                      查看提交 ({task.submissionCount})
                     </Text>
                   </View>
                 </View>
@@ -311,6 +325,96 @@ const CircleMoralTasksPage: React.FC = () => {
             <View className={styles.submitBtn} onClick={handleAddTask}>
               <Text className={styles.submitBtnText}>发布{typeConfig.labels.taskShort}</Text>
             </View>
+          </View>
+        </View>
+      )}
+
+      {/* 提交列表弹窗 */}
+      {showSubmissions && selectedTask && (
+        <View className={styles.modalOverlay} onClick={() => setShowSubmissions(false)}>
+          <View className={styles.modalPanel} onClick={(e) => e.stopPropagation()}>
+            <Text className={styles.modalTitle}>{selectedTask.title} - 提交列表</Text>
+            <ScrollView scrollY style={{ maxHeight: '60vh' }}>
+              {taskSubmissions.length > 0 ? (
+                taskSubmissions.map((sub) => (
+                  <View key={sub.id} className={styles.submissionItem}>
+                    <View className={styles.submissionHeader}>
+                      <Text className={styles.submissionUser}>{sub.userName}</Text>
+                      <View className={styles.submissionTags}>
+                        {sub.isExample && <Text className={styles.submissionTagExample}>⭐ 榜样</Text>}
+                        {sub.needsRevision && <Text className={styles.submissionTagRevise}>📝 需修改</Text>}
+                        <Text className={styles.submissionDate}>{sub.createdAt.split('T')[0]}</Text>
+                      </View>
+                    </View>
+                    <Text className={styles.submissionContent}>{sub.content}</Text>
+
+                    {/* 老师操作区 */}
+                    <View className={styles.teacherActions}>
+                      <View
+                        className={`${styles.teacherActionBtn} ${sub.isExample ? styles.teacherActionBtnActive : ''}`}
+                        onClick={() => {
+                          const { markExample } = useMoralTaskStore.getState();
+                          markExample(sub.id, !sub.isExample);
+                          // 刷新列表
+                          const subs = getSubmissionsByCircle(circleId).filter((s) => s.taskId === selectedTask.id);
+                          setTaskSubmissions(subs);
+                          Taro.showToast({ title: sub.isExample ? '取消榜样标记' : '已标记为榜样', icon: 'success' });
+                        }}
+                      >
+                        <Text className={styles.teacherActionBtnText}>⭐ 榜样</Text>
+                      </View>
+                      <View
+                        className={`${styles.teacherActionBtn} ${sub.needsRevision ? styles.teacherActionBtnWarn : ''}`}
+                        onClick={() => {
+                          const { markNeedsRevision } = useMoralTaskStore.getState();
+                          markNeedsRevision(sub.id);
+                          const subs = getSubmissionsByCircle(circleId).filter((s) => s.taskId === selectedTask.id);
+                          setTaskSubmissions(subs);
+                          Taro.showToast({ title: '已标记需修改', icon: 'none' });
+                        }}
+                      >
+                        <Text className={styles.teacherActionBtnText}>📝 需修改</Text>
+                      </View>
+                    </View>
+
+                    {/* AI 改进建议 */}
+                    {aiSuggestTarget === sub.id && aiSuggestion ? (
+                      <View className={styles.aiSuggestBox}>
+                        <Text className={styles.aiSuggestLabel}>🤖 AI 建议</Text>
+                        <Text className={styles.aiSuggestText}>{aiSuggestion}</Text>
+                      </View>
+                    ) : (
+                      <View
+                        className={styles.aiSuggestBtn}
+                        onClick={async () => {
+                          if (aiSuggestLoading) return;
+                          setAiSuggestTarget(sub.id);
+                          setAiSuggestLoading(true);
+                          try {
+                            const suggestion = await generateImprovementSuggestion(
+                              sub.content,
+                              selectedTask.title,
+                              selectedTask.description
+                            );
+                            setAiSuggestion(suggestion);
+                          } catch (e) {
+                            Taro.showToast({ title: '生成失败', icon: 'none' });
+                          } finally {
+                            setAiSuggestLoading(false);
+                          }
+                        }}
+                      >
+                        <Text className={styles.aiSuggestBtnText}>
+                          {aiSuggestLoading && aiSuggestTarget === sub.id ? '思考中...' : '🤖 AI 改进建议'}
+                        </Text>
+                      </View>
+                    )}
+                  </View>
+                ))
+              ) : (
+                <Text className={styles.emptyText}>暂无提交</Text>
+              )}
+            </ScrollView>
           </View>
         </View>
       )}

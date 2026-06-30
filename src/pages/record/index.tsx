@@ -229,8 +229,9 @@ const RecordPage: React.FC = () => {
     try {
       const manager = Taro.getRecorderManager();
       // H5 环境中 getRecorderManager 由 temporarilyNotSupport 包装，返回 rejected Promise
-      if (manager && typeof manager.catch === 'function') {
-        manager.catch(() => { /* H5 不支持录音 */ });
+      const mgr = manager as any;
+      if (mgr && typeof mgr.catch === 'function') {
+        mgr.catch(() => { /* H5 不支持录音 */ });
         recorderManagerRef.current = null;
       } else {
         recorderManagerRef.current = manager;
@@ -275,11 +276,12 @@ const RecordPage: React.FC = () => {
       // 清理录音回调
       if (recorderManagerRef.current) {
         try {
-          if (typeof recorderManagerRef.current.offStop === 'function') {
-            recorderManagerRef.current.offStop();
+          const rm = recorderManagerRef.current as any;
+          if (typeof rm.offStop === 'function') {
+            rm.offStop();
           }
-          if (typeof recorderManagerRef.current.offError === 'function') {
-            recorderManagerRef.current.offError();
+          if (typeof rm.offError === 'function') {
+            rm.offError();
           }
         } catch { /* 忽略清理异常 */ }
       }
@@ -1197,7 +1199,7 @@ const RecordPage: React.FC = () => {
                 </Text>
               </View>
               {/* 第二位名人：完成后出现，可点击进入对话 */}
-              {aiResponses.map((resp, idx) => (
+              {aiResponses.map((resp) => (
                 <View
                   key={resp.persona}
                   className={`${styles.aiCard} ${styles.aiCardSecond}`}

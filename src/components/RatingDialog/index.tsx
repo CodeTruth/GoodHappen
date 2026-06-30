@@ -35,7 +35,6 @@ const RatingDialog: React.FC<RatingDialogProps> = ({ need, visible, onClose, onR
   // 评价维度文案
   const dimensionLabel = isPublisher ? '服务质量' : '沟通配合';
   const targetName = isPublisher ? need.accepterName : need.publisherName;
-  const targetAvatar = isPublisher ? need.accepterAvatar : need.publisherAvatar;
 
   // 星级文案
   const scoreLabels = ['很差', '较差', '一般', '满意', '非常满意'];

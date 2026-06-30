@@ -16,11 +16,11 @@ const StudentProfilePage: React.FC = () => {
 
   const { getCircleById, hasPermission } = useCircleStore();
   const { userInfo } = useUserStore();
-  const { markExample, addTeacherComment } = useMoralTaskStore();
+  const { markExample, addTeacherComment, getSubmissionsByUser } = useMoralTaskStore();
 
   // 圈子类型配置
-  const circle = getCircleById(circleId);
-  const circleType: CircleType = (circle?.type as CircleType) || 'public';
+  const circleInfo = getCircleById(circleId);
+  const circleType: CircleType = (circleInfo?.type as CircleType) || 'public';
   const typeConfig = useMemo(() => getCircleTypeConfig(circleType), [circleType]);
   const categoryMap = useMemo(() => {
     const map: Record<string, typeof typeConfig.categories[0]> = {};
@@ -30,7 +30,6 @@ const StudentProfilePage: React.FC = () => {
 
   const [profile, setProfile] = useState<StudentMoralProfile | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [isSelf, setIsSelf] = useState(false);
   const [commentInput, setCommentInput] = useState('');
   const [commentingId, setCommentingId] = useState<string | null>(null);
 
@@ -40,7 +39,6 @@ const StudentProfilePage: React.FC = () => {
   useEffect(() => {
     if (circleId && userInfo) {
       setIsAdmin(hasPermission(circleId, userInfo.id, 'create_checkin_task'));
-      setIsSelf(targetUserId === currentUserId);
     }
   }, [circleId, userInfo, targetUserId]);
 
@@ -48,8 +46,6 @@ const StudentProfilePage: React.FC = () => {
     if (!circleId || !targetUserId) return;
     setProfile(getStudentProfile(targetUserId, circleId));
   }, [circleId, targetUserId]);
-
-  const circle = getCircleById(circleId);
 
   const handleMarkExample = (submissionId: string, current: boolean) => {
     markExample(submissionId, !current);
@@ -89,13 +85,61 @@ const StudentProfilePage: React.FC = () => {
 
   const maxCategoryCount = Math.max(...profile.categoryDistribution.map((c) => c.count), 1);
 
+  // 近期趋势数据（最近4周）
+  const weeklyTrend = useMemo(() => {
+    const subs = getSubmissionsByUser(targetUserId, circleId);
+    const weeks: { label: string; count: number }[] = [];
+    const now = new Date();
+    for (let i = 3; i >= 0; i--) {
+      const weekStart = new Date(now);
+      weekStart.setDate(now.getDate() - now.getDay() - i * 7);
+      const weekEnd = new Date(weekStart);
+      weekEnd.setDate(weekStart.getDate() + 6);
+      const count = subs.filter((s) => {
+        const d = new Date(s.createdAt);
+        return d >= weekStart && d <= weekEnd;
+      }).length;
+      weeks.push({
+        label: `${weekStart.getMonth() + 1}/${weekStart.getDate()}`,
+        count,
+      });
+    }
+    return weeks;
+  }, [targetUserId, circleId, getSubmissionsByUser]);
+
+  // 打卡日历数据（本月）
+  const calendarData = useMemo(() => {
+    const subs = getSubmissionsByUser(targetUserId, circleId);
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const daysInMonth = lastDay.getDate();
+    const startWeekday = firstDay.getDay();
+    const days: { day: number; hasSubmit: boolean; isToday: boolean }[] = [];
+    // 填充前置空白
+    for (let i = 0; i < startWeekday; i++) {
+      days.push({ day: 0, hasSubmit: false, isToday: false });
+    }
+    for (let d = 1; d <= daysInMonth; d++) {
+      const dateStr = new Date(year, month, d).toISOString().split('T')[0];
+      const hasSubmit = subs.some((s) => s.createdAt.startsWith(dateStr));
+      const isToday = d === now.getDate();
+      days.push({ day: d, hasSubmit, isToday });
+    }
+    return days;
+  }, [targetUserId, circleId, getSubmissionsByUser]);
+
+  const maxWeeklyCount = Math.max(...weeklyTrend.map((w) => w.count), 1);
+
   return (
     <View className={styles.container}>
       {/* 顶部档案卡 */}
       <View className={styles.profileCard}>
         <Image className={styles.profileAvatar} src={profile.userAvatar} />
         <Text className={styles.profileName}>{profile.userName}</Text>
-        <Text className={styles.profileClass}>{circle?.name || '班级'} · 学号 {targetUserId.slice(-2)}</Text>
+        <Text className={styles.profileClass}>{circleInfo?.name || '班级'} · 学号 {targetUserId.slice(-2)}</Text>
       </View>
 
       {/* 本学期数据概览 */}
@@ -133,6 +177,43 @@ const StudentProfilePage: React.FC = () => {
           </View>
         </View>
       )}
+
+      {/* 近期趋势 */}
+      <View className={styles.sectionCard}>
+        <Text className={styles.sectionTitle}>📈 近期趋势（近4周）</Text>
+        <View className={styles.trendChart}>
+          {weeklyTrend.map((w, idx) => (
+            <View key={idx} className={styles.trendBarItem}>
+              <View className={styles.trendBarTrack}>
+                <View
+                  className={styles.trendBarFill}
+                  style={{ height: `${maxWeeklyCount > 0 ? (w.count / maxWeeklyCount) * 100 : 0}%` }}
+                />
+              </View>
+              <Text className={styles.trendBarCount}>{w.count}</Text>
+              <Text className={styles.trendBarLabel}>{w.label}</Text>
+            </View>
+          ))}
+        </View>
+      </View>
+
+      {/* 打卡日历 */}
+      <View className={styles.sectionCard}>
+        <Text className={styles.sectionTitle}>📅 本月打卡</Text>
+        <View className={styles.calendarGrid}>
+          {['日', '一', '二', '三', '四', '五', '六'].map((d) => (
+            <Text key={d} className={styles.calendarWeekday}>{d}</Text>
+          ))}
+          {calendarData.map((day, idx) => (
+            <View
+              key={idx}
+              className={`${styles.calendarDay} ${day.hasSubmit ? styles.calendarDayActive : ''} ${day.isToday ? styles.calendarDayToday : ''}`}
+            >
+              {day.day > 0 && <Text className={styles.calendarDayText}>{day.day}</Text>}
+            </View>
+          ))}
+        </View>
+      </View>
 
       {/* 分类分布 */}
       {profile.categoryDistribution.length > 0 && (

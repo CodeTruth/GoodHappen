@@ -171,7 +171,7 @@ const isAlreadyMatched = (
 
 // 推送"你可能被温暖到了"通知
 const pushMatchNotification = async (
-  source: Kindness,
+  _source: Kindness,
   target: Kindness,
   confidence: number
 ): Promise<void> => {
