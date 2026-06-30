@@ -22,6 +22,18 @@ export type SOSSource =
   | 'watch_triple_tap'   // 手表三连击
   | 'auto_emergency';    // 系统自动检测
 
+/** 通知目标类型 */
+export type NotifyTargetType = 'emergency_contact' | 'nearby_user';
+
+/** SOS通知记录 */
+export interface SOSNotification {
+  targetType: NotifyTargetType;
+  targetId: string;
+  targetName: string;
+  notifiedAt: string;
+  cost: number;                 // 通知费用（紧急联系人0元，周围用户收费）
+}
+
 /** SOS事件 */
 export interface SOSEvent {
   id: string;
@@ -41,6 +53,9 @@ export interface SOSEvent {
   confirmedAt?: string;
   confirmEvidence?: SOSConfirmEvidence;
   aiVerdict?: 'real' | 'suspicious' | 'unknown'; // AI初步判断
+  // 分级通知（P4增强）
+  notifications: SOSNotification[];
+  totalNotifyCost: number;      // 通知总费用
 }
 
 /** SOS确认证据 */
@@ -76,6 +91,13 @@ export const SOS_CONFIG = {
   CONFIRM_WINDOW_HOURS: 24,        // 24小时确认窗口
   REFUND_FULL: true,               // 真实SOS全额退还
 
+  // 分级通知费用（P4增强）
+  NOTIFY_COST: {
+    EMERGENCY_CONTACT: 0,          // 紧急联系人：免费（信任关系）
+    NEARBY_USER: 10,               // 周围好事发生用户：¥10/人（防止滥用损害热心人）
+  },
+  MAX_NEARBY_NOTIFY: 5,            // 最多通知5位周围用户
+
   // 定时安全确认
   SAFETY_CHECK_DEFAULT_MINUTES: 30, // 默认30分钟
   SAFETY_CHECK_MAX_MINUTES: 120,    // 最长120分钟
@@ -107,14 +129,74 @@ let _safetyListeners: Array<(tasks: SafetyCheckTask[]) => void> = [];
 /**
  * 触发SOS（带押金预扣）
  */
+/**
+ * 执行分级通知
+ * 紧急联系人免费，周围好事发生用户收费
+ */
+const executeTieredNotifications = (
+  _eventId: string,
+  emergencyContacts: { id: string; name: string }[] = [],
+  nearbyUsers: { id: string; name: string }[] = []
+): { notifications: SOSNotification[]; totalCost: number; summary: string } => {
+  const now = new Date().toISOString();
+  const notifications: SOSNotification[] = [];
+  let totalCost = 0;
+
+  // 1. 通知紧急联系人（免费）
+  emergencyContacts.forEach(contact => {
+    notifications.push({
+      targetType: 'emergency_contact',
+      targetId: contact.id,
+      targetName: contact.name,
+      notifiedAt: now,
+      cost: SOS_CONFIG.NOTIFY_COST.EMERGENCY_CONTACT,
+    });
+  });
+
+  // 2. 通知周围好事发生用户（收费，防止滥用损害热心人）
+  const limitedNearby = nearbyUsers.slice(0, SOS_CONFIG.MAX_NEARBY_NOTIFY);
+  limitedNearby.forEach(user => {
+    const cost = SOS_CONFIG.NOTIFY_COST.NEARBY_USER;
+    notifications.push({
+      targetType: 'nearby_user',
+      targetId: user.id,
+      targetName: user.name,
+      notifiedAt: now,
+      cost,
+    });
+    totalCost += cost;
+  });
+
+  const summary = [
+    `已通知 ${emergencyContacts.length} 位紧急联系人（免费）`,
+    totalCost > 0
+      ? `已通知 ${limitedNearby.length} 位附近热心用户（¥${totalCost}）`
+      : '未通知附近用户',
+  ].join('，');
+
+  return { notifications, totalCost, summary };
+};
+
+/**
+ * 触发SOS（带押金预扣 + 分级通知）
+ */
 export const triggerSOSWithGuard = (
   source: SOSSource,
   userId: string,
   userName: string,
-  location?: { latitude: number; longitude: number; address: string; }
+  location?: { latitude: number; longitude: number; address: string; },
+  emergencyContacts: { id: string; name: string }[] = [],
+  nearbyUsers: { id: string; name: string }[] = []
 ): { event: SOSEvent; message: string } => {
   const now = new Date();
   const confirmDeadline = new Date(now.getTime() + SOS_CONFIG.CONFIRM_WINDOW_HOURS * 60 * 60 * 1000);
+
+  // 执行分级通知
+  const { notifications, totalCost, summary } = executeTieredNotifications(
+    `sos_${Date.now()}`,
+    emergencyContacts,
+    nearbyUsers
+  );
 
   const event: SOSEvent = {
     id: `sos_${Date.now()}`,
@@ -127,6 +209,8 @@ export const triggerSOSWithGuard = (
     depositAmount: SOS_CONFIG.DEPOSIT_AMOUNT,
     depositStatus: 'held',
     confirmDeadline: confirmDeadline.toISOString(),
+    notifications,
+    totalNotifyCost: totalCost,
   };
 
   _sosEvents = [event, ..._sosEvents];
@@ -147,7 +231,14 @@ export const triggerSOSWithGuard = (
 
   return {
     event,
-    message: `🆘 SOS已触发（${sourceLabels[source]}）\n押金 ¥${SOS_CONFIG.DEPOSIT_AMOUNT} 已预扣，请在${SOS_CONFIG.CONFIRM_WINDOW_HOURS}小时内提交确认。`,
+    message: [
+      `🆘 SOS已触发（${sourceLabels[source]}）`,
+      ``,
+      summary,
+      ``,
+      `押金 ¥${SOS_CONFIG.DEPOSIT_AMOUNT} 已预扣，请在${SOS_CONFIG.CONFIRM_WINDOW_HOURS}小时内提交确认。`,
+      totalCost > 0 ? `通知费用 ¥${totalCost} 将从押金中扣除。` : '',
+    ].filter(Boolean).join('\n'),
   };
 };
 
