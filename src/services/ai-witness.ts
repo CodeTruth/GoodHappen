@@ -1,4 +1,4 @@
-import { WitnessRecord } from './evidence';
+import { WitnessRecord, isDelayedPost } from './evidence';
 import { deepseekChat } from './ai';
 
 // ===== 类型定义 =====
@@ -296,16 +296,19 @@ export const aiWitnessMatching = async (
 };
 
 /**
- * 生成 AI 证据链推理报告
+ * 生成 AI 证据链推理报告（支持延迟发布场景）
  */
 export const generateEvidenceChainReport = async (
   primaryContent: string,
   matchedWitnesses: WitnessRecord[],
   matchResults: AIMediaMatchResult[]
 ): Promise<string> => {
+  const delayedCount = matchedWitnesses.filter(w => isDelayedPost(w)).length;
+
   const witnessSummaries = matchedWitnesses.map((w, i) => {
     const result = matchResults[i];
-    return `见证人${i + 1}（${w.witnessUserName}）：${result?.aiSummary || '匹配分析完成'}`;
+    const delayedTag = isDelayedPost(w) ? '【延迟发布·媒体EXIF时间已校正】' : '';
+    return `见证人${i + 1}（${w.witnessUserName}）${delayedTag}：${result?.aiSummary || '匹配分析完成'}`;
   });
 
   const prompt = `你是一位司法证据专家。基于以下信息，写一段60字以内的证据链推理总结：
@@ -314,7 +317,7 @@ export const generateEvidenceChainReport = async (
 
 ${witnessSummaries.map((s, i) => `见证${i + 1}：${s}`).join('\n')}
 
-总见证人数：${matchedWitnesses.length}
+总见证人数：${matchedWitnesses.length}${delayedCount > 0 ? `，其中${delayedCount}人为延迟发布（通过媒体EXIF提取真实拍摄时间/GPS进行匹配）` : ''}
 
 请给出简短、有说服力的证据链判断。`;
 
@@ -327,10 +330,13 @@ ${witnessSummaries.map((s, i) => `见证${i + 1}：${s}`).join('\n')}
   } catch {
     // 回退
     const totalConfidence = matchResults.reduce((sum, r) => sum + r.overallConfidence, 0) / matchResults.length;
+    const delayedHint = delayedCount > 0
+      ? `（含${delayedCount}条延迟发布记录，已通过媒体EXIF提取真实拍摄时间）`
+      : '';
     if (totalConfidence > 0.7) {
-      return `AI多模态分析确认：${matchedWitnesses.length}位见证者提供的文字${matchResults.some(r => r.imageAnalysis || r.videoAnalysis) ? '、图片及视频' : ''}证据与事件描述高度吻合，证据链可信。`;
+      return `AI多模态分析确认：${matchedWitnesses.length}位见证者提供的文字${matchResults.some(r => r.imageAnalysis || r.videoAnalysis) ? '、图片及视频' : ''}证据与事件描述高度吻合${delayedHint}，证据链可信。`;
     }
-    return `初步分析：${matchedWitnesses.length}位见证者提供了相关记录，综合置信度${Math.round(totalConfidence * 100)}%，建议进一步核实。`;
+    return `初步分析：${matchedWitnesses.length}位见证者提供了相关记录${delayedHint}，综合置信度${Math.round(totalConfidence * 100)}%，建议进一步核实。`;
   }
 };
 

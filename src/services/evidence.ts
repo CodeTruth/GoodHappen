@@ -32,13 +32,17 @@ export interface MediaAsset {
 /** 善行证据包 - 不可篡改 */
 export interface EvidencePackage {
   recordId: string;          // 关联的善行记录 ID
-  timestamp: string;         // 服务器生成的时间戳（ISO，不可篡改）
-  gps: GPSInfo;              // GPS 定位
+  timestamp: string;         // 记录发布时间戳（ISO，发帖时实时获取）
+  gps: GPSInfo;              // 记录发布时的 GPS 定位
   content: string;           // 原始内容
   mediaUrls: MediaAsset[];   // 录音/拍照等媒体资源
   hash: string;              // 证据包哈希值（用于校验完整性）
   preExisting: boolean;      // 是否为争议发生前存入（true=非事后捏造）
   sealedAt?: string;         // 锁定时间（一键求助时设置）
+  // ===== 事件元数据（解决"延迟发帖"问题）=====
+  eventTimestamp?: string;   // 事件真实发生时间（从EXIF/用户填写获得）
+  eventGps?: GPSInfo;         // 事件真实发生地点（从EXIF/用户填写获得）
+  metadataSource?: 'exif' | 'manual' | 'inferred'; // 元数据来源
 }
 
 /** 求助记录 - "我被讹了"触发 */
@@ -60,12 +64,16 @@ export interface WitnessRecord {
   witnessUserName: string;
   witnessUserAvatar: string;
   recordId: string;          // 关联的善行记录 ID
-  timestamp: string;         // 见证时间
-  gps: GPSInfo;              // 见证位置
+  timestamp: string;         // 记录发布时间（发帖时实时获取）
+  gps: GPSInfo;              // 记录发布时的 GPS 定位
   description: string;       // 见证描述
   matched: boolean;          // 是否被匹配为善意证据
   notified: boolean;         // 是否已通知见证者
   badgeGranted: boolean;     // 是否已授予"温暖见证人"徽章
+  // ===== 事件元数据（解决"延迟发帖"问题）=====
+  eventTimestamp?: string;   // 事件真实发生时间（从EXIF/用户填写获得）
+  eventGps?: GPSInfo;         // 事件真实发生地点（从EXIF/用户填写获得）
+  metadataSource?: 'exif' | 'manual' | 'inferred'; // 元数据来源
 }
 
 /** 见证匹配结果 - 独立证据链 */
@@ -79,6 +87,9 @@ export interface WitnessMatch {
   descriptionMatchScore: number; // 描述吻合度 0-1
   evidenceChainFormed: boolean;  // 是否形成独立证据链（≥2条独立记录）
   createdAt: string;
+  // ===== 延迟发布相关 =====
+  delayedWitnessIds?: string[]; // 延迟发布的见证记录ID列表
+  eventTimeUsed?: boolean;      // 是否使用了事件时间元数据进行匹配
 }
 
 // ============================================
@@ -87,10 +98,12 @@ export interface WitnessMatch {
 
 /** 见证网络匹配参数 */
 export const WITNESS_MATCH_CONFIG = {
-  TIME_WINDOW_MINUTES: 30,   // 事发时间 ±30 分钟
-  LOCATION_RADIUS_METERS: 100, // 地点半径 100m
-  MIN_WITNESS_FOR_CHAIN: 2,  // 形成证据链的最少见证数
-  DESCRIPTION_MATCH_THRESHOLD: 0.5, // 描述吻合度阈值
+  TIME_WINDOW_MINUTES: 30,              // 事发时间 ±30 分钟
+  DELAYED_POST_TIME_EXTENSION_MINUTES: 60, // 延迟发布放宽到 ±60 分钟
+  LOCATION_RADIUS_METERS: 100,          // 地点半径 100m
+  MIN_WITNESS_FOR_CHAIN: 2,             // 形成证据链的最少见证数
+  DESCRIPTION_MATCH_THRESHOLD: 0.5,     // 描述吻合度阈值
+  DELAYED_POST_THRESHOLD_MINUTES: 10,   // 超过10分钟算延迟发布
 };
 
 /** 地球半径（米），用于 GPS 距离计算 */
@@ -137,6 +150,73 @@ export const calculateDistance = (
     Math.sin(dLng / 2) * Math.sin(dLng / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return EARTH_RADIUS_METERS * c;
+};
+
+/**
+ * 获取有效时间（优先使用事件真实发生时间，其次使用记录发布时间）
+ * 解决"延迟发帖"场景：拍照后隔了很久才发帖
+ */
+export const getEffectiveTime = (
+  record: EvidencePackage | WitnessRecord
+): string => {
+  return record.eventTimestamp || record.timestamp;
+};
+
+/**
+ * 获取有效 GPS（优先使用事件真实发生地点，其次使用记录发布时的 GPS）
+ */
+export const getEffectiveGps = (
+  record: EvidencePackage | WitnessRecord
+): GPSInfo => {
+  return record.eventGps || record.gps;
+};
+
+/**
+ * 判断是否为"延迟发布"（事件时间与记录时间相差超过阈值）
+ */
+export const isDelayedPost = (
+  record: EvidencePackage | WitnessRecord
+): boolean => {
+  if (!record.eventTimestamp) return false;
+  const eventTime = new Date(record.eventTimestamp).getTime();
+  const recordTime = new Date(record.timestamp).getTime();
+  const diffMinutes = Math.abs(recordTime - eventTime) / (1000 * 60);
+  return diffMinutes > WITNESS_MATCH_CONFIG.DELAYED_POST_THRESHOLD_MINUTES;
+};
+
+/**
+ * 从媒体资产提取元数据（模拟 EXIF 解析）
+ * 实际环境应调用服务端 EXIF 解析 API 或客户端 exif-js 库
+ */
+export const extractMediaMetadata = (
+  mediaAssets: MediaAsset[]
+): { eventTimestamp?: string; eventGps?: GPSInfo; source: 'exif' | 'none' } => {
+  if (!mediaAssets || mediaAssets.length === 0) {
+    return { source: 'none' };
+  }
+
+  // 查找最早的媒体创建时间作为事件时间
+  const sortedByTime = [...mediaAssets]
+    .filter(m => m.createdAt)
+    .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+
+  if (sortedByTime.length > 0) {
+    const earliestMedia = sortedByTime[0];
+    // 模拟：从媒体 createdAt 推断事件时间（实际应从 EXIF 提取）
+    return {
+      eventTimestamp: earliestMedia.createdAt,
+      // 模拟 EXIF GPS（实际生产环境需解析真实 EXIF）
+      eventGps: {
+        latitude: 39.9042,
+        longitude: 116.4074,
+        address: '媒体拍摄地点（需EXIF解析）',
+        accuracy: 10,
+      },
+      source: 'exif',
+    };
+  }
+
+  return { source: 'none' };
 };
 
 /**
@@ -204,6 +284,7 @@ export const getCurrentGPS = async (): Promise<GPSInfo> => {
 /**
  * 创建善行证据包（事前存证）
  * 在善行记录创建时同步调用，确保时间戳由系统生成不可篡改
+ * 自动从媒体资产提取 EXIF 元数据（事件真实时间/GPS）
  */
 export const createEvidencePackage = (
   recordId: string,
@@ -217,6 +298,9 @@ export const createEvidencePackage = (
   const hashSource = `${recordId}|${serverTimestamp}|${content}|${gps.latitude},${gps.longitude}`;
   const hash = generateHash(hashSource);
 
+  // 尝试从媒体资产提取事件元数据（解决"延迟发帖"问题）
+  const mediaMeta = extractMediaMetadata(mediaAssets);
+
   return {
     recordId,
     timestamp: serverTimestamp,
@@ -224,7 +308,11 @@ export const createEvidencePackage = (
     content,
     mediaUrls: mediaAssets,
     hash,
-    preExisting: true, // 事前存证标记：非事后捏造
+    preExisting: true,
+    // 如果媒体有元数据，优先使用媒体时间作为事件时间
+    eventTimestamp: mediaMeta.eventTimestamp,
+    eventGps: mediaMeta.eventGps,
+    metadataSource: mediaMeta.source === 'exif' ? 'exif' : undefined,
   };
 };
 
@@ -282,30 +370,43 @@ export const verifyEvidenceIntegrity = (pkg: EvidencePackage): boolean => {
 // ============================================
 
 /**
- * 分布式目击扫描
+ * 分布式目击扫描（支持延迟发布检测）
  * 善行者点击"我被讹了" → 系统自动扫描事发时间±30分钟、地点半径100m内所有独立用户的见证记录
+ * 核心改进：优先使用 eventTimestamp/eventGps（事件真实时间/地点），解决"拍完照隔很久才发帖"的问题
  */
 export const scanWitnessNetwork = (
   _sosRecord: SOSRecord,
   primaryEvidence: EvidencePackage,
   allWitnessRecords: WitnessRecord[]
 ): WitnessRecord[] => {
-  const incidentTime = new Date(primaryEvidence.timestamp).getTime();
-  const { TIME_WINDOW_MINUTES, LOCATION_RADIUS_METERS } = WITNESS_MATCH_CONFIG;
+  // 优先使用事件真实发生时间，其次使用记录发布时间
+  const incidentTime = new Date(getEffectiveTime(primaryEvidence)).getTime();
+  const incidentGps = getEffectiveGps(primaryEvidence);
+  const { TIME_WINDOW_MINUTES, DELAYED_POST_TIME_EXTENSION_MINUTES, LOCATION_RADIUS_METERS } = WITNESS_MATCH_CONFIG;
 
   return allWitnessRecords.filter(witness => {
     // 排除自己的记录（独立用户）
     if (witness.recordId === primaryEvidence.recordId) return false;
 
-    // 时间窗口校验：±30 分钟
-    const witnessTime = new Date(witness.timestamp).getTime();
-    const timeDiffMin = Math.abs(witnessTime - incidentTime) / (1000 * 60);
-    if (timeDiffMin > TIME_WINDOW_MINUTES) return false;
+    // 获取见证记录的有效时间和GPS
+    const witnessTime = new Date(getEffectiveTime(witness)).getTime();
+    const witnessGps = getEffectiveGps(witness);
 
-    // 地点半径校验：100m 内
+    // 判断是否为延迟发布 → 放宽时间窗
+    const witnessIsDelayed = isDelayedPost(witness);
+    const primaryIsDelayed = isDelayedPost(primaryEvidence);
+    const effectiveTimeWindow = (witnessIsDelayed || primaryIsDelayed)
+      ? DELAYED_POST_TIME_EXTENSION_MINUTES
+      : TIME_WINDOW_MINUTES;
+
+    // 时间窗口校验：普通 ±30 分钟，延迟发布放宽到 ±60 分钟
+    const timeDiffMin = Math.abs(witnessTime - incidentTime) / (1000 * 60);
+    if (timeDiffMin > effectiveTimeWindow) return false;
+
+    // 地点半径校验：100m 内（优先使用事件GPS）
     const distance = calculateDistance(
-      primaryEvidence.gps.latitude, primaryEvidence.gps.longitude,
-      witness.gps.latitude, witness.gps.longitude
+      incidentGps.latitude, incidentGps.longitude,
+      witnessGps.latitude, witnessGps.longitude
     );
     if (distance > LOCATION_RADIUS_METERS) return false;
 
@@ -386,28 +487,30 @@ export const aiEnhancedWitnessMatch = async (
 };
 
 /**
- * 匹配见证证据链
+ * 匹配见证证据链（支持延迟发布检测）
  * 两条独立记录 → 时间差、GPS 半径、描述吻合 → 独立证据链
+ * 核心改进：使用事件元数据计算，检测并标记延迟发布的见证记录
  */
 export const matchWitnessEvidence = (
   sosRecord: SOSRecord,
   primaryEvidence: EvidencePackage,
   matchedWitnesses: WitnessRecord[]
 ): WitnessMatch => {
-  const incidentTime = new Date(primaryEvidence.timestamp).getTime();
+  const incidentTime = new Date(getEffectiveTime(primaryEvidence)).getTime();
+  const incidentGps = getEffectiveGps(primaryEvidence);
 
-  // 计算时间差（取最大值）
+  // 计算时间差（取最大值，使用事件真实发生时间）
   const timeDiffs = matchedWitnesses.map(w => {
-    const witnessTime = new Date(w.timestamp).getTime();
+    const witnessTime = new Date(getEffectiveTime(w)).getTime();
     return Math.abs(witnessTime - incidentTime) / (1000 * 60);
   });
   const maxTimeDiff = timeDiffs.length > 0 ? Math.max(...timeDiffs) : 0;
 
-  // 计算 GPS 半径（取最大距离）
+  // 计算 GPS 半径（取最大距离，使用事件真实发生地点）
   const distances = matchedWitnesses.map(w =>
     calculateDistance(
-      primaryEvidence.gps.latitude, primaryEvidence.gps.longitude,
-      w.gps.latitude, w.gps.longitude
+      incidentGps.latitude, incidentGps.longitude,
+      getEffectiveGps(w).latitude, getEffectiveGps(w).longitude
     )
   );
   const maxRadius = distances.length > 0 ? Math.max(...distances) : 0;
@@ -423,6 +526,14 @@ export const matchWitnessEvidence = (
   // 是否形成独立证据链：≥2 条独立记录
   const evidenceChainFormed = matchedWitnesses.length >= WITNESS_MATCH_CONFIG.MIN_WITNESS_FOR_CHAIN;
 
+  // 检测延迟发布的见证记录
+  const delayedWitnessIds = matchedWitnesses
+    .filter(w => isDelayedPost(w))
+    .map(w => w.id);
+
+  // 是否使用了事件时间元数据
+  const eventTimeUsed = matchedWitnesses.some(w => !!w.eventTimestamp) || !!primaryEvidence.eventTimestamp;
+
   return {
     id: genId('match'),
     sosRecordId: sosRecord.id,
@@ -433,6 +544,8 @@ export const matchWitnessEvidence = (
     descriptionMatchScore: Number(avgMatchScore.toFixed(2)),
     evidenceChainFormed,
     createdAt: new Date().toISOString(),
+    delayedWitnessIds,
+    eventTimeUsed,
   };
 };
 

@@ -167,6 +167,10 @@ const mockWitnessRecords: WitnessRecord[] = [
     matched: false,
     notified: false,
     badgeGranted: false,
+    // 正常发布：事件时间 = 发帖时间
+    eventTimestamp: '2024-06-22T10:28:00Z',
+    eventGps: { latitude: 39.9048, longitude: 116.4075, address: '北京市朝阳区善行地点附近', accuracy: 5 },
+    metadataSource: 'exif',
   },
   {
     id: 'wit_002',
@@ -174,12 +178,17 @@ const mockWitnessRecords: WitnessRecord[] = [
     witnessUserName: '晨练的旁观者',
     witnessUserAvatar: '',
     recordId: 'kindness_mock_003',
-    timestamp: '2024-06-22T10:35:00Z',
-    gps: { latitude: 39.9043, longitude: 116.4080, address: '北京市朝阳区·路口对面' },
+    // 延迟发布：上午10:30拍的照片，下午14:00才发帖
+    timestamp: '2024-06-22T14:00:00Z',
+    gps: { latitude: 39.9120, longitude: 116.4200, address: '北京市海淀区·家中' },
     description: '路过看到有人帮老人，拍了照片发到小区群里问认不认识。照片里能清楚看到老人和年轻人',
     matched: false,
     notified: false,
     badgeGranted: false,
+    // 延迟发布：事件时间 ≠ 发帖时间，事件地点 ≠ 发帖地点
+    eventTimestamp: '2024-06-22T10:30:00Z',
+    eventGps: { latitude: 39.9043, longitude: 116.4080, address: '北京市朝阳区·路口对面', accuracy: 8 },
+    metadataSource: 'exif',
   },
   {
     id: 'wit_003',
@@ -187,12 +196,17 @@ const mockWitnessRecords: WitnessRecord[] = [
     witnessUserName: '便利店店员',
     witnessUserAvatar: '',
     recordId: 'kindness_mock_004',
-    timestamp: '2024-06-22T10:40:00Z',
+    // 延迟发布：10:25录的音频，11:30才发帖
+    timestamp: '2024-06-22T11:30:00Z',
     gps: { latitude: 39.9040, longitude: 116.4082, address: '北京市朝阳区·便利店门口' },
     description: '在店门口录了一段现场，听到年轻人说"奶奶您小心点"，老人说"谢谢谢谢"。录音很清楚',
     matched: false,
     notified: false,
     badgeGranted: false,
+    // 延迟发布
+    eventTimestamp: '2024-06-22T10:25:00Z',
+    eventGps: { latitude: 39.9040, longitude: 116.4082, address: '北京市朝阳区·便利店门口', accuracy: 6 },
+    metadataSource: 'exif',
   },
 ];
 

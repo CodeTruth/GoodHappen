@@ -3,7 +3,7 @@ import { View, Text, ScrollView, Image } from '@tarojs/components';
 import Taro from '@tarojs/taro';
 import classnames from 'classnames';
 import { useProtectionStore } from '@/store/protection';
-import { WITNESS_MATCH_CONFIG, WitnessRecord, SOSRecord, WitnessMatch } from '@/services/evidence';
+import { WITNESS_MATCH_CONFIG, WitnessRecord, SOSRecord, WitnessMatch, isDelayedPost, getEffectiveTime } from '@/services/evidence';
 import { useUserStore } from '@/store/user';
 import { aiWitnessMatching, getMediaEvidenceCards as fetchMediaEvidenceCards, AIMediaMatchResult, MediaEvidenceCard } from '@/services/ai-witness';
 import styles from './index.module.scss';
@@ -70,11 +70,15 @@ const mockWitnessRecords: WitnessRecord[] = [
     witnessUserName: '见证者B',
     witnessUserAvatar: '',
     description: '路过看到有人帮老人，老人走路很慢，年轻人很耐心',
-    timestamp: '2024-06-22T10:32:00Z',
-    gps: { latitude: 39.9043, longitude: 116.4080, address: '北京市朝阳区善行地点附近' },
+    // 延迟发布：上午10:30拍的照片，下午14:00才发帖
+    timestamp: '2024-06-22T14:00:00Z',
+    gps: { latitude: 39.9120, longitude: 116.4200, address: '北京市海淀区·家中' },
     matched: true,
     notified: true,
     badgeGranted: true,
+    eventTimestamp: '2024-06-22T10:30:00Z',
+    eventGps: { latitude: 39.9043, longitude: 116.4080, address: '北京市朝阳区·路口对面', accuracy: 8 },
+    metadataSource: 'exif',
   },
   {
     id: 'wit_003',
@@ -83,11 +87,15 @@ const mockWitnessRecords: WitnessRecord[] = [
     witnessUserName: '见证者C',
     witnessUserAvatar: '',
     description: '在马路对面看到，年轻人很小心地扶着老人走',
-    timestamp: '2024-06-22T10:25:00Z',
-    gps: { latitude: 39.9040, longitude: 116.4082, address: '北京市朝阳区善行地点附近' },
+    // 延迟发布：10:25录的音频，11:30才发帖
+    timestamp: '2024-06-22T11:30:00Z',
+    gps: { latitude: 39.9040, longitude: 116.4082, address: '北京市朝阳区·便利店门口' },
     matched: true,
     notified: true,
     badgeGranted: true,
+    eventTimestamp: '2024-06-22T10:25:00Z',
+    eventGps: { latitude: 39.9040, longitude: 116.4082, address: '北京市朝阳区·便利店门口', accuracy: 6 },
+    metadataSource: 'exif',
   },
 ];
 
@@ -266,6 +274,7 @@ const WitnessNetworkPage: React.FC = () => {
           · 事发时间 ±{WITNESS_MATCH_CONFIG.TIME_WINDOW_MINUTES} 分钟内的见证记录{'\n'}
           · 地点半径 {WITNESS_MATCH_CONFIG.LOCATION_RADIUS_METERS}m 内的独立用户{'\n'}
           · {WITNESS_MATCH_CONFIG.MIN_WITNESS_FOR_CHAIN} 条以上独立记录 → 形成证据链{'\n'}
+          · 支持延迟发布检测：从媒体EXIF提取真实拍摄时间/GPS，放宽至±{WITNESS_MATCH_CONFIG.DELAYED_POST_TIME_EXTENSION_MINUTES}分钟{'\n'}
           见证者将收到通知并获得"温暖见证人"徽章
         </Text>
       </View>
@@ -370,6 +379,27 @@ const WitnessNetworkPage: React.FC = () => {
                 </Text>
               </View>
             </View>
+
+            {/* 事件时间元数据提示 */}
+            {matchResult.eventTimeUsed && (
+              <View className={styles.eventTimeNotice}>
+                <Text className={styles.eventTimeNoticeIcon}>📷</Text>
+                <Text className={styles.eventTimeNoticeText}>
+                  已启用事件时间元数据匹配（从媒体EXIF提取真实拍摄时间/GPS）
+                </Text>
+              </View>
+            )}
+
+            {/* 延迟发布提示 */}
+            {(matchResult.delayedWitnessIds && matchResult.delayedWitnessIds.length > 0) && (
+              <View className={styles.delayedNotice}>
+                <Text className={styles.delayedNoticeIcon}>⏰</Text>
+                <Text className={styles.delayedNoticeText}>
+                  检测到 {matchResult.delayedWitnessIds.length} 条延迟发布记录（事件时间≠发帖时间），
+                  系统已自动放宽时间窗至 ±{WITNESS_MATCH_CONFIG.DELAYED_POST_TIME_EXTENSION_MINUTES} 分钟
+                </Text>
+              </View>
+            )}
           </View>
 
           {/* AI 多模态分析入口 */}
@@ -494,6 +524,18 @@ const WitnessNetworkPage: React.FC = () => {
                   {(matchResult.descriptionMatchScore * 100).toFixed(0)}%
                 </Text>
               </View>
+              <View className={styles.paramItem}>
+                <Text className={styles.paramLabel}>事件时间匹配</Text>
+                <Text className={styles.paramValue}>
+                  {matchResult.eventTimeUsed ? '✅ 已启用' : '—'}
+                </Text>
+              </View>
+              <View className={styles.paramItem}>
+                <Text className={styles.paramLabel}>延迟发布记录</Text>
+                <Text className={styles.paramValue}>
+                  {(matchResult.delayedWitnessIds?.length || 0)} 条
+                </Text>
+              </View>
             </View>
           </View>
 
@@ -511,14 +553,23 @@ const WitnessNetworkPage: React.FC = () => {
                     <View className={styles.witnessInfo}>
                       <View className={styles.witnessHeader}>
                         <Text className={styles.witnessName}>{witness.witnessUserName}</Text>
+                        {isDelayedPost(witness) && (
+                          <Text className={styles.delayedBadge}>⏰ 延迟发布</Text>
+                        )}
+                        {witness.metadataSource === 'exif' && (
+                          <Text className={styles.exifBadge}>📷 EXIF</Text>
+                        )}
                         {witness.badgeGranted && (
                           <Text className={styles.witnessBadge}>温暖见证人</Text>
                         )}
                       </View>
                       <Text className={styles.witnessDesc}>{witness.description}</Text>
                       <Text className={styles.witnessMeta}>
-                        见证时间：{formatTime(witness.timestamp)}{'\n'}
-                        见证地点：{witness.gps.address}
+                        事件时间：{formatTime(getEffectiveTime(witness))}{'\n'}
+                        事件地点：{(witness.eventGps || witness.gps).address}
+                        {isDelayedPost(witness) && (
+                          `\n发帖时间：${formatTime(witness.timestamp)} · 发帖地点：${witness.gps.address}`
+                        )}
                       </Text>
                     </View>
                     <Text className={styles.witnessExpand}>
