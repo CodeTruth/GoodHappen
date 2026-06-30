@@ -5,7 +5,47 @@ import { useMoralTaskStore } from '@/store/moral-task';
 import { useCircleStore } from '@/store/circle';
 import { useUserStore } from '@/store/user';
 import { getCircleTypeConfig, CircleType } from '@/config/circle-types';
+import { MoralCategory } from '@/data/mock-moral-tasks';
 import styles from './index.module.scss';
+
+interface TaskTemplate {
+  title: string;
+  description: string;
+  category: string;
+}
+
+const QUICK_TEMPLATES: Record<CircleType, TaskTemplate[]> = {
+  class: [
+    { title: '帮父母做家务', description: '洗碗、扫地、整理房间、洗衣服等均可，请拍摄视频记录', category: 'housework' },
+    { title: '主动帮助同学', description: '帮助同学解决学习困难、分享文具、一起打扫卫生等', category: 'help_others' },
+    { title: '环保小行动', description: '垃圾分类、节约用水用电、爱护花草树木等', category: 'environmental' },
+    { title: '阅读分享', description: '阅读一本好书，写下读后感或与同学分享', category: 'reading' },
+  ],
+  company: [
+    { title: '社区义工日', description: '前往社区敬老院陪伴老人，协助日常活动，记录服务时长', category: 'charity' },
+    { title: '绿色办公倡议', description: '推行无纸化办公、节约用电、自带水杯，提交绿色办公小贴士', category: 'environmental' },
+    { title: '跨部门协作', description: '与其他部门同事合作完成一项公益或创新项目', category: 'team' },
+    { title: '志愿服务', description: '参与公司组织的志愿服务活动，记录服务心得', category: 'volunteer' },
+  ],
+  community: [
+    { title: '楼道清洁日', description: '清理所住楼道垃圾、擦拭扶手和门窗', category: 'environmental' },
+    { title: '关爱独居老人', description: '定期探访社区独居老人，陪聊天、帮忙买菜或代取快递', category: 'elderly' },
+    { title: '邻里互助', description: '在互助群中响应邻居需求，或出借闲置物品', category: 'neighbor' },
+    { title: '安全巡查', description: '巡查楼道消防隐患、检查公共设施安全', category: 'safety' },
+  ],
+  friends: [
+    { title: '互助打卡', description: '本周为朋友做一件力所能及的事，可以是帮搬家、带饭、修电脑等', category: 'help' },
+    { title: '陪伴时光', description: '陪伴朋友度过重要时刻或低落时期，一起吃饭、散步、聊天均可', category: 'accompany' },
+    { title: '好物分享', description: '分享自己觉得好用的物品或美食给朋友', category: 'share' },
+    { title: '美好回忆', description: '记录和朋友的一次美好聚会或旅行，配照片和文字感言', category: 'memory' },
+  ],
+  public: [
+    { title: '公益捐赠', description: '捐赠闲置物品或参与公益募捐活动', category: 'charity' },
+    { title: '环保行动', description: '参与垃圾分类宣传、植树造林等环保活动', category: 'environmental' },
+    { title: '助学支教', description: '为贫困地区学生捐赠书籍或参与线上支教', category: 'education' },
+    { title: '健康关爱', description: '参与社区健康宣传或为有需要的人提供健康帮助', category: 'health' },
+  ],
+};
 
 const CircleMoralTasksPage: React.FC = () => {
   const router = useRouter();
@@ -65,7 +105,7 @@ const CircleMoralTasksPage: React.FC = () => {
       circleId,
       title: formTitle.trim(),
       description: formDesc.trim(),
-      category: formCategory,
+      category: formCategory as MoralCategory,
       requireVideo: formRequireVideo,
       weekRange: {
         start: now.toISOString().split('T')[0],
@@ -197,6 +237,26 @@ const CircleMoralTasksPage: React.FC = () => {
         <View className={styles.modalOverlay} onClick={() => setShowModal(false)}>
           <View className={styles.modalPanel} onClick={(e) => e.stopPropagation()}>
             <Text className={styles.modalTitle}>发布{typeConfig.labels.task}</Text>
+
+            {/* 快捷模板 */}
+            <View className={styles.formItem}>
+              <Text className={styles.formLabel}>⚡ 快捷模板</Text>
+              <View className={styles.templateList}>
+                {QUICK_TEMPLATES[circleType]?.map((tmpl, idx) => (
+                  <View
+                    key={idx}
+                    className={styles.templateTag}
+                    onClick={() => {
+                      setFormTitle(tmpl.title);
+                      setFormDesc(tmpl.description);
+                      setFormCategory(tmpl.category);
+                    }}
+                  >
+                    <Text className={styles.templateTagText}>{tmpl.title}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
 
             <View className={styles.formItem}>
               <Text className={styles.formLabel}>{typeConfig.labels.taskShort}标题</Text>

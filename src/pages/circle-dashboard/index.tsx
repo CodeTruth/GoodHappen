@@ -3,6 +3,7 @@ import { View, Text, Image, ScrollView } from '@tarojs/components';
 import Taro, { useRouter } from '@tarojs/taro';
 import { useCircleStore } from '@/store/circle';
 import { useUserStore } from '@/store/user';
+import { useMoralTaskStore } from '@/store/moral-task';
 import { getRanking, getWeeklyReport, getExampleWall, getUnsubmittedStudents } from '@/services/moral-dashboard';
 import { StudentRankingItem, WeeklyReportData, ExampleWallItem } from '@/services/moral-dashboard';
 import { getCircleTypeConfig, CircleType } from '@/config/circle-types';
@@ -43,6 +44,16 @@ const CircleDashboardPage: React.FC = () => {
   // Tab3 数据
   const [examples, setExamples] = useState<ExampleWallItem[]>([]);
   const [selectedWeekIdx, setSelectedWeekIdx] = useState(25);
+
+  // 分享卡片弹窗
+  const [showShareCard, setShowShareCard] = useState(false);
+  const [shareCardData, setShareCardData] = useState<{
+    weekIndex: number;
+    totalCount: number;
+    participationRate: number;
+    exampleCount: number;
+    topUsers: { userName: string; count: number }[];
+  } | null>(null);
 
   useEffect(() => {
     if (circleId && userInfo) {
@@ -268,7 +279,20 @@ const CircleDashboardPage: React.FC = () => {
 
         {/* 操作按钮 */}
         <View className={styles.actionButtons}>
-          <View className={styles.actionBtn} onClick={() => Taro.showToast({ title: '周报海报已生成', icon: 'success' })}>
+          <View
+            className={styles.actionBtn}
+            onClick={() => {
+              if (!report) return;
+              setShareCardData({
+                weekIndex: report.weekIndex,
+                totalCount: report.totalCount,
+                participationRate: report.participationRate,
+                exampleCount: report.exampleCount,
+                topUsers: ranking.slice(0, 3).map((r) => ({ userName: r.userName, count: r.taskCompleted + r.freeKindness })),
+              });
+              setShowShareCard(true);
+            }}
+          >
             <Text className={styles.actionBtnText}>📄 生成周报海报</Text>
           </View>
           <View className={styles.actionBtn} onClick={() => Taro.showToast({ title: '已分享到领导', icon: 'success' })}>
@@ -323,7 +347,22 @@ const CircleDashboardPage: React.FC = () => {
               )}
               <View className={styles.exampleFooter}>
                 <Text className={styles.exampleDate}>{formatDate(ex.createdAt)}</Text>
-                <Text className={styles.exampleLikes}>👍 {ex.likeCount}</Text>
+                <View
+                  className={`${styles.likeBtn} ${(ex.likedBy || []).includes(userInfo?.id || '') ? styles.likeBtnActive : ''}`}
+                  onClick={() => {
+                    const { toggleLike } = useMoralTaskStore.getState();
+                    const liked = toggleLike(ex.id, userInfo?.id || 'currentUser');
+                    Taro.showToast({ title: liked ? '已点赞 ❤️' : '取消点赞', icon: 'none' });
+                    // 刷新榜样墙数据
+                    const weekReport = mockWeeklyReports.find((r) => r.weekIndex === selectedWeekIdx);
+                    if (weekReport) {
+                      setExamples(getExampleWall(circleId, weekReport.weekRange));
+                    }
+                  }}
+                >
+                  <Text className={styles.likeBtnIcon}>👍</Text>
+                  <Text className={styles.likeBtnCount}>{ex.likes || 0}</Text>
+                </View>
               </View>
             </View>
           ))
@@ -359,6 +398,55 @@ const CircleDashboardPage: React.FC = () => {
         {activeTab === 'report' && renderReport()}
         {activeTab === 'examples' && renderExamples()}
       </View>
+
+      {/* 分享卡片弹窗 */}
+      {showShareCard && shareCardData && (
+        <View className={styles.shareOverlay} onClick={() => setShowShareCard(false)}>
+          <View className={styles.shareCard} onClick={(e) => e.stopPropagation()}>
+            <View className={styles.shareHeader}>
+              <Text className={styles.shareTitle}>📊 {circle?.name || '善行圈'}周报</Text>
+              <Text className={styles.shareSubtitle}>第{shareCardData.weekIndex}周 · {typeConfig.labels.ranking}汇总</Text>
+            </View>
+
+            <View className={styles.shareStats}>
+              <View className={styles.shareStatItem}>
+                <Text className={styles.shareStatNum}>{shareCardData.totalCount}</Text>
+                <Text className={styles.shareStatLabel}>总{typeConfig.labels.submit}</Text>
+              </View>
+              <View className={styles.shareStatItem}>
+                <Text className={styles.shareStatNum}>{shareCardData.participationRate}%</Text>
+                <Text className={styles.shareStatLabel}>参与率</Text>
+              </View>
+              <View className={styles.shareStatItem}>
+                <Text className={styles.shareStatNum}>{shareCardData.exampleCount}</Text>
+                <Text className={styles.shareStatLabel}>{typeConfig.labels.example}</Text>
+              </View>
+            </View>
+
+            {shareCardData.topUsers.length > 0 && (
+              <View className={styles.shareTopUsers}>
+                <Text className={styles.shareTopTitle}>🏆 本周TOP3</Text>
+                {shareCardData.topUsers.map((u, i) => (
+                  <View key={i} className={styles.shareTopItem}>
+                    <Text className={styles.shareTopRank}>{i === 0 ? '🥇' : i === 1 ? '🥈' : '🥉'}</Text>
+                    <Text className={styles.shareTopName}>{u.userName}</Text>
+                    <Text className={styles.shareTopCount}>{u.count}条</Text>
+                  </View>
+                ))}
+              </View>
+            )}
+
+            <View className={styles.shareFooter}>
+              <Text className={styles.shareSlogan}>记录每一份善意，让世界更美好</Text>
+              <Text className={styles.shareBrand}>—— 好事发生</Text>
+            </View>
+
+            <View className={styles.shareHint}>
+              <Text className={styles.shareHintText}>👆 点击空白处关闭，长按保存截图</Text>
+            </View>
+          </View>
+        </View>
+      )}
     </View>
   );
 };

@@ -23,10 +23,11 @@ interface MoralTaskState {
 
   // 操作
   addTask: (task: Omit<MoralTask, 'id' | 'status' | 'createdAt'>) => MoralTask;
-  addSubmission: (submission: Omit<TaskSubmission, 'id' | 'isExample' | 'needsRevision' | 'createdAt'>) => TaskSubmission;
+  addSubmission: (submission: Omit<TaskSubmission, 'id' | 'isExample' | 'needsRevision' | 'likes' | 'likedBy' | 'createdAt'>) => TaskSubmission;
   markExample: (submissionId: string, isExample: boolean) => void;
   addTeacherComment: (submissionId: string, comment: string) => void;
   markNeedsRevision: (submissionId: string) => void;
+  toggleLike: (submissionId: string, userId: string) => boolean;
 
   // 持久化
   loadFromStorage: () => void;
@@ -38,7 +39,11 @@ const generateId = (prefix: string): string =>
 
 export const useMoralTaskStore = create<MoralTaskState>((set, get) => ({
   tasks: [...mockMoralTasks],
-  submissions: [...mockTaskSubmissions],
+  submissions: mockTaskSubmissions.map((s) => ({
+    ...s,
+    likes: s.likes || (s.isExample ? Math.floor(Math.random() * 15) + 3 : 0),
+    likedBy: s.likedBy || [],
+  })),
 
   getTasksByCircle: (circleId) => {
     return get().tasks.filter((t) => t.circleId === circleId);
@@ -88,6 +93,8 @@ export const useMoralTaskStore = create<MoralTaskState>((set, get) => ({
       id: generateId('sub'),
       isExample: false,
       needsRevision: false,
+      likes: 0,
+      likedBy: [],
       createdAt: new Date().toISOString(),
     };
     set((state) => ({ submissions: [...state.submissions, newSubmission] }));
@@ -104,6 +111,32 @@ export const useMoralTaskStore = create<MoralTaskState>((set, get) => ({
 
     get().saveToStorage();
     return newSubmission;
+  },
+
+  toggleLike: (submissionId, userId) => {
+    let result = false;
+    set((state) => ({
+      submissions: state.submissions.map((s) => {
+        if (s.id !== submissionId) return s;
+        const hasLiked = s.likedBy?.includes(userId);
+        if (hasLiked) {
+          return {
+            ...s,
+            likes: Math.max(0, (s.likes || 0) - 1),
+            likedBy: (s.likedBy || []).filter((id) => id !== userId),
+          };
+        } else {
+          result = true;
+          return {
+            ...s,
+            likes: (s.likes || 0) + 1,
+            likedBy: [...(s.likedBy || []), userId],
+          };
+        }
+      }),
+    }));
+    get().saveToStorage();
+    return result;
   },
 
   markExample: (submissionId, isExample) => {

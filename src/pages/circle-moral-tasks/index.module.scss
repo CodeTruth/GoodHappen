@@ -284,6 +284,24 @@
   padding: $spacing-xl 0;
 }
 
+.templateList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-sm;
+}
+
+.templateTag {
+  padding: $spacing-sm $spacing-md;
+  border-radius: $radius-md;
+  background: rgba($color-primary, 0.08);
+  border: 1rpx solid rgba($color-primary, 0.2);
+}
+
+.templateTagText {
+  font-size: $font-size-sm;
+  color: $color-primary;
+}
+
 .emptyIcon {
   font-size: 80rpx;
   margin-bottom: $spacing-md;

@@ -32,7 +32,8 @@ export interface ExampleWallItem {
   categoryName: string;
   categoryIcon: string;
   categoryColor: string;
-  likeCount: number;
+  likes: number;
+  likedBy: string[];
   createdAt: string;
 }
 
@@ -188,7 +189,8 @@ export const getExampleWall = (circleId: string, weekRange?: { start: string; en
       categoryName: catConfig.name,
       categoryIcon: catConfig.icon,
       categoryColor: catConfig.color,
-      likeCount: Math.floor(Math.random() * 20) + 5, // mock点赞数
+      likes: s.likes || 0,
+      likedBy: s.likedBy || [],
       createdAt: s.createdAt,
     };
   });

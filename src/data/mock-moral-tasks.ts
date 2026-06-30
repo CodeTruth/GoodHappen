@@ -89,6 +89,8 @@ export interface TaskSubmission {
   teacherComment?: string;
   isExample: boolean;
   needsRevision: boolean;
+  likes?: number; // 点赞数
+  likedBy?: string[]; // 点赞用户ID列表
   createdAt: string;
 }
 

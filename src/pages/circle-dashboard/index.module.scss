@@ -543,12 +543,31 @@
   color: $color-text-tertiary;
 }
 
-.exampleLikes {
+.likeBtn {
   display: flex;
   align-items: center;
   gap: $spacing-xs;
+  padding: $spacing-xs $spacing-sm;
+  border-radius: $radius-md;
+  background: $color-bg-muted;
+}
+
+.likeBtnActive {
+  background: rgba($color-primary, 0.12);
+}
+
+.likeBtnIcon {
+  font-size: $font-size-sm;
+}
+
+.likeBtnCount {
   font-size: $font-size-sm;
   color: $color-text-secondary;
+}
+
+.likeBtnActive .likeBtnCount {
+  color: $color-primary;
+  font-weight: $font-weight-medium;
 }
 
 .empty {
@@ -564,5 +583,147 @@
 
 .emptyText {
   font-size: $font-size-md;
+  color: $color-text-tertiary;
+}
+
+// ===== 分享卡片 =====
+.shareOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: $spacing-xl;
+  z-index: 1000;
+}
+
+.shareCard {
+  width: 100%;
+  max-width: 600rpx;
+  background: linear-gradient(135deg, #FFF9F0 0%, #FFFFFF 100%);
+  border-radius: $radius-xl;
+  padding: $spacing-xl;
+  border: 2rpx solid rgba($color-primary, 0.2);
+  box-shadow: 0 20rpx 60rpx rgba(0, 0, 0, 0.2);
+}
+
+.shareHeader {
+  text-align: center;
+  margin-bottom: $spacing-lg;
+  padding-bottom: $spacing-lg;
+  border-bottom: 2rpx dashed rgba($color-primary, 0.2);
+}
+
+.shareTitle {
+  font-size: $font-size-xl;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  display: block;
+  margin-bottom: $spacing-sm;
+}
+
+.shareSubtitle {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+}
+
+.shareStats {
+  display: flex;
+  justify-content: space-around;
+  margin-bottom: $spacing-lg;
+}
+
+.shareStatItem {
+  text-align: center;
+}
+
+.shareStatNum {
+  font-size: 48rpx;
+  font-weight: $font-weight-bold;
+  color: $color-primary;
+  display: block;
+}
+
+.shareStatLabel {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  margin-top: $spacing-xs;
+}
+
+.shareTopUsers {
+  background: rgba($color-primary, 0.05);
+  border-radius: $radius-lg;
+  padding: $spacing-md;
+  margin-bottom: $spacing-lg;
+}
+
+.shareTopTitle {
+  font-size: $font-size-md;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+  text-align: center;
+  margin-bottom: $spacing-sm;
+  display: block;
+}
+
+.shareTopItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: $spacing-sm 0;
+  border-bottom: 1rpx solid rgba($color-primary, 0.1);
+}
+
+.shareTopItem:last-child {
+  border-bottom: none;
+}
+
+.shareTopRank {
+  font-size: $font-size-lg;
+}
+
+.shareTopName {
+  font-size: $font-size-md;
+  color: $color-text-primary;
+  flex: 1;
+  text-align: center;
+}
+
+.shareTopCount {
+  font-size: $font-size-sm;
+  color: $color-primary;
+  font-weight: $font-weight-medium;
+}
+
+.shareFooter {
+  text-align: center;
+  padding-top: $spacing-md;
+  border-top: 2rpx dashed rgba($color-primary, 0.2);
+}
+
+.shareSlogan {
+  font-size: $font-size-md;
+  color: $color-text-secondary;
+  display: block;
+  margin-bottom: $spacing-xs;
+}
+
+.shareBrand {
+  font-size: $font-size-sm;
+  color: $color-primary;
+  font-weight: $font-weight-medium;
+}
+
+.shareHint {
+  text-align: center;
+  margin-top: $spacing-lg;
+}
+
+.shareHintText {
+  font-size: $font-size-xs;
   color: $color-text-tertiary;
 }
