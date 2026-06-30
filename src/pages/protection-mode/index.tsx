@@ -44,6 +44,17 @@ export default function ProtectionModePage() {
   ]);
   const [sosCountdown, setSosCountdown] = useState(0);
 
+  // 来源信息：从AI顾问等页面跳转过来时携带的上下文
+  const [sourceFrom, setSourceFrom] = useState('');
+  const [sourceScene, setSourceScene] = useState('');
+
+  // 读取跳转来源
+  useEffect(() => {
+    const params = Taro.getCurrentInstance().router?.params;
+    if (params?.from) setSourceFrom(params.from);
+    if (params?.scene) setSourceScene(decodeURIComponent(params.scene));
+  }, []);
+
   // 监听会话变化
   useEffect(() => {
     const unsubscribe = onSessionChange((s) => {
@@ -163,6 +174,21 @@ export default function ProtectionModePage() {
     });
   }, [session?.currentGps]);
 
+  /** 跳转记录善行（带上保护模式的证据信息） */
+  const handleGoRecord = useCallback(() => {
+    const params = new URLSearchParams();
+    params.set('from', 'protection');
+    if (session) {
+      params.set('duration', String(session.duration));
+      params.set('video', String(session.evidenceCollected.videoDuration));
+      params.set('audio', String(session.evidenceCollected.audioDuration));
+      params.set('gps', String(session.evidenceCollected.gpsPoints));
+      params.set('photos', String(session.evidenceCollected.photos));
+    }
+    if (sourceScene) params.set('scene', encodeURIComponent(sourceScene));
+    Taro.navigateTo({ url: `/pages/record/index?${params.toString()}` });
+  }, [session, sourceScene]);
+
   /** 结束保护 */
   const handleClose = useCallback(() => {
     Taro.showModal({
@@ -172,15 +198,16 @@ export default function ProtectionModePage() {
       success: (res) => {
         if (res.confirm) {
           closeSession();
+          // 如果来自AI顾问建议，自动引导到记录页
+          if (sourceFrom === 'advisor') {
+            setTimeout(() => {
+              handleGoRecord();
+            }, 600);
+          }
         }
       },
     });
-  }, []);
-
-  /** 跳转记录善行 */
-  const handleGoRecord = useCallback(() => {
-    Taro.navigateTo({ url: '/pages/record/index' });
-  }, []);
+  }, [sourceFrom, handleGoRecord]);
 
   /** 跳转保护详情 */
   const handleGoWitness = useCallback(() => {
@@ -198,6 +225,13 @@ export default function ProtectionModePage() {
       <Text className={styles.mainTitle}>善行保护模式</Text>
       <Text className={styles.subtitle}>做任何事前先保护好自己</Text>
 
+      {sourceScene && (
+        <View className={styles.sceneHintCard}>
+          <Text className={styles.sceneHintLabel}>🤖 AI顾问识别的场景</Text>
+          <Text className={styles.sceneHintText}>{sourceScene}</Text>
+        </View>
+      )}
+
       <View className={styles.descCard}>
         <Text className={styles.descText}>
           启动后系统将自动<Text className={styles.descHighlight}>录像、录音、GPS追踪</Text>，全程存证
@@ -207,11 +241,11 @@ export default function ProtectionModePage() {
       <View className={styles.circleBtnWrap}>
         <View className={styles.circleBtnIdle} onClick={handleStart}>
           <Text className={styles.circleBtnIdleIcon}>{'\u{1F6E1}\uFE0F'}</Text>
-          <Text className={styles.circleBtnIdleText}>一键开启保护</Text>
+          <Text className={styles.circleBtnIdleText}>{sourceFrom === 'advisor' ? '确认开启保护' : '一键开启保护'}</Text>
         </View>
       </View>
 
-      <Text className={styles.btnHint}>点击即开始全程录像+录音+GPS定位</Text>
+      <Text className={styles.btnHint}>{sourceFrom === 'advisor' ? 'AI顾问建议：此场景需先保护再行善' : '点击即开始全程录像+录音+GPS定位'}</Text>
 
       {/* 定时安全确认入口 */}
       <View className={styles.safetyCheckEntry} onClick={() => Taro.navigateTo({ url: '/pages/safety-check/index' })}>

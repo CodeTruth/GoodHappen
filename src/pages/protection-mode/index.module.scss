@@ -79,6 +79,29 @@ $color-text-tertiary: rgba(255, 255, 255, 0.4);
   font-weight: 600;
 }
 
+// AI顾问场景提示
+.sceneHintCard {
+  width: 100%;
+  background: rgba(76, 175, 80, 0.12);
+  border: 1rpx solid rgba(76, 175, 80, 0.25);
+  border-radius: 24rpx;
+  padding: 24rpx 32rpx;
+  margin-bottom: 40rpx;
+}
+
+.sceneHintLabel {
+  font-size: 22rpx;
+  color: $color-green-light;
+  font-weight: 600;
+  margin-bottom: 8rpx;
+}
+
+.sceneHintText {
+  font-size: 26rpx;
+  color: $color-text-primary;
+  line-height: 1.5;
+}
+
 // ============================================
 // 中心圆形按钮
 // ============================================

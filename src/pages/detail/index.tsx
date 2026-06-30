@@ -418,6 +418,50 @@ const DetailPage: React.FC = () => {
         </View>
       )}
 
+      {/* ===== 善行保障中心 ===== */}
+      {kindness.type === 'self' && (
+        <View className={styles.safetyCenterCard}>
+          <View className={styles.safetyCenterHeader}>
+            <Text className={styles.safetyCenterTitle}>🛡️ 善行保障中心</Text>
+            <Text className={styles.safetyCenterSub}>行善无忧，系统兜底</Text>
+          </View>
+          <View className={styles.safetyCenterGrid}>
+            <View
+              className={styles.safetyCenterItem}
+              onClick={() => Taro.navigateTo({ url: '/pages/insurance/index' })}
+            >
+              <Text className={styles.safetyCenterItemIcon}>🏥</Text>
+              <Text className={styles.safetyCenterItemName}>善行保险</Text>
+              <Text className={styles.safetyCenterItemDesc}>理赔申请</Text>
+            </View>
+            <View
+              className={styles.safetyCenterItem}
+              onClick={() => Taro.navigateTo({ url: '/pages/legal-aid/index' })}
+            >
+              <Text className={styles.safetyCenterItemIcon}>⚖️</Text>
+              <Text className={styles.safetyCenterItemName}>法律援助</Text>
+              <Text className={styles.safetyCenterItemDesc}>绿色通道</Text>
+            </View>
+            <View
+              className={styles.safetyCenterItem}
+              onClick={() => Taro.navigateTo({ url: '/pages/witness-network/index' })}
+            >
+              <Text className={styles.safetyCenterItemIcon}>📸</Text>
+              <Text className={styles.safetyCenterItemName}>网络见证</Text>
+              <Text className={styles.safetyCenterItemDesc}>独立证据</Text>
+            </View>
+            <View
+              className={styles.safetyCenterItem}
+              onClick={() => Taro.navigateTo({ url: '/pages/protection-mode/index' })}
+            >
+              <Text className={styles.safetyCenterItemIcon}>🛡️</Text>
+              <Text className={styles.safetyCenterItemName}>保护模式</Text>
+              <Text className={styles.safetyCenterItemDesc}>事前存证</Text>
+            </View>
+          </View>
+        </View>
+      )}
+
       {/* ===== 事前学习：从他人善行中学习风险防护 ===== */}
       {learnInfo && (
         <View className={styles.learnCard}>

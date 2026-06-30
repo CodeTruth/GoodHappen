@@ -172,13 +172,30 @@ export default function AIAdvisorPage() {
   }, [clearAllTimers])
 
   // ===== 底部按钮操作 =====
-  const handleLevelAction = useCallback((level: string) => {
+  const handleLevelAction = useCallback((level: string, scene: string) => {
+    const encodedScene = encodeURIComponent(scene)
     switch (level) {
-      case 'A': Taro.navigateTo({ url: '/pages/record/index' }); break
-      case 'B': Taro.navigateTo({ url: '/pages/protection-mode/index' }); break
-      case 'C': Taro.navigateTo({ url: '/pages/witness-network/index' }); break
-      case 'D': Taro.makePhoneCall({ phoneNumber: '120' }); break
-      case 'E': Taro.makePhoneCall({ phoneNumber: '110' }); break
+      case 'A':
+        Taro.navigateTo({ url: `/pages/record/index?from=advisor&level=A&scene=${encodedScene}` })
+        break
+      case 'B':
+        Taro.navigateTo({ url: `/pages/protection-mode/index?from=advisor&level=B&scene=${encodedScene}` })
+        break
+      case 'C':
+        Taro.navigateTo({ url: `/pages/witness-network/index?from=advisor&level=C` })
+        break
+      case 'D':
+        Taro.makePhoneCall({ phoneNumber: '120' })
+        setTimeout(() => {
+          Taro.navigateTo({ url: `/pages/record/index?from=advisor&level=D&scene=${encodedScene}` })
+        }, 800)
+        break
+      case 'E':
+        Taro.makePhoneCall({ phoneNumber: '110' })
+        setTimeout(() => {
+          Taro.navigateTo({ url: `/pages/record/index?from=advisor&level=E&scene=${encodedScene}` })
+        }, 800)
+        break
     }
   }, [])
 
@@ -555,7 +572,7 @@ export default function AIAdvisorPage() {
             <View className={styles.bottomBtnGroup}>
               <View
                 className={`${styles.bottomBtn} ${styles.primaryBtn}`}
-                onClick={() => handleLevelAction(result.adviceLevel)}
+                onClick={() => handleLevelAction(result.adviceLevel, voiceText)}
               >
                 <Text>
                   {result.adviceLevel === 'A' && '🤝 去帮助'}

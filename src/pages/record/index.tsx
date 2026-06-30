@@ -236,6 +236,42 @@ const RecordPage: React.FC = () => {
     }
   }, [isMinor, visibleScope]);
 
+  // 从URL参数读取外部上下文（AI顾问 / 保护模式）
+  const [fromSource, setFromSource] = useState('');
+  const [protectionMeta, setProtectionMeta] = useState<{
+    duration: number; video: number; audio: number; gps: number; photos: number;
+  } | null>(null);
+
+  useEffect(() => {
+    const params = Taro.getCurrentInstance().router?.params;
+    if (!params) return;
+    const from = params.from || '';
+    const scene = params.scene ? decodeURIComponent(params.scene) : '';
+    setFromSource(from);
+
+    if (from === 'advisor' && scene) {
+      // AI顾问跳转来：预填场景描述
+      setContent(scene);
+      // 自动检测风险
+      const risk = detectRisk(scene);
+      if (risk) setRiskScenario(risk);
+    }
+
+    if (from === 'protection') {
+      // 保护模式跳转来：预填保护信息
+      const duration = parseInt(params.duration || '0', 10);
+      const video = parseInt(params.video || '0', 10);
+      const audio = parseInt(params.audio || '0', 10);
+      const gps = parseInt(params.gps || '0', 10);
+      const photos = parseInt(params.photos || '0', 10);
+      setProtectionMeta({ duration, video, audio, gps, photos });
+      const autoContent = scene
+        ? `【保护模式记录】${scene}（保护时长${Math.floor(duration / 60)}分${duration % 60}秒）`
+        : `【保护模式记录】全程保护时长${Math.floor(duration / 60)}分${duration % 60}秒，已自动存证。`;
+      setContent(autoContent);
+    }
+  }, []);
+
   // 初始化
   useEffect(() => {
     loadFromStorage();
@@ -903,6 +939,28 @@ const RecordPage: React.FC = () => {
                 <Text className={styles.lengthHint}>💡 多写几句吧，说说具体做了什么、感受如何？（建议20字以上）</Text>
               )}
             </View>
+
+            {/* 来源提示：AI顾问 / 保护模式 */}
+            {fromSource === 'advisor' && (
+              <View className={styles.sourceHintCard}>
+                <Text className={styles.sourceHintIcon}>🤖</Text>
+                <View className={styles.sourceHintBody}>
+                  <Text className={styles.sourceHintTitle}>来自AI善行顾问评估</Text>
+                  <Text className={styles.sourceHintDesc}>场景已预填，可编辑补充细节</Text>
+                </View>
+              </View>
+            )}
+            {fromSource === 'protection' && protectionMeta && (
+              <View className={styles.sourceHintCard}>
+                <Text className={styles.sourceHintIcon}>🛡️</Text>
+                <View className={styles.sourceHintBody}>
+                  <Text className={styles.sourceHintTitle}>已关联保护模式证据</Text>
+                  <Text className={styles.sourceHintDesc}>
+                    录像{Math.floor(protectionMeta.video / 60)}分{protectionMeta.video % 60}秒 · 录音{Math.floor(protectionMeta.audio / 60)}分{protectionMeta.audio % 60}秒 · GPS{protectionMeta.gps}个点 · 照片{protectionMeta.photos}张
+                  </Text>
+                </View>
+              </View>
+            )}
 
             {/* 任务1：语音录制区域（选择语音时显示） */}
             {selectedMediaTypes.has('voice') && (

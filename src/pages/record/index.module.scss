@@ -72,6 +72,40 @@
   margin-bottom: $spacing-lg;
 }
 
+// 来源提示（AI顾问 / 保护模式）
+.sourceHintCard {
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+  background: linear-gradient(135deg, #FFF8F0 0%, #FFF0E0 100%);
+  border: 1rpx solid rgba(196, 149, 106, 0.3);
+  border-radius: $radius-lg;
+  padding: $spacing-md $spacing-lg;
+  margin-bottom: $spacing-lg;
+}
+
+.sourceHintIcon {
+  font-size: 40rpx;
+  flex-shrink: 0;
+}
+
+.sourceHintBody {
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+}
+
+.sourceHintTitle {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  color: $color-primary-dark;
+}
+
+.sourceHintDesc {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+}
+
 .formItem {
   margin-bottom: $spacing-lg;
 }

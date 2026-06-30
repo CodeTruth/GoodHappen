@@ -651,6 +651,64 @@
   font-weight: 600;
 }
 
+/* === 善行保障中心 === */
+.safetyCenterCard {
+  margin: 24rpx 24rpx 0;
+  background: $color-bg-card;
+  border-radius: 20rpx;
+  padding: 24rpx;
+  border: 1rpx solid $color-border;
+}
+
+.safetyCenterHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20rpx;
+}
+
+.safetyCenterTitle {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: $color-text-primary;
+}
+
+.safetyCenterSub {
+  font-size: 24rpx;
+  color: $color-text-secondary;
+}
+
+.safetyCenterGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16rpx;
+}
+
+.safetyCenterItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8rpx;
+  padding: 20rpx 0;
+  background: $color-bg-page;
+  border-radius: 16rpx;
+}
+
+.safetyCenterItemIcon {
+  font-size: 40rpx;
+}
+
+.safetyCenterItemName {
+  font-size: 24rpx;
+  font-weight: 500;
+  color: $color-text-primary;
+}
+
+.safetyCenterItemDesc {
+  font-size: 20rpx;
+  color: $color-text-tertiary;
+}
+
 /* === 事前学习卡片 === */
 .learnCard {
   margin: 24rpx 24rpx 0;
