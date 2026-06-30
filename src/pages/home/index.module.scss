@@ -218,6 +218,56 @@
   font-weight: $font-weight-bold;
 }
 
+.advisorEntry {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: $spacing-md $spacing-lg;
+  margin-bottom: $spacing-lg;
+  background: linear-gradient(135deg, #FFF8EE 0%, #FFF3E0 100%);
+  border-radius: $radius-lg;
+  border-left: 4rpx solid $color-primary;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.advisorEntry:active {
+  transform: scale(0.98);
+}
+
+.advisorEntryLeft {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+}
+
+.advisorEntryIcon {
+  font-size: 44rpx;
+}
+
+.advisorEntryText {
+  display: flex;
+  flex-direction: column;
+  gap: 2rpx;
+}
+
+.advisorEntryTitle {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: darken($color-primary, 10%);
+}
+
+.advisorEntryDesc {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.advisorEntryArrow {
+  font-size: $font-size-lg;
+  color: $color-primary;
+  font-weight: $font-weight-bold;
+}
+
 // ============================================
 // 悬浮保护按钮（全局入口）
 // ============================================

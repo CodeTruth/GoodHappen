@@ -407,6 +407,21 @@ const HomePage: React.FC = () => {
         <Text className={styles.protectionEntryArrow}>→</Text>
       </View>
 
+      {/* AI善行顾问入口 */}
+      <View
+        className={styles.advisorEntry}
+        onClick={() => Taro.navigateTo({ url: '/pages/ai-advisor/index' })}
+      >
+        <View className={styles.advisorEntryLeft}>
+          <Text className={styles.advisorEntryIcon}>🤖</Text>
+          <View className={styles.advisorEntryText}>
+            <Text className={styles.advisorEntryTitle}>做好事前，先问AI顾问</Text>
+            <Text className={styles.advisorEntryDesc}>描述情况，AI综合评判后给出最佳行动方案</Text>
+          </View>
+        </View>
+        <Text className={styles.advisorEntryArrow}>→</Text>
+      </View>
+
       {/* 标签切换 */}
       <ScrollView className={styles.tabs} scrollX enableFlex>
         <View className={styles.tabsInner}>
