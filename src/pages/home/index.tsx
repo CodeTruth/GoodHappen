@@ -5,11 +5,13 @@ import KindnessCard from '@/components/KindnessCard';
 import WarmPartnerCard from '@/components/WarmPartnerCard';
 import { getKindnessList } from '@/data/kindness';
 import { getWeeklyWarmPartners } from '@/data/social';
+import { getTodaySuggestion } from '@/data/daily-kindness';
 import { useSocialStore } from '@/store/social';
 import { useUserStore } from '@/store/user';
 import { useInteractionStore } from '@/store/interaction';
 import { useKindnessStore } from '@/store/kindness';
 import CustomTabBar from '@/components/CustomTabBar';
+import WelcomeGuide from '@/components/WelcomeGuide';
 import { useNotificationStore } from '@/store/notification';
 import { useCircleStore } from '@/store/circle';
 import { useProtectionStore } from '@/store/protection';
@@ -46,6 +48,7 @@ const HomePage: React.FC = () => {
   const [onlyFollowing, setOnlyFollowing] = useState(false);
   const [regionPickerOpen, setRegionPickerOpen] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [showWelcome, setShowWelcome] = useState(false);
 
   const { followingIds, isFollowing, loadFromStorage: loadSocial } = useSocialStore();
   const { userInfo, loadFromStorage: loadUser } = useUserStore();
@@ -62,6 +65,12 @@ const HomePage: React.FC = () => {
     loadNotification();
     loadMockNotification();
     cleanupExpired();
+
+    // 新手引导判断
+    const welcomeShown = Taro.getStorageSync('haoshi_welcome_shown');
+    if (!welcomeShown) {
+      setShowWelcome(true);
+    }
   }, []);
 
   // 下拉刷新
@@ -282,6 +291,52 @@ const HomePage: React.FC = () => {
     );
   });
 
+  // 平台善行数据概览
+  const PlatformStatsBar = React.memo(() => (
+    <View className={styles.statsBar}>
+      <ScrollView scrollX enableFlex className={styles.statsScroll}>
+        <View className={styles.statsInner}>
+          <View className={styles.statItem}>
+            <Text className={styles.statNumber}>12,847</Text>
+            <Text className={styles.statLabel}>件善行被记录</Text>
+          </View>
+          <View className={styles.statDivider} />
+          <View className={styles.statItem}>
+            <Text className={styles.statNumber}>3,256</Text>
+            <Text className={styles.statLabel}>人参与其中</Text>
+          </View>
+          <View className={styles.statDivider} />
+          <View className={styles.statItem}>
+            <Text className={styles.statNumber}>8</Text>
+            <Text className={styles.statLabel}>位先贤守护</Text>
+          </View>
+          <View className={styles.statDivider} />
+          <View className={styles.statItem}>
+            <Text className={styles.statNumber}>156</Text>
+            <Text className={styles.statLabel}>所学校在用</Text>
+          </View>
+        </View>
+      </ScrollView>
+    </View>
+  ));
+
+  const DailySuggestionCard = React.memo(() => {
+    const suggestion = useMemo(() => getTodaySuggestion(), []);
+    const [visible, setVisible] = useState(true);
+    if (!visible) return null;
+    return (
+      <View className={styles.dailyCard}>
+        <View className={styles.dailyHeader}>
+          <Text className={styles.dailyIcon}>💡</Text>
+          <Text className={styles.dailyTitle}>今日善行灵感</Text>
+          <Text className={styles.dailyClose} onClick={() => setVisible(false)}>✕</Text>
+        </View>
+        <Text className={styles.dailyContent}>{suggestion.suggestion}</Text>
+        <Text className={styles.dailyQuote}>—— {suggestion.persona}：「{suggestion.quote}」</Text>
+      </View>
+    );
+  });
+
   // 是否显示筛选栏（"为你推荐"和"全部"显示）
   const showFilterBar = activeTab === 'all' || activeTab === 'recommend';
 
@@ -294,6 +349,7 @@ const HomePage: React.FC = () => {
 
   return (
     <View className={styles.pageWrapper}>
+    <WelcomeGuide visible={showWelcome} onClose={() => setShowWelcome(false)} />
     <ScrollView
       className={styles.container}
       scrollY
@@ -315,6 +371,9 @@ const HomePage: React.FC = () => {
           <Text className={styles.searchIcon}>🔍</Text>
         </View>
       </View>
+
+      {/* 平台善行数据概览 */}
+      <PlatformStatsBar />
 
       {/* 标签切换 */}
       <ScrollView className={styles.tabs} scrollX enableFlex>
@@ -351,6 +410,9 @@ const HomePage: React.FC = () => {
           </Text>
         </View>
       </ScrollView>
+
+      {/* 每日善行建议 */}
+      <DailySuggestionCard />
 
       {/* 筛选栏 */}
       {showFilterBar && (

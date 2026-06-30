@@ -1048,3 +1048,26 @@
   margin-top: $spacing-sm;
   display: block;
 }
+
+.sageQuoteCard {
+  margin: 24rpx 24rpx;
+  padding: 24rpx 28rpx;
+  background: linear-gradient(135deg, #FFF9F0 0%, #FFF3E0 100%);
+  border-radius: 16rpx;
+  border-left: 6rpx solid #C4956A;
+  animation: fadeInSlow 1s ease;
+}
+
+.sageQuotePersona {
+  font-size: 24rpx;
+  color: #8B7355;
+  margin-bottom: 8rpx;
+  display: block;
+}
+
+.sageQuoteText {
+  font-size: 30rpx;
+  color: #5D4E37;
+  line-height: 1.6;
+  font-style: italic;
+}

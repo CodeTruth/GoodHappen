@@ -19,6 +19,18 @@ import MilestonePopup from '@/components/MilestonePopup';
 import CustomTabBar from '@/components/CustomTabBar';
 import styles from './index.module.scss';
 
+// 先贤语录库
+const SAGE_QUOTES = [
+  { persona: 'sudongpo', name: '苏东坡', quote: '但愿人长久，千里共婵娟。' },
+  { persona: 'confucius', name: '孔子', quote: '己所不欲，勿施于人。' },
+  { persona: 'libai', name: '李白', quote: '天生我材必有用，千金散尽还复来。' },
+  { persona: 'dufu', name: '杜甫', quote: '安得广厦千万间，大庇天下寒士俱欢颜。' },
+  { persona: 'zhuangzi', name: '庄子', quote: '天地有大美而不言。' },
+  { persona: 'liqingzhao', name: '李清照', quote: '生当作人杰，死亦为鬼雄。' },
+  { persona: 'taoyuanming', name: '陶渊明', quote: '采菊东篱下，悠然见南山。' },
+  { persona: 'wangwei', name: '王维', quote: '行到水穷处，坐看云起时。' },
+];
+
 // 反馈阶段：输入 → 提交中 → 反馈
 type FeedbackPhase = 'input' | 'submitting' | 'feedback';
 
@@ -127,6 +139,9 @@ const RecordPage: React.FC = () => {
   const [aiResponses, setAiResponses] = useState<AIResponseType[]>([]); // 多人回复
   const [isStreaming, setIsStreaming] = useState(false);
   const [showPlaceholder, setShowPlaceholder] = useState(false);
+
+  // 随机先贤语录（避免每次渲染随机变化）
+  const [randomQuote] = useState(() => SAGE_QUOTES[Math.floor(Math.random() * SAGE_QUOTES.length)]);
 
   // ====== 善行发布存储 ======
   const { addKindness: addPublishedKindness, publishedList } = useKindnessStore();
@@ -1230,6 +1245,14 @@ const RecordPage: React.FC = () => {
               <View className={`${styles.actionBtn} ${styles.actionBtnSecondary}`} onClick={handleBack}>
                 <Text className={styles.actionText}>返回首页</Text>
               </View>
+            </View>
+          )}
+
+          {/* 先贤随机语录 */}
+          {feedbackStep === 'done' && (
+            <View className={styles.sageQuoteCard}>
+              <Text className={styles.sageQuotePersona}>📜 {randomQuote.name}</Text>
+              <Text className={styles.sageQuoteText}>「{randomQuote.quote}」</Text>
             </View>
           )}
         </View>

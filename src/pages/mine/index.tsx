@@ -194,33 +194,39 @@ const MinePage: React.FC = () => {
           </View>
         </View>
 
-        {/* 福气等级进度条 */}
-        <View className={styles.progressSection}>
-          <View className={styles.levelHeader}>
-            <Text className={styles.levelBadge}>
-              {levelProgress.current.icon} {levelProgress.current.name}
+        {/* 福气等级 */}
+        {levelProgress && (
+          <View className={styles.levelSection}>
+            <View className={styles.levelHeader}>
+              <View className={styles.levelBadgeLarge}>
+                <Text className={styles.levelIconLarge}>{levelProgress.current.icon}</Text>
+              </View>
+              <View className={styles.levelInfo}>
+                <Text className={styles.levelNameLarge}>{levelProgress.current.name}</Text>
+                <Text className={styles.levelDesc}>{levelProgress.current.description}</Text>
+              </View>
+            </View>
+            <View className={styles.progressSection}>
+              <View className={styles.levelBadge}>
+                <Text className={styles.levelIcon}>{levelProgress.current.icon}</Text>
+                <Text className={styles.levelName}>{levelProgress.current.name}</Text>
+              </View>
+              <View className={styles.progressTrack}>
+                <View
+                  className={styles.progressFill}
+                  style={{ width: `${levelProgress.progress}%` }}
+                />
+              </View>
+              <View className={styles.levelNext}>
+                <Text className={styles.levelNextIcon}>{levelProgress.next?.icon || '👑'}</Text>
+                <Text className={styles.levelNextName}>{levelProgress.next?.name || '已满级'}</Text>
+              </View>
+            </View>
+            <Text className={styles.progressText}>
+              距下一等级还需 {levelProgress.remaining} 福气值
             </Text>
-            {levelProgress.next && (
-              <Text className={styles.levelNext}>
-                下一级：{levelProgress.next.icon} {levelProgress.next.name}
-              </Text>
-            )}
           </View>
-          <View className={styles.progressBar}>
-            <View
-              className={styles.progressFill}
-              style={{
-                width: `${levelProgress.progress}%`,
-                backgroundColor: levelProgress.current.color,
-              }}
-            />
-          </View>
-          <Text className={styles.progressText}>
-            {levelProgress.next
-              ? `距离「${levelProgress.next.name}」还差 ${levelProgress.remaining} 福气`
-              : '已达到最高等级，功德圆满 🌟'}
-          </Text>
-        </View>
+        )}
       </View>
 
       {/* 连续记录信息 */}

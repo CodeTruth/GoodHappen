@@ -235,46 +235,113 @@
   color: rgba(255, 255, 255, 0.85);
 }
 
-.progressSection {
-  margin-top: $spacing-md;
+.levelSection {
+  margin: 16rpx 24rpx;
+  background: linear-gradient(135deg, #FFF9F0 0%, #FFF3E0 100%);
+  border-radius: 20rpx;
+  padding: 24rpx 28rpx;
+  border-left: 6rpx solid #C4956A;
 }
 
 .levelHeader {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: $spacing-xs;
+  margin-bottom: 20rpx;
+}
+
+.levelBadgeLarge {
+  width: 88rpx;
+  height: 88rpx;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #C4956A 0%, #D4A76A 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 20rpx;
+  box-shadow: 0 4rpx 16rpx rgba(196, 149, 106, 0.3);
+}
+
+.levelIconLarge {
+  font-size: 44rpx;
+}
+
+.levelInfo {
+  flex: 1;
+}
+
+.levelNameLarge {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: #5D4E37;
+  display: block;
+  margin-bottom: 4rpx;
+}
+
+.levelDesc {
+  font-size: 22rpx;
+  color: #8B7355;
+  display: block;
+}
+
+.progressSection {
+  display: flex;
+  align-items: center;
 }
 
 .levelBadge {
-  font-size: $font-size-sm;
-  font-weight: 600;
-  color: $color-text-white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
-.levelNext {
-  font-size: $font-size-xs;
-  color: rgba(255, 255, 255, 0.8);
+.levelIcon {
+  font-size: 28rpx;
 }
 
-.progressBar {
-  height: 12rpx;
-  background: rgba(255, 255, 255, 0.3);
-  border-radius: $radius-round;
+.levelName {
+  font-size: 20rpx;
+  color: #5D4E37;
+  margin-top: 2rpx;
+}
+
+.progressTrack {
+  flex: 1;
+  height: 16rpx;
+  background: rgba(196, 149, 106, 0.15);
+  border-radius: 8rpx;
   overflow: hidden;
-  margin-bottom: $spacing-xs;
 }
 
 .progressFill {
   height: 100%;
-  background: $color-text-white;
-  border-radius: $radius-round;
-  transition: width 0.5s ease;
+  border-radius: 8rpx;
+  background: linear-gradient(90deg, #C4956A 0%, #D4A76A 100%);
+  transition: width 0.6s ease;
+}
+
+.levelNext {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-left: 16rpx;
+}
+
+.levelNextIcon {
+  font-size: 28rpx;
+}
+
+.levelNextName {
+  font-size: 20rpx;
+  color: #8B7355;
+  margin-top: 2rpx;
 }
 
 .progressText {
   font-size: $font-size-xs;
-  color: rgba(255, 255, 255, 0.9);
+  color: #8B7355;
+  margin-top: 12rpx;
+  display: block;
+  text-align: center;
 }
 
 .streakCard {

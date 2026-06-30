@@ -481,4 +481,97 @@
   padding: $spacing-sm;
   border-radius: $radius-sm;
 }
+
+// ===== 平台善行数据概览 =====
+.statsBar {
+  margin: 16rpx 24rpx;
+  background: linear-gradient(135deg, #FFF9F0 0%, #FFF3E0 100%);
+  border-radius: 20rpx;
+  padding: 20rpx 0;
+  border-left: 6rpx solid #C4956A;
+}
+
+.statsScroll {
+  white-space: nowrap;
+}
+
+.statsInner {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 24rpx;
+}
+
+.statItem {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 140rpx;
+}
+
+.statNumber {
+  font-size: 36rpx;
+  font-weight: 700;
+  color: #C4956A;
+  line-height: 1.2;
+}
+
+.statLabel {
+  font-size: 22rpx;
+  color: #8B7355;
+  margin-top: 4rpx;
+}
+
+.statDivider {
+  width: 2rpx;
+  height: 48rpx;
+  background: rgba(196, 149, 106, 0.2);
+  margin: 0 24rpx;
+}
+
+// ===== 每日善行建议卡片（新版） =====
+.dailyCard {
+  margin: 16rpx 24rpx;
+  background: linear-gradient(135deg, #FFF9F0 0%, #FFF3E0 100%);
+  border-radius: 20rpx;
+  padding: 24rpx 28rpx;
+  border-left: 6rpx solid #C4956A;
+  animation: fadeInUp 0.4s ease;
+}
+
+.dailyHeader {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12rpx;
+}
+
+.dailyIcon {
+  font-size: 32rpx;
+  margin-right: 8rpx;
+}
+
+.dailyTitle {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #5D4E37;
+  flex: 1;
+}
+
+.dailyClose {
+  font-size: 24rpx;
+  color: #A89880;
+  padding: 8rpx;
+}
+
+.dailyContent {
+  font-size: 28rpx;
+  color: #5D4E37;
+  line-height: 1.6;
+  margin-bottom: 8rpx;
+}
+
+.dailyQuote {
+  font-size: 22rpx;
+  color: #8B7355;
+  font-style: italic;
+}
 }
