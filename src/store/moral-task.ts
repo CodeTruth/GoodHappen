@@ -1,10 +1,11 @@
 import { create } from 'zustand';
 import Taro from '@tarojs/taro';
-import { MoralTask, TaskSubmission, MoralCategory } from '@/data/mock-moral-tasks';
+import { MoralTask, TaskSubmission } from '@/data/mock-moral-tasks';
 import {
   mockMoralTasks,
   mockTaskSubmissions,
 } from '@/data/mock-moral-tasks';
+import { useFortuneStore } from '@/store/fortune';
 
 const STORAGE_KEY = 'haoshi_moral_task_store';
 
@@ -90,6 +91,17 @@ export const useMoralTaskStore = create<MoralTaskState>((set, get) => ({
       createdAt: new Date().toISOString(),
     };
     set((state) => ({ submissions: [...state.submissions, newSubmission] }));
+
+    // 联动福气值：关联任务+5，自由记录+3
+    const fortuneStore = useFortuneStore.getState();
+    const fortuneAmount = submission.taskId ? 5 : 3;
+    fortuneStore.addFortune(
+      fortuneAmount,
+      submission.taskId ? '完成圈子任务' : '圈子自由记录',
+      newSubmission.id
+    );
+    fortuneStore.recordKindness();
+
     get().saveToStorage();
     return newSubmission;
   },
@@ -100,6 +112,13 @@ export const useMoralTaskStore = create<MoralTaskState>((set, get) => ({
         s.id === submissionId ? { ...s, isExample } : s
       ),
     }));
+
+    // 联动福气值：被标记榜样额外+10
+    if (isExample) {
+      const fortuneStore = useFortuneStore.getState();
+      fortuneStore.addFortune(10, '被标记为圈子榜样', submissionId);
+    }
+
     get().saveToStorage();
   },
 

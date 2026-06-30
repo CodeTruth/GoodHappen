@@ -298,3 +298,103 @@
   font-size: $font-size-sm;
   color: $color-text-tertiary;
 }
+
+// ===== 本周圈子榜样推荐位 =====
+.exampleSection {
+  margin-bottom: $spacing-lg;
+}
+
+.exampleHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: $spacing-md;
+  padding: 0 $spacing-md;
+}
+
+.exampleTitle {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
+.exampleMore {
+  font-size: $font-size-sm;
+  color: $color-primary;
+  font-weight: $font-weight-medium;
+}
+
+.exampleScroll {
+  white-space: nowrap;
+}
+
+.exampleCard {
+  display: inline-block;
+  width: 560rpx;
+  margin-left: $spacing-md;
+  margin-right: $spacing-sm;
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  box-shadow: $shadow-card;
+  border-left: 6rpx solid $color-primary;
+  vertical-align: top;
+  white-space: normal;
+}
+
+.exampleCardHeader {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  margin-bottom: $spacing-sm;
+}
+
+.exampleAvatar {
+  width: 48rpx;
+  height: 48rpx;
+  border-radius: 24rpx;
+  object-fit: cover;
+}
+
+.exampleInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.exampleName {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  display: block;
+}
+
+.exampleCircle {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  display: block;
+}
+
+.exampleBadge {
+  font-size: $font-size-xs;
+  color: $color-primary;
+  background: rgba($color-primary, 0.1);
+  padding: $spacing-xs $spacing-sm;
+  border-radius: $radius-sm;
+  font-weight: $font-weight-medium;
+}
+
+.exampleContent {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  line-height: $line-height-normal;
+  margin-bottom: $spacing-sm;
+}
+
+.exampleComment {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  background: $color-bg-muted;
+  padding: $spacing-sm;
+  border-radius: $radius-sm;
+}
+}

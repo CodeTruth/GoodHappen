@@ -10,6 +10,8 @@ import {
   sendChatMessageStream,
   getQuickTopics,
 } from '@/services/ai-chat';
+import { useMoralTaskStore } from '@/store/moral-task';
+import { getRanking } from '@/services/moral-dashboard';
 import styles from './index.module.scss';
 
 const MODE_LABELS: Record<ChatMode, string> = {
@@ -41,6 +43,42 @@ const AiChatPage: React.FC = () => {
   const scrollViewRef = useRef<any>(null);
 
   const quickTopics = getQuickTopics(personaId);
+
+  // 检测用户圈子贡献，生成专属表扬语
+  const getCirclePraise = useCallback(() => {
+    const { getSubmissionsByUser } = useMoralTaskStore.getState();
+    const currentUserId = 'currentUser';
+
+    // 获取用户在各个圈子的提交
+    const circleIds = ['circle1', 'circle2', 'circle3'];
+    let exampleCount = 0;
+    let isTopRank = false;
+    let circleName = '';
+
+    for (const cid of circleIds) {
+      const subs = getSubmissionsByUser(currentUserId, cid);
+      const examples = subs.filter((s) => s.isExample).length;
+      if (examples > 0) {
+        exampleCount += examples;
+      }
+
+      // 检查是否排行第一
+      const ranking = getRanking(cid);
+      if (ranking.length > 0 && ranking[0].userId === currentUserId) {
+        isTopRank = true;
+        circleName = ranking[0].userName;
+      }
+    }
+
+    if (exampleCount > 0 && isTopRank) {
+      return `听闻你近日在圈子中表现优异，被标记为榜样${exampleCount}次，且位列排行之首，实在令人欣慰！`;
+    } else if (exampleCount > 0) {
+      return `听闻你近日在圈子中被标记为榜样${exampleCount}次，善行有目共睹，令人欣慰！`;
+    } else if (isTopRank) {
+      return `听闻你在圈子中位列排行之首，积极参与，令人欣慰！`;
+    }
+    return '';
+  }, []);
 
   // 切换对话模式
   const handleModeChange = (mode: ChatMode) => {
@@ -181,6 +219,9 @@ const AiChatPage: React.FC = () => {
           <View className={styles.welcomeCard}>
             <Text className={styles.welcomeText}>
               我是{persona.name}，{persona.description}。{'\n'}
+              {getCirclePraise() && (
+                <Text>{getCirclePraise()}{'\n\n'}</Text>
+              )}
               你可以向我倾诉烦恼、探讨我的作品和思想，或让我为你推荐一件今日的善事。{'\n'}
               点击下方快捷话题，或直接输入你想说的话。
             </Text>

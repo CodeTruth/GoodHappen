@@ -12,6 +12,10 @@ import { useInteractionStore } from '@/store/interaction';
 import { useKindnessStore } from '@/store/kindness';
 import CustomTabBar from '@/components/CustomTabBar';
 import { useNotificationStore } from '@/store/notification';
+import { useMoralTaskStore } from '@/store/moral-task';
+import { useCircleStore } from '@/store/circle';
+import { getExampleWall } from '@/services/moral-dashboard';
+import { getCircleTypeConfig, CircleType } from '@/config/circle-types';
 import { Kindness } from '@/types/kindness';
 import styles from './index.module.scss';
 
@@ -173,6 +177,70 @@ const HomePage: React.FC = () => {
     );
   });
 
+  // 本周圈子榜样推荐位
+  const CircleExampleCard = React.memo(() => {
+    const { getCircleById } = useCircleStore();
+    const [examples, setExamples] = useState<any[]>([]);
+
+    useEffect(() => {
+      // 获取所有圈子的榜样记录（取前3条）
+      const allExamples: any[] = [];
+      const circleIds = ['circle1', 'circle2', 'circle3'];
+      circleIds.forEach((cid) => {
+        const exs = getExampleWall(cid).slice(0, 1);
+        const circle = getCircleById(cid);
+        if (circle && exs.length > 0) {
+          const typeConfig = getCircleTypeConfig((circle.type as CircleType) || 'public');
+          allExamples.push({
+            ...exs[0],
+            circleName: circle.name,
+            circleType: circle.type,
+            exampleLabel: typeConfig.labels.example,
+          });
+        }
+      });
+      setExamples(allExamples.slice(0, 3));
+    }, []);
+
+    if (examples.length === 0) return null;
+
+    return (
+      <View className={styles.exampleSection}>
+        <View className={styles.exampleHeader}>
+          <Text className={styles.exampleTitle}>⭐ 本周圈子榜样</Text>
+          <Text
+            className={styles.exampleMore}
+            onClick={() => Taro.switchTab({ url: '/pages/circle/index' })}
+          >
+            查看全部 →
+          </Text>
+        </View>
+        <ScrollView className={styles.exampleScroll} scrollX>
+          {examples.map((ex) => (
+            <View
+              key={ex.id}
+              className={styles.exampleCard}
+              onClick={() => Taro.navigateTo({ url: `/pages/student-profile/index?circleId=${ex.circleId || 'circle1'}&userId=${ex.userId}` })}
+            >
+              <View className={styles.exampleCardHeader}>
+                <Image className={styles.exampleAvatar} src={ex.userAvatar} />
+                <View className={styles.exampleInfo}>
+                  <Text className={styles.exampleName}>{ex.userName}</Text>
+                  <Text className={styles.exampleCircle}>{ex.circleName}</Text>
+                </View>
+                <Text className={styles.exampleBadge}>{ex.exampleLabel}</Text>
+              </View>
+              <Text className={styles.exampleContent} numberOfLines={2}>{ex.content}</Text>
+              {ex.teacherComment && (
+                <Text className={styles.exampleComment}>👩‍🏫 {ex.teacherComment}</Text>
+              )}
+            </View>
+          ))}
+        </ScrollView>
+      </View>
+    );
+  });
+
   // 是否显示筛选栏（"为你推荐"和"全部"显示）
   const showFilterBar = activeTab === 'all' || activeTab === 'recommend';
 
@@ -312,6 +380,9 @@ const HomePage: React.FC = () => {
           ))}
         </View>
       )}
+
+      {/* 本周圈子榜样推荐 */}
+      <CircleExampleCard />
 
       {/* 善行列表 */}
       <View className={styles.kindnessList}>
