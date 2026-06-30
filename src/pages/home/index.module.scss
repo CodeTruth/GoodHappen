@@ -218,6 +218,43 @@
   font-weight: $font-weight-bold;
 }
 
+// ============================================
+// 悬浮保护按钮（全局入口）
+// ============================================
+.floatingShield {
+  position: fixed;
+  right: 30rpx;
+  bottom: 200rpx;
+  width: 100rpx;
+  height: 100rpx;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #4CAF50 0%, #66BB6A 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8rpx 24rpx rgba(76, 175, 80, 0.4);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  z-index: 999;
+}
+
+.floatingShield:active {
+  transform: scale(0.92);
+  box-shadow: 0 4rpx 12rpx rgba(76, 175, 80, 0.3);
+}
+
+.floatingShieldIcon {
+  font-size: 40rpx;
+}
+
+.floatingShieldLabel {
+  font-size: 16rpx;
+  color: #FFFFFF;
+  font-weight: 600;
+  margin-top: -2rpx;
+}
+
 .tabs {
   white-space: nowrap;
   margin-bottom: $spacing-lg;

@@ -1040,8 +1040,12 @@ const RecordPage: React.FC = () => {
                       </View>
                     </View>
                     <Text className={styles.postHocGuideTip}>
-                      💡 下次做好事前，可先开启"善行保护模式"自动存证
+                    💡 下次做好事前，可先开启
+                    <Text className={styles.postHocGuideLink} onClick={() => Taro.navigateTo({ url: '/pages/protection-mode/index' })}>
+                      "善行保护模式"
                     </Text>
+                    自动录像+录音+GPS存证
+                  </Text>
                   </View>
                 )}
 

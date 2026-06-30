@@ -395,13 +395,13 @@ const HomePage: React.FC = () => {
       {/* 事前保护快速入口 */}
       <View
         className={styles.protectionEntry}
-        onClick={() => Taro.navigateTo({ url: '/pages/record/index' })}
+        onClick={() => Taro.navigateTo({ url: '/pages/protection-mode/index' })}
       >
         <View className={styles.protectionEntryLeft}>
           <Text className={styles.protectionEntryIcon}>🛡️</Text>
           <View className={styles.protectionEntryText}>
             <Text className={styles.protectionEntryTitle}>做好事前，先开启保护</Text>
-            <Text className={styles.protectionEntryDesc}>GPS定位自动存证，事后遇纠纷系统全程兜底</Text>
+            <Text className={styles.protectionEntryDesc}>一键启动：全程录像+录音+GPS存证，遇纠纷系统兜底</Text>
           </View>
         </View>
         <Text className={styles.protectionEntryArrow}>→</Text>
@@ -548,6 +548,15 @@ const HomePage: React.FC = () => {
       </View>
     </ScrollView>
     <CustomTabBar currentPath="pages/home/index" />
+
+    {/* 悬浮保护按钮 */}
+    <View
+      className={styles.floatingShield}
+      onClick={() => Taro.navigateTo({ url: '/pages/protection-mode/index' })}
+    >
+      <Text className={styles.floatingShieldIcon}>🛡️</Text>
+      <Text className={styles.floatingShieldLabel}>保护</Text>
+    </View>
     </View>
   );
 };

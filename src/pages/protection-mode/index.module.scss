@@ -1,0 +1,649 @@
+// ============================================
+// 善行保护模式 — 深色沉浸式样式
+// ============================================
+
+$bg-primary: #1A1A2E;
+$bg-card: rgba(255, 255, 255, 0.05);
+$bg-card-hover: rgba(255, 255, 255, 0.08);
+$color-green: #4CAF50;
+$color-green-light: #66BB6A;
+$color-red: #F44336;
+$color-orange: #FF9800;
+$color-text-primary: #FFFFFF;
+$color-text-secondary: rgba(255, 255, 255, 0.7);
+$color-text-tertiary: rgba(255, 255, 255, 0.4);
+
+.pageWrapper {
+  min-height: 100vh;
+  background: $bg-primary;
+}
+
+.container {
+  min-height: 100vh;
+  background: $bg-primary;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 48rpx 32rpx;
+  box-sizing: border-box;
+}
+
+// ============================================
+// Idle 状态 — 初始页面
+// ============================================
+
+.idleSection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  flex: 1;
+}
+
+.shieldIcon {
+  font-size: 120rpx;
+  margin-bottom: 24rpx;
+}
+
+.mainTitle {
+  font-size: 44rpx;
+  font-weight: 700;
+  color: $color-text-primary;
+  margin-bottom: 12rpx;
+}
+
+.subtitle {
+  font-size: 26rpx;
+  color: $color-text-secondary;
+  margin-bottom: 40rpx;
+}
+
+.descCard {
+  width: 100%;
+  background: $bg-card;
+  border-radius: 24rpx;
+  padding: 28rpx 32rpx;
+  margin-bottom: 60rpx;
+  border: 1rpx solid rgba(255, 255, 255, 0.06);
+}
+
+.descText {
+  font-size: 24rpx;
+  color: $color-text-secondary;
+  line-height: 1.6;
+  text-align: center;
+}
+
+.descHighlight {
+  color: $color-green-light;
+  font-weight: 600;
+}
+
+// ============================================
+// 中心圆形按钮
+// ============================================
+
+.circleBtnWrap {
+  position: relative;
+  width: 400rpx;
+  height: 400rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 32rpx;
+}
+
+// idle 状态 — 绿色渐变大按钮
+.circleBtnIdle {
+  width: 400rpx;
+  height: 400rpx;
+  border-radius: 50%;
+  background: linear-gradient(135deg, $color-green 0%, $color-green-light 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8rpx 40rpx rgba(76, 175, 80, 0.35);
+  transition: transform 0.2s ease;
+
+  &:active {
+    transform: scale(0.96);
+  }
+}
+
+.circleBtnIdleText {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: #FFFFFF;
+}
+
+.circleBtnIdleIcon {
+  font-size: 56rpx;
+  margin-bottom: 8rpx;
+}
+
+// starting 状态 — 加载中
+.circleBtnStarting {
+  width: 400rpx;
+  height: 400rpx;
+  border-radius: 50%;
+  background: linear-gradient(135deg, $color-green 0%, $color-green-light 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  animation: breathe 1.5s ease-in-out infinite;
+}
+
+@keyframes breathe {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.05); opacity: 0.85; }
+}
+
+.startingSpinner {
+  width: 60rpx;
+  height: 60rpx;
+  border: 4rpx solid rgba(255, 255, 255, 0.3);
+  border-top: 4rpx solid #FFFFFF;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-bottom: 16rpx;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.startingText {
+  font-size: 28rpx;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+// active 状态 — 红色脉动圆环 + 计时器
+.circleBtnActive {
+  width: 400rpx;
+  height: 400rpx;
+  border-radius: 50%;
+  background: rgba(244, 67, 54, 0.15);
+  border: 6rpx solid $color-red;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  animation: pulse 2s ease-in-out infinite;
+  box-shadow: 0 0 0 0 rgba(244, 67, 54, 0.4);
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(244, 67, 54, 0.5);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 0 30rpx rgba(244, 67, 54, 0);
+    transform: scale(1.03);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(244, 67, 54, 0.5);
+    transform: scale(1);
+  }
+}
+
+.activeTimer {
+  font-size: 72rpx;
+  font-weight: 700;
+  color: $color-text-primary;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 4rpx;
+}
+
+.activeLabel {
+  font-size: 22rpx;
+  color: $color-text-secondary;
+  margin-top: 4rpx;
+}
+
+// paused 状态 — 橙色
+.circleBtnPaused {
+  width: 400rpx;
+  height: 400rpx;
+  border-radius: 50%;
+  background: rgba(255, 152, 0, 0.2);
+  border: 6rpx solid $color-orange;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.pausedTimer {
+  font-size: 64rpx;
+  font-weight: 700;
+  color: $color-text-primary;
+  font-variant-numeric: tabular-nums;
+}
+
+.pausedLabel {
+  font-size: 22rpx;
+  color: $color-text-secondary;
+  margin-top: 4rpx;
+}
+
+// ============================================
+// 按钮下方说明文字
+// ============================================
+
+.btnHint {
+  font-size: 22rpx;
+  color: $color-text-tertiary;
+  text-align: center;
+  margin-bottom: 40rpx;
+}
+
+// ============================================
+// starting — 初始化进度
+// ============================================
+
+.initChecklist {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+  margin-top: 20rpx;
+}
+
+.initCheckItem {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  font-size: 26rpx;
+  color: $color-text-secondary;
+}
+
+.initCheckIcon {
+  width: 40rpx;
+  height: 40rpx;
+  border-radius: 50%;
+  background: $color-green;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22rpx;
+}
+
+.initCheckIconPending {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+// ============================================
+// active — 四宫格实时数据
+// ============================================
+
+.dataGrid {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20rpx;
+  margin-bottom: 40rpx;
+}
+
+.dataCard {
+  background: $bg-card;
+  border-radius: 20rpx;
+  padding: 24rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border: 1rpx solid rgba(255, 255, 255, 0.06);
+}
+
+.dataIcon {
+  font-size: 40rpx;
+  margin-bottom: 8rpx;
+}
+
+.dataValue {
+  font-size: 36rpx;
+  font-weight: 700;
+  color: $color-text-primary;
+  font-variant-numeric: tabular-nums;
+}
+
+.dataLabel {
+  font-size: 22rpx;
+  color: $color-text-tertiary;
+  margin-top: 4rpx;
+}
+
+// ============================================
+// active — 底部操作栏
+// ============================================
+
+.actionBar {
+  width: 100%;
+  display: flex;
+  gap: 20rpx;
+  padding: 24rpx 0;
+  box-sizing: border-box;
+}
+
+.actionBtn {
+  flex: 1;
+  border-radius: 16rpx;
+  padding: 24rpx 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  font-size: 24rpx;
+  font-weight: 600;
+  transition: opacity 0.2s;
+
+  &:active {
+    opacity: 0.8;
+  }
+}
+
+.actionBtnPhoto {
+  background: rgba(255, 255, 255, 0.95);
+  color: #333333;
+}
+
+.actionBtnPause {
+  background: $color-orange;
+  color: #FFFFFF;
+}
+
+.actionBtnSOS {
+  background: $color-red;
+  color: #FFFFFF;
+  flex: 1.2;
+}
+
+.actionBtnIcon {
+  font-size: 40rpx;
+  margin-bottom: 8rpx;
+}
+
+.actionBtnText {
+  font-size: 24rpx;
+  font-weight: 600;
+}
+
+// ============================================
+// paused — 底部操作栏
+// ============================================
+
+.pausedBar {
+  width: 100%;
+  display: flex;
+  gap: 24rpx;
+  margin-top: 40rpx;
+}
+
+.pausedBtn {
+  flex: 1;
+  border-radius: 16rpx;
+  padding: 28rpx 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  font-size: 28rpx;
+  font-weight: 600;
+
+  &:active {
+    opacity: 0.8;
+  }
+}
+
+.pausedBtnResume {
+  background: $color-green;
+  color: #FFFFFF;
+}
+
+.pausedBtnClose {
+  background: rgba(255, 255, 255, 0.15);
+  color: $color-text-primary;
+  border: 1rpx solid rgba(255, 255, 255, 0.2);
+}
+
+// ============================================
+// SOS 状态 — 全屏红色
+// ============================================
+
+.sosOverlay {
+  width: 100%;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  animation: sosFlash 1s ease-in-out infinite;
+  border-radius: 24rpx;
+  padding: 48rpx 32rpx;
+}
+
+@keyframes sosFlash {
+  0%, 100% { background: rgba(244, 67, 54, 0.25); }
+  50% { background: rgba(244, 67, 54, 0.45); }
+}
+
+.sosIcon {
+  font-size: 120rpx;
+  margin-bottom: 24rpx;
+}
+
+.sosTitle {
+  font-size: 44rpx;
+  font-weight: 700;
+  color: $color-red;
+  margin-bottom: 16rpx;
+}
+
+.sosCountdown {
+  font-size: 28rpx;
+  color: $color-text-secondary;
+  margin-bottom: 32rpx;
+}
+
+.sosContactList {
+  width: 100%;
+  background: $bg-card;
+  border-radius: 20rpx;
+  padding: 24rpx;
+  margin-bottom: 40rpx;
+  border: 1rpx solid rgba(244, 67, 54, 0.3);
+}
+
+.sosContactTitle {
+  font-size: 24rpx;
+  color: $color-text-secondary;
+  margin-bottom: 16rpx;
+}
+
+.sosContactItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12rpx 0;
+  border-bottom: 1rpx solid rgba(255, 255, 255, 0.06);
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.sosContactName {
+  font-size: 26rpx;
+  color: $color-text-primary;
+}
+
+.sosContactPhone {
+  font-size: 24rpx;
+  color: $color-text-tertiary;
+}
+
+.sosContactNotified {
+  font-size: 22rpx;
+  color: $color-red;
+  font-weight: 600;
+}
+
+.sosActionBar {
+  width: 100%;
+  display: flex;
+  gap: 20rpx;
+}
+
+.sosBtn {
+  flex: 1;
+  border-radius: 16rpx;
+  padding: 28rpx 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  font-size: 26rpx;
+  font-weight: 600;
+
+  &:active {
+    opacity: 0.8;
+  }
+}
+
+.sosBtnPhoto {
+  background: rgba(255, 255, 255, 0.9);
+  color: #333333;
+}
+
+.sosBtnClose {
+  background: $color-red;
+  color: #FFFFFF;
+}
+
+// ============================================
+// closed 状态 — 证据汇总
+// ============================================
+
+.closedSection {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+}
+
+.closedIcon {
+  font-size: 100rpx;
+  margin-bottom: 24rpx;
+}
+
+.closedTitle {
+  font-size: 40rpx;
+  font-weight: 700;
+  color: $color-text-primary;
+  margin-bottom: 8rpx;
+}
+
+.closedSaved {
+  font-size: 26rpx;
+  color: $color-green-light;
+  margin-bottom: 40rpx;
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+}
+
+.evidenceSummary {
+  width: 100%;
+  background: $bg-card;
+  border-radius: 24rpx;
+  padding: 32rpx;
+  margin-bottom: 40rpx;
+  border: 1rpx solid rgba(255, 255, 255, 0.06);
+}
+
+.evidenceRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20rpx 0;
+  border-bottom: 1rpx solid rgba(255, 255, 255, 0.06);
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.evidenceRowIcon {
+  font-size: 36rpx;
+  width: 60rpx;
+}
+
+.evidenceRowLabel {
+  flex: 1;
+  font-size: 26rpx;
+  color: $color-text-secondary;
+}
+
+.evidenceRowValue {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: $color-text-primary;
+  font-variant-numeric: tabular-nums;
+}
+
+.evidenceTotalRow {
+  padding-top: 24rpx;
+  margin-top: 8rpx;
+  border-top: 2rpx solid rgba(255, 255, 255, 0.1);
+
+  .evidenceRowLabel {
+    color: $color-text-primary;
+    font-weight: 600;
+  }
+
+  .evidenceRowValue {
+    color: $color-green-light;
+    font-size: 32rpx;
+  }
+}
+
+.closedBar {
+  width: 100%;
+  display: flex;
+  gap: 20rpx;
+  margin-top: auto;
+  padding-bottom: 40rpx;
+}
+
+.closedBtn {
+  flex: 1;
+  border-radius: 16rpx;
+  padding: 28rpx 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  font-size: 26rpx;
+  font-weight: 600;
+
+  &:active {
+    opacity: 0.8;
+  }
+}
+
+.closedBtnRecord {
+  background: linear-gradient(135deg, $color-green 0%, $color-green-light 100%);
+  color: #FFFFFF;
+}
+
+.closedBtnDetail {
+  background: rgba(255, 255, 255, 0.1);
+  color: $color-text-primary;
+  border: 1rpx solid rgba(255, 255, 255, 0.15);
+}
