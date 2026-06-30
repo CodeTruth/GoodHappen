@@ -118,6 +118,22 @@ const StudentProfilePage: React.FC = () => {
         </View>
       </View>
 
+      {/* 徽章墙 */}
+      {profile.badges.length > 0 && (
+        <View className={styles.sectionCard}>
+          <Text className={styles.sectionTitle}>🏅 荣誉徽章</Text>
+          <View className={styles.badgeList}>
+            {profile.badges.map((badge) => (
+              <View key={badge.id} className={`${styles.badgeItem} ${styles[`badge_${badge.level}`]}`}>
+                <Text className={styles.badgeIcon}>{badge.icon}</Text>
+                <Text className={styles.badgeName}>{badge.name}</Text>
+                <Text className={styles.badgeDesc}>{badge.description}</Text>
+              </View>
+            ))}
+          </View>
+        </View>
+      )}
+
       {/* 分类分布 */}
       {profile.categoryDistribution.length > 0 && (
         <View className={styles.sectionCard}>

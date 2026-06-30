@@ -86,6 +86,147 @@
   color: $color-text-tertiary;
 }
 
+// ===== 即将到期提醒 =====
+.urgentBanner {
+  background: linear-gradient(135deg, #FFF5F5 0%, #FFEEEE 100%);
+  border: 2rpx solid #FF9999;
+  border-radius: $radius-lg;
+  padding: $spacing-md;
+  margin-bottom: $spacing-lg;
+}
+
+.urgentBannerTitle {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: #D43D3D;
+  margin-bottom: $spacing-sm;
+  display: block;
+}
+
+.urgentTaskItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: $spacing-sm $spacing-md;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: $radius-md;
+  margin-bottom: $spacing-xs;
+}
+
+.urgentTaskItem:last-child {
+  margin-bottom: 0;
+}
+
+.urgentTaskName {
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+  font-weight: $font-weight-medium;
+}
+
+.urgentTaskMeta {
+  font-size: $font-size-xs;
+  color: #D43D3D;
+  font-weight: $font-weight-medium;
+}
+
+// ===== 邀请弹窗 =====
+.inviteOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: $spacing-xl;
+  z-index: 1000;
+}
+
+.inviteCard {
+  width: 100%;
+  max-width: 560rpx;
+  background: linear-gradient(135deg, #FFF9F0 0%, #FFFFFF 100%);
+  border-radius: $radius-xl;
+  padding: $spacing-xl;
+  border: 2rpx solid rgba($color-primary, 0.2);
+  box-shadow: 0 20rpx 60rpx rgba(0, 0, 0, 0.2);
+  text-align: center;
+}
+
+.inviteTitle {
+  font-size: $font-size-xl;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  display: block;
+  margin-bottom: $spacing-md;
+}
+
+.inviteCircleName {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-medium;
+  color: $color-primary;
+  display: block;
+  margin-bottom: $spacing-sm;
+}
+
+.inviteDesc {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  display: block;
+  margin-bottom: $spacing-lg;
+}
+
+.inviteCodeBox {
+  background: rgba($color-primary, 0.08);
+  border-radius: $radius-lg;
+  padding: $spacing-md;
+  margin-bottom: $spacing-lg;
+}
+
+.inviteCodeLabel {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  display: block;
+  margin-bottom: $spacing-xs;
+}
+
+.inviteCode {
+  font-size: 48rpx;
+  font-weight: $font-weight-bold;
+  color: $color-primary;
+  letter-spacing: 8rpx;
+  display: block;
+}
+
+.inviteMethod {
+  margin-bottom: $spacing-lg;
+}
+
+.inviteMethodText {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+}
+
+.inviteCopyBtn {
+  background: linear-gradient(135deg, $color-primary 0%, darken($color-primary, 10%) 100%);
+  border-radius: $radius-lg;
+  padding: $spacing-md;
+  margin-bottom: $spacing-md;
+}
+
+.inviteCopyBtnText {
+  font-size: $font-size-md;
+  font-weight: $font-weight-medium;
+  color: #FFFFFF;
+}
+
+.inviteHint {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
 // 团体类型标签
 .circleTags {
   display: flex;

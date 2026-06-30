@@ -4,12 +4,15 @@ import Taro, { useRouter } from '@tarojs/taro';
 import { useCircleStore, ROLE_NAMES, ACCESS_TYPE_NAMES } from '@/store/circle';
 import { useCheckinStore, CATEGORY_INFO } from '@/store/checkin';
 import { useUserStore } from '@/store/user';
+import { useMoralTaskStore } from '@/store/moral-task';
 import styles from './index.module.scss';
 
 const CircleDetailPage: React.FC = () => {
   const router = useRouter();
   const { id } = router.params;
   const [circle, setCircle] = useState<any>(null);
+  const [urgentTasks, setUrgentTasks] = useState<any[]>([]);
+  const [showInviteModal, setShowInviteModal] = useState(false);
 
   const {
     getCircleById,
@@ -18,6 +21,7 @@ const CircleDetailPage: React.FC = () => {
   } = useCircleStore();
   const { getCircleCheckins, loadFromStorage: loadCheckinFromStorage } = useCheckinStore();
   const { userInfo, loadFromStorage: loadUserFromStorage } = useUserStore();
+  const { tasks, getSubmissionsByUser } = useMoralTaskStore();
 
   useEffect(() => {
     loadCircleFromStorage();
@@ -35,6 +39,27 @@ const CircleDetailPage: React.FC = () => {
       }
     }
   }, [id]);
+
+  // 检测即将到期的任务
+  useEffect(() => {
+    if (!id || !userInfo) return;
+    const userId = userInfo.id || 'currentUser';
+    const now = new Date();
+    const activeTasks = tasks.filter((t) => t.circleId === id && t.status === 'active');
+    const urgent: any[] = [];
+    activeTasks.forEach((task) => {
+      const endDate = new Date(task.weekRange.end);
+      const diffDays = Math.ceil((endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+      // 3天内截止且用户未提交
+      if (diffDays >= 0 && diffDays <= 3) {
+        const userSubs = getSubmissionsByUser(userId, id).filter((s) => s.taskId === task.id);
+        if (userSubs.length === 0) {
+          urgent.push({ ...task, diffDays });
+        }
+      }
+    });
+    setUrgentTasks(urgent);
+  }, [id, tasks, userInfo]);
 
   if (!circle) {
     return (
@@ -114,6 +139,27 @@ const CircleDetailPage: React.FC = () => {
         </View>
       </View>
 
+      {/* 即将到期任务提醒 */}
+      {urgentTasks.length > 0 && (
+        <View className={styles.urgentBanner}>
+          <Text className={styles.urgentBannerTitle}>⏰ 任务提醒</Text>
+          {urgentTasks.map((task) => (
+            <View
+              key={task.id}
+              className={styles.urgentTaskItem}
+              onClick={() => {
+                Taro.navigateTo({ url: `/pages/record/index?circleId=${id}&taskId=${task.id}` });
+              }}
+            >
+              <Text className={styles.urgentTaskName}>{task.title}</Text>
+              <Text className={styles.urgentTaskMeta}>
+                {task.diffDays === 0 ? '今天截止' : `还剩${task.diffDays}天`}
+              </Text>
+            </View>
+          ))}
+        </View>
+      )}
+
       {/* 快捷操作 - 按角色显示不同入口 */}
       <View className={styles.actionBar}>
         {canViewSummary ? (
@@ -131,6 +177,10 @@ const CircleDetailPage: React.FC = () => {
               <Text className={styles.actionIcon}>📊</Text>
               <Text className={styles.actionText}>德育看板</Text>
             </View>
+            <View className={styles.actionBtn} onClick={() => setShowInviteModal(true)}>
+              <Text className={styles.actionIcon}>💌</Text>
+              <Text className={styles.actionText}>邀请成员</Text>
+            </View>
           </>
         ) : (
           <>
@@ -147,6 +197,12 @@ const CircleDetailPage: React.FC = () => {
               <Text className={styles.actionIcon}>📖</Text>
               <Text className={styles.actionText}>我的档案</Text>
             </View>
+            {circle?.accessType === 'open' && (
+              <View className={styles.actionBtn} onClick={() => setShowInviteModal(true)}>
+                <Text className={styles.actionIcon}>💌</Text>
+                <Text className={styles.actionText}>邀请好友</Text>
+              </View>
+            )}
           </>
         )}
       </View>
@@ -176,6 +232,46 @@ const CircleDetailPage: React.FC = () => {
           ))
         )}
       </View>
+
+      {/* 邀请弹窗 */}
+      {showInviteModal && circle && (
+        <View className={styles.inviteOverlay} onClick={() => setShowInviteModal(false)}>
+          <View className={styles.inviteCard} onClick={(e) => e.stopPropagation()}>
+            <Text className={styles.inviteTitle}>💌 邀请加入</Text>
+            <Text className={styles.inviteCircleName}>{circle.name}</Text>
+            <Text className={styles.inviteDesc}>{circle.description || '一起来记录善行吧～'}</Text>
+
+            {circle.accessType === 'open' && circle.classCode && (
+              <View className={styles.inviteCodeBox}>
+                <Text className={styles.inviteCodeLabel}>班级码</Text>
+                <Text className={styles.inviteCode}>{circle.classCode}</Text>
+              </View>
+            )}
+
+            <View className={styles.inviteMethod}>
+              <Text className={styles.inviteMethodText}>
+                {circle.accessType === 'open'
+                  ? '通过班级码即可加入'
+                  : circle.accessType === 'closed'
+                    ? '需管理员邀请加入'
+                    : '公开圈子，可直接浏览'}
+              </Text>
+            </View>
+
+            <View
+              className={styles.inviteCopyBtn}
+              onClick={() => {
+                const text = `邀请你加入「${circle.name}」${circle.accessType === 'open' ? `，班级码：${circle.classCode}` : ''}，一起来记录善行吧！——好事发生`;
+                Taro.setClipboardData({ data: text });
+              }}
+            >
+              <Text className={styles.inviteCopyBtnText}>📋 复制邀请信息</Text>
+            </View>
+
+            <Text className={styles.inviteHint}>点击空白处关闭</Text>
+          </View>
+        </View>
+      )}
     </View>
   );
 };

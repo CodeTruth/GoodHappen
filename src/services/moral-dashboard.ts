@@ -38,6 +38,14 @@ export interface ExampleWallItem {
 }
 
 // ========== 学生德育档案 ==========
+export interface BadgeItem {
+  id: string;
+  name: string;
+  icon: string;
+  description: string;
+  level: 'bronze' | 'silver' | 'gold';
+}
+
 export interface StudentMoralProfile {
   userId: string;
   userName: string;
@@ -48,6 +56,7 @@ export interface StudentMoralProfile {
     streakDays: number;
     taskCompletionRate: number;
   };
+  badges: BadgeItem[];
   categoryDistribution: { category: MoralCategory; name: string; count: number; percentage: number }[];
   semesterProfiles: SemesterProfile[];
   timeline: {
@@ -282,6 +291,30 @@ export const getStudentProfile = (userId: string, circleId: string): StudentMora
   // 跨学期档案
   const semesterProfiles = mockSemesterProfiles[userId] || [];
 
+  // 徽章计算
+  const badges: BadgeItem[] = [];
+  if (streakDays >= 7) {
+    badges.push({ id: 'streak7', name: '坚持之星', icon: '🔥', description: `连续打卡${streakDays}天`, level: 'bronze' });
+  }
+  if (streakDays >= 30) {
+    badges.push({ id: 'streak30', name: '毅力达人', icon: '⚡', description: `连续打卡${streakDays}天`, level: 'silver' });
+  }
+  if (streakDays >= 100) {
+    badges.push({ id: 'streak100', name: '善行大师', icon: '👑', description: `连续打卡${streakDays}天`, level: 'gold' });
+  }
+  if (exampleCount >= 1) {
+    badges.push({ id: 'example1', name: '榜样新秀', icon: '⭐', description: '首次被标记为榜样', level: 'bronze' });
+  }
+  if (exampleCount >= 5) {
+    badges.push({ id: 'example5', name: '榜样之星', icon: '🌟', description: `被标记榜样${exampleCount}次`, level: 'silver' });
+  }
+  if (totalCount >= 10) {
+    badges.push({ id: 'kindness10', name: '善行者', icon: '💫', description: `累计记录${totalCount}条善行`, level: 'bronze' });
+  }
+  if (totalCount >= 50) {
+    badges.push({ id: 'kindness50', name: '大爱无疆', icon: '💖', description: `累计记录${totalCount}条善行`, level: 'gold' });
+  }
+
   return {
     userId,
     userName: member?.userName || '未知',
@@ -292,6 +325,7 @@ export const getStudentProfile = (userId: string, circleId: string): StudentMora
       streakDays,
       taskCompletionRate,
     },
+    badges,
     categoryDistribution,
     semesterProfiles,
     timeline,

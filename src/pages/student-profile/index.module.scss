@@ -351,3 +351,55 @@
   font-size: $font-size-md;
   color: $color-text-tertiary;
 }
+
+// ===== 徽章 =====
+.badgeList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-md;
+}
+
+.badgeItem {
+  flex: 1;
+  min-width: 140rpx;
+  max-width: calc(50% - #{$spacing-md} / 2);
+  text-align: center;
+  padding: $spacing-md;
+  border-radius: $radius-lg;
+  background: $color-bg-muted;
+  border: 2rpx solid transparent;
+}
+
+.badge_bronze {
+  background: linear-gradient(135deg, #FFF5E6 0%, #FFE4CC 100%);
+  border-color: #E6A23C;
+}
+
+.badge_silver {
+  background: linear-gradient(135deg, #F5F5F5 0%, #E8E8E8 100%);
+  border-color: #A0A0A0;
+}
+
+.badge_gold {
+  background: linear-gradient(135deg, #FFF9E6 0%, #FFEDC2 100%);
+  border-color: #D4A017;
+}
+
+.badgeIcon {
+  font-size: 48rpx;
+  display: block;
+  margin-bottom: $spacing-sm;
+}
+
+.badgeName {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+  display: block;
+  margin-bottom: $spacing-xs;
+}
+
+.badgeDesc {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+}
