@@ -40,7 +40,10 @@ export default defineAppConfig({
     'pages/recipients/index',
     'pages/charity-tasks/index',
     'pages/claim-flow/index',
-    'pages/ai-chat/index'
+    'pages/ai-chat/index',
+    'pages/circle-moral-tasks/index',
+    'pages/circle-dashboard/index',
+    'pages/student-profile/index'
   ],
   window: {
     backgroundTextStyle: 'light',
