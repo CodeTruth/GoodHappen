@@ -3,7 +3,7 @@ import { View, Text, ScrollView, Image } from '@tarojs/components';
 import Taro from '@tarojs/taro';
 import classnames from 'classnames';
 import { useProtectionStore } from '@/store/protection';
-import { WITNESS_MATCH_CONFIG, WitnessRecord, SOSRecord, WitnessMatch, isDelayedPost, getEffectiveTime } from '@/services/evidence';
+import { WITNESS_MATCH_CONFIG, WitnessRecord, SOSRecord, WitnessMatch, isDelayedPost, getEffectiveTime, CollectionRequest, NearbyUser, COLLECTION_CONFIG } from '@/services/evidence';
 import { useUserStore } from '@/store/user';
 import { aiWitnessMatching, getMediaEvidenceCards as fetchMediaEvidenceCards, AIMediaMatchResult, MediaEvidenceCard } from '@/services/ai-witness';
 import styles from './index.module.scss';
@@ -110,6 +110,10 @@ const WitnessNetworkPage: React.FC = () => {
     getAIMatchResults,
     getMediaEvidenceCards,
     setAIMatchResults,
+    nearbyUsers,
+    broadcastCollection,
+    getCollectionBySos,
+    collectionRequests,
   } = useProtectionStore();
 
   const { loadFromStorage: loadUser } = useUserStore();
@@ -120,6 +124,7 @@ const WitnessNetworkPage: React.FC = () => {
   const [mediaCards, setMediaCards] = useState<MediaEvidenceCard[]>([]);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiReport, setAiReport] = useState<string>('');
+  const [collectionRequest, setCollectionRequest] = useState<CollectionRequest | null>(null);
 
   useEffect(() => {
     loadFromStorage();
@@ -138,6 +143,14 @@ const WitnessNetworkPage: React.FC = () => {
 
   // 当前求助记录：优先使用真实数据，如果没有则使用 mock
   const currentSos = sosRecords.find(s => s.id === activeSosId) || (sosRecords.length === 0 ? mockSosRecord : sosRecords[0]);
+
+  // 根据当前 SOS 获取征集状态
+  useEffect(() => {
+    if (currentSos?.id) {
+      const request = getCollectionBySos(currentSos.id);
+      setCollectionRequest(request || null);
+    }
+  }, [currentSos?.id, collectionRequests]);
 
   // 见证匹配结果：优先使用真实数据，如果没有则使用 mock
   const realMatchResult = currentSos ? getWitnessMatchBySos(currentSos.id) : undefined;
@@ -182,6 +195,21 @@ const WitnessNetworkPage: React.FC = () => {
       });
     } else {
       Taro.showToast({ title: '扫描失败', icon: 'none' });
+    }
+  };
+
+  // 主动征集见证
+  const handleBroadcastCollection = () => {
+    if (!currentSos) {
+      Taro.showToast({ title: '请先发起求助', icon: 'none' });
+      return;
+    }
+    const result = broadcastCollection(currentSos.id);
+    if (result.success && result.request) {
+      setCollectionRequest(result.request);
+      Taro.showToast({ title: '征集请求已发送', icon: 'success' });
+    } else {
+      Taro.showToast({ title: result.message || '征集失败', icon: 'none' });
     }
   };
 
@@ -399,6 +427,78 @@ const WitnessNetworkPage: React.FC = () => {
                   系统已自动放宽时间窗至 ±{WITNESS_MATCH_CONFIG.DELAYED_POST_TIME_EXTENSION_MINUTES} 分钟
                 </Text>
               </View>
+            )}
+          </View>
+
+          {/* 主动征集见证 */}
+          <View className={styles.section}>
+            <Text className={styles.sectionTitle}>📢 主动征集见证</Text>
+            {!collectionRequest ? (
+              <>
+                <Text className={styles.infoText} style={{ marginBottom: '16rpx', display: 'block' }}>
+                  当自动扫描未匹配到足够见证记录时，可主动向事发地附近 {COLLECTION_CONFIG.DEFAULT_RADIUS_METERS}m 内用户发起征集请求，邀请他们提供现场见证。
+                </Text>
+                <View
+                  className={styles.broadcastBtn}
+                  onClick={handleBroadcastCollection}
+                >
+                  <Text className={styles.broadcastBtnIcon}>📢</Text>
+                  <Text className={styles.broadcastBtnText}>向附近用户征集见证</Text>
+                </View>
+              </>
+            ) : (
+              <>
+                <View className={styles.collectionStatusRow}>
+                  <Text className={styles.collectionStatusLabel}>征集状态</Text>
+                  <Text
+                    className={classnames(
+                      styles.collectionStatusTag,
+                      collectionRequest.status === 'broadcasting'
+                        ? styles.collectionStatusBroadcasting
+                        : collectionRequest.status === 'collecting'
+                        ? styles.collectionStatusCollecting
+                        : styles.collectionStatusClosed
+                    )}
+                  >
+                    {collectionRequest.status === 'broadcasting'
+                      ? '征集中'
+                      : collectionRequest.status === 'collecting'
+                      ? '收集中'
+                      : '已关闭'}
+                  </Text>
+                </View>
+                <View className={styles.nearbyUserList}>
+                  {nearbyUsers.map((user: NearbyUser) => (
+                    <View key={user.id} className={styles.nearbyUserItem}>
+                      <View className={styles.nearbyUserInfo}>
+                        <Text className={styles.nearbyUserName}>{user.userName}</Text>
+                        <Text className={styles.nearbyUserDistance}>
+                          {user.distanceToIncident < 1000
+                            ? `${Math.round(user.distanceToIncident)}m`
+                            : `${(user.distanceToIncident / 1000).toFixed(1)}km`}
+                        </Text>
+                      </View>
+                      <Text
+                        className={classnames(
+                          styles.nearbyUserStatus,
+                          user.responded
+                            ? styles.nearbyUserResponded
+                            : user.notified
+                            ? styles.nearbyUserNotified
+                            : styles.nearbyUserPending
+                        )}
+                      >
+                        {user.responded ? '已响应' : user.notified ? '已通知' : '未通知'}
+                      </Text>
+                    </View>
+                  ))}
+                </View>
+                <View className={styles.collectionStats}>
+                  <Text className={styles.collectionStatsText}>
+                    已响应{nearbyUsers.filter((u) => u.responded).length}人 / 已通知{nearbyUsers.filter((u) => u.notified).length}人 / 附近共{nearbyUsers.length}人
+                  </Text>
+                </View>
+              </>
             )}
           </View>
 

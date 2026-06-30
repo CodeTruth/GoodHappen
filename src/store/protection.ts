@@ -19,11 +19,16 @@ import {
   WitnessMatch,
   GPSInfo,
   MediaAsset,
+  CollectionRequest,
+  NearbyUser,
   createEvidencePackage,
   triggerSOS,
   scanWitnessNetwork,
   matchWitnessEvidence,
   notifyWitnesses,
+  broadcastCollectionRequest,
+  submitCollectionResponse,
+  closeCollectionRequest,
   genId,
   getCurrentGPS,
 } from '@/services/evidence';
@@ -103,6 +108,9 @@ interface ProtectionStoreState {
   witnessMatches: WitnessMatch[];
   aimMatchResults?: Record<string, AIMediaMatchResult[]>;  // key: sosRecordId
   mediaEvidenceCards?: Record<string, MediaEvidenceCard[]>;  // key: sosRecordId
+  // 主动征集（P4增强）
+  collectionRequests: CollectionRequest[];
+  nearbyUsers: NearbyUser[];
 
   // ===== 事前存证（P1）=====
   /** 为善行记录创建存证 */
@@ -137,6 +145,16 @@ interface ProtectionStoreState {
   getMediaEvidenceCards: (sosRecordId: string) => MediaEvidenceCard[];
   /** 设置 AI 匹配结果 */
   setAIMatchResults: (sosRecordId: string, results: AIMediaMatchResult[], cards: MediaEvidenceCard[]) => void;
+
+  // ===== 主动征集见证（P4增强）=====
+  /** 向事发地附近用户发起征集 */
+  broadcastCollection: (sosRecordId: string, radiusMeters?: number) => { success: boolean; message: string; request?: CollectionRequest };
+  /** 获取征集状态 */
+  getCollectionBySos: (sosRecordId: string) => CollectionRequest | undefined;
+  /** 附近用户提交征集响应 */
+  submitCollectionWitness: (collectionRequestId: string, nearbyUserId: string, description: string, mediaAssets?: MediaAsset[]) => { success: boolean; message: string; witnessRecord?: WitnessRecord };
+  /** 关闭征集 */
+  closeCollection: (collectionRequestId: string) => void;
 
   // ===== 律师匹配（P2）=====
   /** 匹配律师（模拟） */
@@ -210,6 +228,60 @@ const mockWitnessRecords: WitnessRecord[] = [
   },
 ];
 
+/** Mock 附近用户 - 事发地（39.9045, 116.4078）周围的潜在见证者 */
+const mockNearbyUsers: NearbyUser[] = [
+  {
+    id: 'nearby_001',
+    userName: '朝阳路人甲',
+    userAvatar: '',
+    location: { latitude: 39.9047, longitude: 116.4076, address: '北京市朝阳区·朝阳路北侧', accuracy: 15 },
+    lastActiveAt: '2024-06-22T10:25:00Z',
+    distanceToIncident: 35,
+    notified: false,
+    responded: false,
+  },
+  {
+    id: 'nearby_002',
+    userName: '咖啡店老板',
+    userAvatar: '',
+    location: { latitude: 39.9042, longitude: 116.4080, address: '北京市朝阳区·街角咖啡店', accuracy: 10 },
+    lastActiveAt: '2024-06-22T10:20:00Z',
+    distanceToIncident: 65,
+    notified: false,
+    responded: false,
+  },
+  {
+    id: 'nearby_003',
+    userName: '遛狗大爷',
+    userAvatar: '',
+    location: { latitude: 39.9050, longitude: 116.4072, address: '北京市朝阳区·小区南门', accuracy: 20 },
+    lastActiveAt: '2024-06-22T10:28:00Z',
+    distanceToIncident: 78,
+    notified: false,
+    responded: false,
+  },
+  {
+    id: 'nearby_004',
+    userName: '快递小哥',
+    userAvatar: '',
+    location: { latitude: 39.9040, longitude: 116.4085, address: '北京市朝阳区·快递驿站', accuracy: 12 },
+    lastActiveAt: '2024-06-22T10:22:00Z',
+    distanceToIncident: 110,
+    notified: false,
+    responded: false,
+  },
+  {
+    id: 'nearby_005',
+    userName: '写字楼上班族',
+    userAvatar: '',
+    location: { latitude: 39.9055, longitude: 116.4090, address: '北京市朝阳区·商务楼A座', accuracy: 25 },
+    lastActiveAt: '2024-06-22T10:15:00Z',
+    distanceToIncident: 180,
+    notified: false,
+    responded: false,
+  },
+];
+
 /** Mock 律师列表 */
 const mockLawyers = [
   {
@@ -258,6 +330,8 @@ export const useProtectionStore = create<ProtectionStoreState>((set, get) => ({
   witnessMatches: [],
   aimMatchResults: {},
   mediaEvidenceCards: {},
+  collectionRequests: [],
+  nearbyUsers: [...mockNearbyUsers],
 
   // ============================================
   // 事前存证（P1）
@@ -508,6 +582,113 @@ export const useProtectionStore = create<ProtectionStoreState>((set, get) => ({
   },
 
   // ============================================
+  // 主动征集见证（P4增强）
+  // ============================================
+
+  /** 向事发地附近用户发起征集 */
+  broadcastCollection: (sosRecordId, radiusMeters) => {
+    const sosRecord = get().sosRecords.find(s => s.id === sosRecordId);
+    if (!sosRecord) {
+      return { success: false, message: '未找到求助记录' };
+    }
+
+    const primaryEvidence = get().getEvidenceByRecordId(sosRecord.recordId);
+    if (!primaryEvidence) {
+      return { success: false, message: '未找到善行存证' };
+    }
+
+    // 检查是否已存在该SOS的征集请求
+    const existing = get().collectionRequests.find(r => r.sosRecordId === sosRecordId && r.status !== 'closed');
+    if (existing) {
+      return { success: false, message: '该求助已发起征集，请勿重复发起' };
+    }
+
+    const allNearbyUsers = get().nearbyUsers;
+    const { request, notifiedUsers } = broadcastCollectionRequest(
+      sosRecord, primaryEvidence, allNearbyUsers, radiusMeters
+    );
+
+    // 更新附近用户状态（标记为已通知）
+    set((state) => ({
+      nearbyUsers: state.nearbyUsers.map(u => {
+        const notified = notifiedUsers.find(n => n.id === u.id);
+        return notified || u;
+      }),
+      collectionRequests: [request, ...state.collectionRequests],
+    }));
+
+    get().saveToStorage();
+    return {
+      success: true,
+      message: `已向 ${notifiedUsers.length} 位附近用户发送征集通知`,
+      request,
+    };
+  },
+
+  /** 获取征集状态 */
+  getCollectionBySos: (sosRecordId) => {
+    return get().collectionRequests.find(r => r.sosRecordId === sosRecordId);
+  },
+
+  /** 附近用户提交征集响应 */
+  submitCollectionWitness: (collectionRequestId, nearbyUserId, description, _mediaAssets = []) => {
+    const request = get().collectionRequests.find(r => r.id === collectionRequestId);
+    if (!request) {
+      return { success: false, message: '未找到征集请求' };
+    }
+
+    const nearbyUser = get().nearbyUsers.find(u => u.id === nearbyUserId);
+    if (!nearbyUser) {
+      return { success: false, message: '未找到附近用户信息' };
+    }
+
+    // 创建新的见证记录
+    const now = new Date().toISOString();
+    const witnessRecord: WitnessRecord = {
+      id: genId('wit'),
+      witnessUserId: nearbyUserId,
+      witnessUserName: nearbyUser.userName,
+      witnessUserAvatar: nearbyUser.userAvatar,
+      recordId: request.primaryRecordId,
+      timestamp: now,
+      gps: nearbyUser.location,
+      description,
+      matched: false,
+      notified: false,
+      badgeGranted: false,
+    };
+
+    // 关联到征集请求
+    const { updatedRequest, updatedUser } = submitCollectionResponse(request, nearbyUser, witnessRecord);
+
+    set((state) => ({
+      witnessRecords: [...state.witnessRecords, witnessRecord],
+      nearbyUsers: state.nearbyUsers.map(u => u.id === nearbyUserId ? updatedUser : u),
+      collectionRequests: state.collectionRequests.map(r => r.id === collectionRequestId ? updatedRequest : r),
+    }));
+
+    // 自动触发见证匹配（新征集到的记录也参与匹配）
+    get().scanWitnesses(request.sosRecordId);
+
+    get().saveToStorage();
+    return {
+      success: true,
+      message: '见证提交成功，已纳入证据链匹配',
+      witnessRecord,
+    };
+  },
+
+  /** 关闭征集 */
+  closeCollection: (collectionRequestId) => {
+    set((state) => ({
+      collectionRequests: state.collectionRequests.map(r =>
+        r.id === collectionRequestId ? closeCollectionRequest(r) : r
+      ),
+    }));
+    get().saveToStorage();
+  },
+
+  // ============================================
   // 律师匹配（P2）
   // ============================================
 
@@ -572,6 +753,8 @@ export const useProtectionStore = create<ProtectionStoreState>((set, get) => ({
           witnessMatches: parsed.witnessMatches || [],
           aimMatchResults: parsed.aimMatchResults || {},
           mediaEvidenceCards: parsed.mediaEvidenceCards || {},
+          collectionRequests: parsed.collectionRequests || [],
+          nearbyUsers: parsed.nearbyUsers || [...mockNearbyUsers],
         });
       }
       // 加载后检查保险资格
@@ -594,6 +777,8 @@ export const useProtectionStore = create<ProtectionStoreState>((set, get) => ({
         witnessMatches: state.witnessMatches,
         aimMatchResults: state.aimMatchResults,
         mediaEvidenceCards: state.mediaEvidenceCards,
+        collectionRequests: state.collectionRequests,
+        nearbyUsers: state.nearbyUsers,
       };
       Taro.setStorageSync(STORAGE_KEY, JSON.stringify(data));
     } catch (e) {

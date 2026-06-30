@@ -568,3 +568,141 @@ export const notifyWitnesses = (
     badgeGranted: notified,
   };
 };
+
+// ============================================
+// 主动征集见证（P4 增强）
+// ============================================
+
+/** 主动征集请求 - 向事发地附近用户推送求助 */
+export interface CollectionRequest {
+  id: string;
+  sosRecordId: string;
+  primaryRecordId: string;
+  incidentLocation: GPSInfo;
+  incidentTime: string;
+  description: string;
+  status: 'broadcasting' | 'collecting' | 'closed';
+  radiusMeters: number;
+  timeWindowMinutes: number;
+  broadcastAt: string;
+  closedAt?: string;
+  nearbyUserIds: string[];       // 已推送的附近用户ID
+  respondedUserIds: string[];    // 已响应的用户ID
+  collectedWitnessIds: string[]; // 征集到的见证记录ID
+}
+
+/** 附近用户（潜在见证者） */
+export interface NearbyUser {
+  id: string;
+  userName: string;
+  userAvatar: string;
+  location: GPSInfo;
+  lastActiveAt: string;
+  distanceToIncident: number;    // 距离事发地（米）
+  notified: boolean;             // 是否已收到征集通知
+  responded: boolean;            // 是否已响应
+  submittedWitnessId?: string;   // 提交的见证记录ID
+}
+
+/** 征集配置 */
+export const COLLECTION_CONFIG = {
+  DEFAULT_RADIUS_METERS: 500,      // 默认征集半径 500m
+  DEFAULT_TIME_WINDOW_MINUTES: 60, // 默认时间窗 ±60分钟
+  BROADCAST_DURATION_MINUTES: 30,  // 征集持续 30 分钟
+};
+
+/**
+ * 查找事发地附近的潜在见证用户
+ * 模拟：基于GPS距离和活跃度筛选
+ */
+export const findNearbyUsers = (
+  incidentLocation: GPSInfo,
+  allUsers: NearbyUser[],
+  radiusMeters: number = COLLECTION_CONFIG.DEFAULT_RADIUS_METERS
+): NearbyUser[] => {
+  return allUsers
+    .map(user => ({
+      ...user,
+      distanceToIncident: calculateDistance(
+        incidentLocation.latitude, incidentLocation.longitude,
+        user.location.latitude, user.location.longitude
+      ),
+    }))
+    .filter(user => user.distanceToIncident <= radiusMeters)
+    .sort((a, b) => a.distanceToIncident - b.distanceToIncident);
+};
+
+/**
+ * 发起主动征集
+ * 向事发地附近用户推送"征集见证"通知
+ */
+export const broadcastCollectionRequest = (
+  sosRecord: SOSRecord,
+  primaryEvidence: EvidencePackage,
+  nearbyUsers: NearbyUser[],
+  radiusMeters?: number
+): { request: CollectionRequest; notifiedUsers: NearbyUser[] } => {
+  const effectiveRadius = radiusMeters || COLLECTION_CONFIG.DEFAULT_RADIUS_METERS;
+  const incidentLocation = getEffectiveGps(primaryEvidence);
+  const incidentTime = getEffectiveTime(primaryEvidence);
+
+  // 筛选附近用户
+  const eligibleUsers = findNearbyUsers(incidentLocation, nearbyUsers, effectiveRadius);
+
+  // 标记为已通知
+  const notifiedUsers = eligibleUsers.map(u => ({ ...u, notified: true }));
+
+  const request: CollectionRequest = {
+    id: genId('collect'),
+    sosRecordId: sosRecord.id,
+    primaryRecordId: primaryEvidence.recordId,
+    incidentLocation,
+    incidentTime,
+    description: `求助：${sosRecord.description}`,
+    status: 'broadcasting',
+    radiusMeters: effectiveRadius,
+    timeWindowMinutes: COLLECTION_CONFIG.DEFAULT_TIME_WINDOW_MINUTES,
+    broadcastAt: new Date().toISOString(),
+    nearbyUserIds: notifiedUsers.map(u => u.id),
+    respondedUserIds: [],
+    collectedWitnessIds: [],
+  };
+
+  return { request, notifiedUsers };
+};
+
+/**
+ * 附近用户提交征集响应
+ * 将用户提交的见证记录关联到征集请求
+ */
+export const submitCollectionResponse = (
+  collectionRequest: CollectionRequest,
+  nearbyUser: NearbyUser,
+  witnessRecord: WitnessRecord
+): { updatedRequest: CollectionRequest; updatedUser: NearbyUser } => {
+  const updatedRequest: CollectionRequest = {
+    ...collectionRequest,
+    status: collectionRequest.status === 'broadcasting' ? 'collecting' : collectionRequest.status,
+    respondedUserIds: [...collectionRequest.respondedUserIds, nearbyUser.id],
+    collectedWitnessIds: [...collectionRequest.collectedWitnessIds, witnessRecord.id],
+  };
+
+  const updatedUser: NearbyUser = {
+    ...nearbyUser,
+    responded: true,
+    submittedWitnessId: witnessRecord.id,
+  };
+
+  return { updatedRequest, updatedUser };
+};
+
+/**
+ * 关闭征集请求
+ */
+export const closeCollectionRequest = (
+  request: CollectionRequest
+): CollectionRequest => ({
+  ...request,
+  status: 'closed',
+  closedAt: new Date().toISOString(),
+});

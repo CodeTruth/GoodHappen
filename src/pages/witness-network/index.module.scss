@@ -724,3 +724,129 @@
   color: #B06650;
   line-height: 1.5;
 }
+
+/* === 主动征集见证 === */
+.broadcastBtn {
+  @include button-reset;
+  width: 100%;
+  height: $button-height-md;
+  background: linear-gradient(135deg, #D4A76A 0%, #C4956A 100%);
+  color: $color-text-white;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  border-radius: $radius-button;
+  gap: $spacing-xs;
+}
+
+.broadcastBtnIcon {
+  font-size: 32rpx;
+}
+
+.broadcastBtnText {
+  font-size: 28rpx;
+  color: #fff;
+  font-weight: 600;
+}
+
+.collectionStatusRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: $spacing-md;
+  padding: $spacing-sm $spacing-md;
+  background: $color-bg-page;
+  border-radius: $radius-md;
+}
+
+.collectionStatusLabel {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+}
+
+.collectionStatusTag {
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+  padding: 4rpx $spacing-sm;
+  border-radius: $radius-xs;
+}
+
+.collectionStatusBroadcasting {
+  color: $color-primary;
+  background: rgba(196, 149, 106, 0.12);
+}
+
+.collectionStatusCollecting {
+  color: $color-info;
+  background: rgba(123, 158, 135, 0.12);
+}
+
+.collectionStatusClosed {
+  color: $color-text-tertiary;
+  background: $color-bg-hover;
+}
+
+.nearbyUserList {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+  margin-bottom: $spacing-md;
+}
+
+.nearbyUserItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: $spacing-sm $spacing-md;
+  background: $color-bg-page;
+  border-radius: $radius-md;
+}
+
+.nearbyUserInfo {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+}
+
+.nearbyUserName {
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+  font-weight: $font-weight-medium;
+}
+
+.nearbyUserDistance {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.nearbyUserStatus {
+  font-size: 20rpx;
+  font-weight: $font-weight-semibold;
+  padding: 2rpx $spacing-xs;
+  border-radius: $radius-xs;
+}
+
+.nearbyUserResponded {
+  color: $color-success;
+  background: rgba(82, 196, 26, 0.1);
+}
+
+.nearbyUserNotified {
+  color: $color-warning;
+  background: rgba(250, 173, 20, 0.1);
+}
+
+.nearbyUserPending {
+  color: $color-text-tertiary;
+  background: $color-bg-hover;
+}
+
+.collectionStats {
+  padding: $spacing-sm 0;
+  text-align: center;
+  border-top: 1rpx solid $color-divider;
+}
+
+.collectionStatsText {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+}
