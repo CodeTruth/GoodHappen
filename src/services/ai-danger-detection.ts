@@ -232,7 +232,7 @@ const buildAIContext = (
 const simulateAIReasoning = (
   indicators: DangerIndicator[],
   triggeredCount: number,
-  context: string
+  _context: string
 ): DangerDetectionResult => {
   // 规则引擎（作为大模型的前置过滤）
   const triggered = indicators.filter(i => i.triggered);

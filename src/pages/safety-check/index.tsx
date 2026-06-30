@@ -1,9 +1,8 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { View, Text, Input } from '@tarojs/components';
 import Taro from '@tarojs/taro';
 import {
   SafetyCheckTask,
-  SOS_CONFIG,
   createSafetyCheck,
   extendSafetyCheck,
   completeSafetyCheck,

@@ -329,10 +329,10 @@ function _startTracking() {
           ..._currentSession.evidenceCollected,
           gpsPoints: _currentSession.evidenceCollected.gpsPoints + 1,
         },
-        currentGps: {
-          ...(_currentSession.currentGps || {}),
+        currentGps: _currentSession.currentGps ? {
+          ..._currentSession.currentGps,
           updatedAt: new Date().toISOString(),
-        },
+        } : undefined,
       };
     }
   }, PROTECTION_MODE_CONFIG.GPS_TRACK_INTERVAL_MS);

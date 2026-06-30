@@ -1,9 +1,8 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { View, Text } from '@tarojs/components';
 import Taro from '@tarojs/taro';
 import {
   ProtectionSession,
-  ProtectionModeStatus,
   EmergencyContact,
   PROTECTION_MODE_CONFIG,
   createSession,

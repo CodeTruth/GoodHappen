@@ -348,8 +348,8 @@ function calculateDangerScore(factors: RiskFactor[]): number {
 
 function determineAdviceLevel(
   dangerScore: number,
-  factors: RiskFactor[],
-  user: UserProfile,
+  _factors: RiskFactor[],
+  _user: UserProfile,
   env: EnvironmentContext,
   subject: SubjectInfo
 ): AdviceLevel {
@@ -384,9 +384,9 @@ function determineAdviceLevel(
 function generateActions(
   level: AdviceLevel,
   action: KindnessAction,
-  env: EnvironmentContext,
+  _env: EnvironmentContext,
   subject: SubjectInfo,
-  user: UserProfile
+  _user: UserProfile
 ): AdvisorAction[] {
   const actions: AdvisorAction[] = [];
 
@@ -554,7 +554,7 @@ function generateWarnings(level: AdviceLevel, factors: RiskFactor[]): string[] {
   return warnings;
 }
 
-function generateTips(level: AdviceLevel, action: KindnessAction, env: EnvironmentContext): string[] {
+function generateTips(level: AdviceLevel, _action: KindnessAction, env: EnvironmentContext): string[] {
   const tips: string[] = [];
 
   if (level === 'A' || level === 'B') {
@@ -629,7 +629,7 @@ function generateProtectionMeasures(
 /** 快速评估预设场景 */
 export const quickAssess = (
   scenario: string,
-  userDescription?: string
+  _userDescription?: string
 ): AIAdvisorResult => {
   // 从场景描述中推断
   const env: EnvironmentContext = {
@@ -643,8 +643,8 @@ export const quickAssess = (
 
   const subject: SubjectInfo = {
     count: scenario.includes('多人') ? 3 : 1,
-    consciousness: scenario.includes('晕倒') ? 'unconscious' : scenario.includes('激动') ? 'aggressive' : 'calm',
-    behavior: scenario.includes('打') || scenario.includes('暴力') ? 'aggressive' : 'calm',
+    consciousness: scenario.includes('晕倒') ? 'unconscious' : scenario.includes('迷糊') ? 'drowsy' : 'alert',
+    behavior: scenario.includes('打') || scenario.includes('暴力') || scenario.includes('激动') ? 'aggressive' : 'calm',
   };
 
   const action: KindnessAction = {

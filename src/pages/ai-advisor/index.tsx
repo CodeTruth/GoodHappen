@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import { View, Text, ScrollView } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import {
@@ -16,7 +16,7 @@ import styles from './index.module.scss'
 // 类型定义
 // ============================================
 
-type PageStep = 'idle' | 'sensing' | 'analyzing' | 'result'
+type PageStep = 'idle' | 'guiding_camera' | 'guiding_voice' | 'analyzing' | 'result'
 
 /** 模拟感知提取的数据 */
 interface PerceivedData {
@@ -37,72 +37,97 @@ interface PerceivedData {
 // ============================================
 
 export default function AIAdvisorPage() {
-  // 页面步骤
   const [step, setStep] = useState<PageStep>('idle')
   const [result, setResult] = useState<AIAdvisorResult | null>(null)
 
-  // 感知状态
-  const [isRecording, setIsRecording] = useState(false)
+  // 引导状态
+  const [countdown, setCountdown] = useState(3)
+  const [guideText, setGuideText] = useState('')
   const [voiceText, setVoiceText] = useState('')
-  const [perceivedDots, setPerceivedDots] = useState(0)
+  const [isListening, setIsListening] = useState(false)
+  const [cameraReady, setCameraReady] = useState(false)
+
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  // ===== 开始感知 =====
-  const handleStartSensing = useCallback(() => {
-    setStep('sensing')
+  // ===== 清理所有定时器 =====
+  const clearAllTimers = useCallback(() => {
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null }
+    if (timeoutRef.current) { clearTimeout(timeoutRef.current); timeoutRef.current = null }
+  }, [])
+
+  // ===== 开始引导流程 =====
+  const handleStart = useCallback(() => {
+    clearAllTimers()
+    setStep('guiding_camera')
+    setCountdown(3)
+    setGuideText('请将摄像头对准需要帮助的现场')
     setVoiceText('')
-    setPerceivedDots(0)
-  }, [])
+    setCameraReady(false)
 
-  // ===== 按住说话 =====
-  const handleVoiceStart = useCallback(() => {
-    setIsRecording(true)
-    // 模拟语音输入过程
+    // 模拟摄像头初始化
+    timeoutRef.current = setTimeout(() => {
+      setCameraReady(true)
+      // 开始3秒倒计时
+      let count = 3
+      timerRef.current = setInterval(() => {
+        count -= 1
+        setCountdown(count)
+        if (count <= 0) {
+          if (timerRef.current) clearInterval(timerRef.current)
+          // 摄像头阶段完成，进入语音引导
+          setStep('guiding_voice')
+          setGuideText('请描述现场情况，例如"一位老人摔倒了"')
+          setIsListening(true)
+
+          // 模拟自动录音过程
+          simulateAutoRecording()
+        }
+      }, 1000)
+    }, 800)
+  }, [clearAllTimers])
+
+  // ===== 模拟自动录音（系统自动聆听，无需用户按住） =====
+  const simulateAutoRecording = useCallback(() => {
+    const phrases = [
+      '看到',
+      '看到一位',
+      '看到一位老人',
+      '看到一位老人摔倒',
+      '看到一位老人摔倒在路边',
+      '看到一位老人摔倒在路边，',
+      '看到一位老人摔倒在路边，周围',
+      '看到一位老人摔倒在路边，周围没什么人',
+      '看到一位老人摔倒在路边，周围没什么人，似乎',
+      '看到一位老人摔倒在路边，周围没什么人，似乎无法起身',
+    ]
+
+    let idx = 0
     timerRef.current = setInterval(() => {
-      setVoiceText((prev) => {
-        const phrases = [
-          '看到',
-          '看到一位',
-          '看到一位老人',
-          '看到一位老人摔倒',
-          '看到一位老人摔倒在路边',
-          '看到一位老人摔倒在路边，',
-          '看到一位老人摔倒在路边，似乎',
-          '看到一位老人摔倒在路边，似乎无法',
-          '看到一位老人摔倒在路边，似乎无法起身',
-        ]
-        const idx = Math.min(phrases.length - 1, Math.floor(prev.length / 3) + 1)
-        return phrases[idx] || phrases[phrases.length - 1]
-      })
-    }, 300)
+      setVoiceText(phrases[idx] || phrases[phrases.length - 1])
+      idx += 1
+      if (idx >= phrases.length) {
+        if (timerRef.current) clearInterval(timerRef.current)
+        // 语音收集完成，短暂停顿后自动分析
+        timeoutRef.current = setTimeout(() => {
+          setIsListening(false)
+          handleAutoAnalyze(phrases[phrases.length - 1])
+        }, 600)
+      }
+    }, 250)
   }, [])
 
-  const handleVoiceEnd = useCallback(() => {
-    setIsRecording(false)
-    if (timerRef.current) {
-      clearInterval(timerRef.current)
-      timerRef.current = null
-    }
-    // 模拟语音识别完成
-    setVoiceText('看到一位老人摔倒在路边，似乎无法起身')
-  }, [])
-
-  // ===== AI 分析 =====
-  const handleAnalyze = useCallback(() => {
-    const finalVoice = voiceText.trim() || '看到一位老人摔倒在路边，似乎无法起身'
-
+  // ===== 自动分析 =====
+  const handleAutoAnalyze = useCallback((finalVoice: string) => {
     setStep('analyzing')
+    setGuideText('AI正在综合评估...')
 
     // 模拟分析延迟
-    setTimeout(() => {
-      // 从语音描述中自动提取信息
+    timeoutRef.current = setTimeout(() => {
       const perceived = extractFromVoice(finalVoice)
-      // 从摄像头感知中自动推断（模拟）
       const cameraData = inferFromCamera()
-      // 合并感知数据
       const merged = { ...perceived, ...cameraData }
 
-      // 自动生成参数
       const userProfile: UserProfile = {
         physicalCondition: 'normal',
         experienceLevel: 'normal',
@@ -132,51 +157,32 @@ export default function AIAdvisorPage() {
       const advisorResult = consultAIAdvisor(userProfile, env, subject, action)
       setResult(advisorResult)
       setStep('result')
-    }, 1500)
-  }, [voiceText])
+    }, 1800)
+  }, [])
 
   // ===== 重新评估 =====
   const handleReset = useCallback(() => {
+    clearAllTimers()
     setStep('idle')
     setResult(null)
     setVoiceText('')
-    setPerceivedDots(0)
-    setIsRecording(false)
-    if (timerRef.current) {
-      clearInterval(timerRef.current)
-      timerRef.current = null
-    }
-  }, [])
+    setCountdown(3)
+    setCameraReady(false)
+    setIsListening(false)
+  }, [clearAllTimers])
 
   // ===== 底部按钮操作 =====
   const handleLevelAction = useCallback((level: string) => {
     switch (level) {
-      case 'A':
-        Taro.navigateTo({ url: '/pages/record/index' })
-        break
-      case 'B':
-        Taro.navigateTo({ url: '/pages/protection-mode/index' })
-        break
-      case 'C':
-        Taro.navigateTo({ url: '/pages/witness-network/index' })
-        break
-      case 'D':
-        Taro.makePhoneCall({ phoneNumber: '120' })
-        break
-      case 'E':
-        Taro.makePhoneCall({ phoneNumber: '110' })
-        break
+      case 'A': Taro.navigateTo({ url: '/pages/record/index' }); break
+      case 'B': Taro.navigateTo({ url: '/pages/protection-mode/index' }); break
+      case 'C': Taro.navigateTo({ url: '/pages/witness-network/index' }); break
+      case 'D': Taro.makePhoneCall({ phoneNumber: '120' }); break
+      case 'E': Taro.makePhoneCall({ phoneNumber: '110' }); break
     }
   }, [])
 
   // ===== 危险系数颜色 =====
-  const getDangerColor = (score: number): string => {
-    if (score < 30) return '#52C41A'
-    if (score < 50) return '#FAAD14'
-    if (score < 70) return '#FF7A45'
-    return '#F44336'
-  }
-
   const getDangerGradient = (score: number): string => {
     if (score < 30) return 'linear-gradient(90deg, #52C41A 0%, #73D13D 100%)'
     if (score < 50) return 'linear-gradient(90deg, #73D13D 0%, #FAAD14 100%)'
@@ -184,14 +190,10 @@ export default function AIAdvisorPage() {
     return 'linear-gradient(90deg, #FF7A45 0%, #F44336 100%)'
   }
 
-  // ===== 感知中动画点 =====
-  React.useEffect(() => {
-    if (step !== 'sensing') return
-    const interval = setInterval(() => {
-      setPerceivedDots((prev) => (prev + 1) % 4)
-    }, 500)
-    return () => clearInterval(interval)
-  }, [step])
+  // ===== 页面卸载时清理 =====
+  useEffect(() => {
+    return () => clearAllTimers()
+  }, [clearAllTimers])
 
   // ============================================
   // 渲染
@@ -199,113 +201,189 @@ export default function AIAdvisorPage() {
 
   return (
     <View className={styles.pageWrapper}>
-      {/* ===== 初始状态：大圆形按钮 ===== */}
+      {/* ===== 初始状态 ===== */}
       {step === 'idle' && (
         <View className={styles.idleContainer}>
           <View className={styles.idleInner}>
             <View className={styles.idleIcon}>🔮</View>
             <View className={styles.idleTitle}>AI 善行顾问</View>
             <View className={styles.idleDesc}>
-              打开摄像头和麦克风，让AI感知周围环境，智能分析最佳行善方案
+              打开摄像头和麦克风，AI自动感知现场，智能分析最佳行善方案
             </View>
-            <View
-              className={styles.startBtn}
-              onClick={handleStartSensing}
-            >
-              <Text className={styles.startBtnIcon}>📷</Text>
-              <Text className={styles.startBtnText}>打开摄像头和麦克风</Text>
+            <View className={styles.idleFeatures}>
+              <View className={styles.idleFeature}>
+                <Text className={styles.idleFeatureIcon}>📷</Text>
+                <Text className={styles.idleFeatureText}>自动感知现场环境</Text>
+              </View>
+              <View className={styles.idleFeature}>
+                <Text className={styles.idleFeatureIcon}>🎙️</Text>
+                <Text className={styles.idleFeatureText}>语音描述自动识别</Text>
+              </View>
+              <View className={styles.idleFeature}>
+                <Text className={styles.idleFeatureIcon}>🤖</Text>
+                <Text className={styles.idleFeatureText}>AI综合评估风险</Text>
+              </View>
+            </View>
+            <View className={styles.startBtn} onClick={handleStart}>
+              <Text className={styles.startBtnIcon}>🔮</Text>
+              <Text className={styles.startBtnText}>开始AI评估</Text>
             </View>
           </View>
         </View>
       )}
 
-      {/* ===== 感知中状态 ===== */}
-      {step === 'sensing' && (
-        <View className={styles.sensingContainer}>
+      {/* ===== 引导摄像头阶段 ===== */}
+      {step === 'guiding_camera' && (
+        <View className={styles.guideContainer}>
+          {/* 引导语音气泡 */}
+          <View className={styles.guideBubble}>
+            <Text className={styles.guideBubbleIcon}>🤖</Text>
+            <Text className={styles.guideBubbleText}>{guideText}</Text>
+          </View>
+
           {/* 摄像头预览区域 */}
           <View className={styles.cameraPreview}>
             <View className={styles.cameraOverlay}>
+              {/* 取景网格 */}
               <View className={styles.cameraGrid}>
                 <View className={styles.cameraGridLineH} />
                 <View className={styles.cameraGridLineH} />
                 <View className={styles.cameraGridLineV} />
                 <View className={styles.cameraGridLineV} />
               </View>
+              {/* 四角取景框 */}
               <View className={`${styles.cameraCorner} ${styles.cameraCornerTL}`} />
               <View className={`${styles.cameraCorner} ${styles.cameraCornerTR}`} />
               <View className={`${styles.cameraCorner} ${styles.cameraCornerBL}`} />
               <View className={`${styles.cameraCorner} ${styles.cameraCornerBR}`} />
-              <View className={styles.recordingBadge}>
-                <View className={styles.recordingDot} />
-                <Text className={styles.recordingText}>录制中</Text>
-              </View>
+
+              {/* 录制中标记 */}
+              {cameraReady && (
+                <View className={styles.recordingBadge}>
+                  <View className={styles.recordingDot} />
+                  <Text className={styles.recordingText}>正在感知</Text>
+                </View>
+              )}
+
+              {/* 倒计时 */}
+              {cameraReady && countdown > 0 && (
+                <View className={styles.countdownOverlay}>
+                  <Text className={styles.countdownNumber}>{countdown}</Text>
+                </View>
+              )}
+
+              {/* 状态文字 */}
               <View className={styles.cameraStatus}>
                 <Text className={styles.cameraStatusText}>
-                  AI正在感知环境{'.'.repeat(perceivedDots + 1)}
+                  {cameraReady
+                    ? countdown > 0
+                      ? 'AI正在扫描环境...'
+                      : '环境扫描完成 ✓'
+                    : '正在启动摄像头...'}
                 </Text>
               </View>
             </View>
           </View>
 
-          {/* 语音识别区域 */}
-          <View className={styles.voiceSection}>
-            <View className={styles.voiceLabel}>按住说话描述场景</View>
-            {voiceText ? (
-              <View className={styles.voiceTextBox}>
-                <Text className={styles.voiceText}>{voiceText}</Text>
-              </View>
-            ) : (
-              <View className={styles.voiceHint}>
-                <Text>请描述你看到的场景，例如"看到一位老人摔倒"</Text>
-              </View>
-            )}
-            <View
-              className={`${styles.voiceBtn} ${isRecording ? styles.recording : ''}`}
-              onTouchStart={handleVoiceStart}
-              onTouchEnd={handleVoiceEnd}
-            >
-              <Text className={styles.voiceBtnIcon}>🎙️</Text>
-              <Text className={styles.voiceBtnText}>
-                {isRecording ? '正在聆听...' : '按住说话'}
-              </Text>
-            </View>
-          </View>
-
-          {/* 感知信息 */}
-          <View className={styles.perceivedSection}>
-            <View className={styles.perceivedTitle}>已感知信息</View>
-            <View className={styles.perceivedTags}>
-              <View className={styles.perceivedTag}>
-                <Text className={styles.perceivedTagLabel}>场景</Text>
-                <Text className={styles.perceivedTagValue}>
-                  {voiceText ? guessActionType(voiceText) === 'elder_help' ? '老人求助' : '现场情况' : '...'}
-                </Text>
-              </View>
-              <View className={styles.perceivedTag}>
-                <Text className={styles.perceivedTagLabel}>时间</Text>
-                <Text className={styles.perceivedTagValue}>
-                  {new Date().getHours() >= 6 && new Date().getHours() < 18 ? '白天' : '晚上'}
-                </Text>
-              </View>
-              <View className={styles.perceivedTag}>
-                <Text className={styles.perceivedTagLabel}>人数</Text>
-                <Text className={styles.perceivedTagValue}>自动推断</Text>
-              </View>
-              <View className={styles.perceivedTag}>
-                <Text className={styles.perceivedTagLabel}>监控</Text>
-                <Text className={styles.perceivedTagValue}>检测中</Text>
+          {/* 已感知信息预览 */}
+          {cameraReady && (
+            <View className={styles.perceivedPreview}>
+              <Text className={styles.perceivedPreviewTitle}>已感知环境信息</Text>
+              <View className={styles.perceivedPreviewTags}>
+                <View className={styles.perceivedPreviewTag}>
+                  <Text className={styles.pptLabel}>时间</Text>
+                  <Text className={styles.pptValue}>
+                    {new Date().getHours() >= 6 && new Date().getHours() < 18 ? '白天' : '夜间'}
+                  </Text>
+                </View>
+                <View className={styles.perceivedPreviewTag}>
+                  <Text className={styles.pptLabel}>光线</Text>
+                  <Text className={styles.pptValue}>检测中</Text>
+                </View>
+                <View className={styles.perceivedPreviewTag}>
+                  <Text className={styles.pptLabel}>监控</Text>
+                  <Text className={styles.pptValue}>检测中</Text>
+                </View>
               </View>
             </View>
+          )}
+        </View>
+      )}
+
+      {/* ===== 引导语音阶段 ===== */}
+      {step === 'guiding_voice' && (
+        <View className={styles.guideContainer}>
+          {/* 引导语音气泡 */}
+          <View className={styles.guideBubble}>
+            <Text className={styles.guideBubbleIcon}>🤖</Text>
+            <Text className={styles.guideBubbleText}>{guideText}</Text>
           </View>
 
-          {/* AI分析按钮 */}
-          <View
-            className={styles.analyzeBtn}
-            onClick={handleAnalyze}
-          >
-            <Text className={styles.analyzeBtnIcon}>🔍</Text>
-            <Text>AI 分析</Text>
+          {/* 语音波形动画 */}
+          <View className={styles.voiceWaveSection}>
+            <View className={styles.voiceWaveContainer}>
+              {Array.from({ length: 20 }).map((_, i) => (
+                <View
+                  key={i}
+                  className={`${styles.voiceWaveBar} ${isListening ? styles.active : ''}`}
+                  style={{
+                    animationDelay: `${i * 0.05}s`,
+                    height: isListening ? `${Math.random() * 40 + 10}px` : '6px',
+                  }}
+                />
+              ))}
+            </View>
+            <Text className={styles.voiceWaveStatus}>
+              {isListening ? '正在聆听...' : '聆听完成'}
+            </Text>
           </View>
+
+          {/* 语音识别文本 */}
+          <View className={styles.voiceTranscriptBox}>
+            <Text className={styles.voiceTranscriptLabel}>识别内容</Text>
+            <Text className={styles.voiceTranscriptText}>
+              {voiceText || '等待语音输入...'}
+              {isListening && <Text className={styles.voiceCursor}>|</Text>}
+            </Text>
+          </View>
+
+          {/* 已感知信息 */}
+          {voiceText && (
+            <View className={styles.perceivedPreview}>
+              <Text className={styles.perceivedPreviewTitle}>已感知信息</Text>
+              <View className={styles.perceivedPreviewTags}>
+                <View className={styles.perceivedPreviewTag}>
+                  <Text className={styles.pptLabel}>场景</Text>
+                  <Text className={styles.pptValue}>
+                    {guessActionType(voiceText) === 'elder_help' ? '老人求助' :
+                     guessActionType(voiceText) === 'traffic' ? '交通事故' :
+                     guessActionType(voiceText) === 'rescue' ? '水域救援' : '现场情况'}
+                  </Text>
+                </View>
+                <View className={styles.perceivedPreviewTag}>
+                  <Text className={styles.pptLabel}>紧急度</Text>
+                  <Text className={styles.pptValue}>
+                    {/紧急|救命|昏迷|落水/.test(voiceText) ? '紧急' :
+                     /撞|摔倒|事故|流血/.test(voiceText) ? '高' : '中'}
+                  </Text>
+                </View>
+                <View className={styles.perceivedPreviewTag}>
+                  <Text className={styles.pptLabel}>人数</Text>
+                  <Text className={styles.pptValue}>
+                    {/多人|两三|几个|一群/.test(voiceText) ? '多人' : '1人'}
+                  </Text>
+                </View>
+                <View className={styles.perceivedPreviewTag}>
+                  <Text className={styles.pptLabel}>状态</Text>
+                  <Text className={styles.pptValue}>
+                    {/昏迷|晕倒|无意识/.test(voiceText) ? '昏迷' :
+                     /激动|大喊|暴力/.test(voiceText) ? '激动' :
+                     /焦虑|不安|慌张/.test(voiceText) ? '焦虑' : '平静'}
+                  </Text>
+                </View>
+              </View>
+            </View>
+          )}
         </View>
       )}
 
@@ -401,9 +479,7 @@ export default function AIAdvisorPage() {
                   {action.steps && action.steps.length > 0 && (
                     <View className={styles.actionSteps}>
                       {action.steps.map((step, sIdx) => (
-                        <View key={sIdx} className={styles.stepItem}>
-                          {step}
-                        </View>
+                        <View key={sIdx} className={styles.stepItem}>{step}</View>
                       ))}
                     </View>
                   )}
@@ -507,7 +583,6 @@ export default function AIAdvisorPage() {
 // 辅助函数
 // ============================================
 
-/** 从语音描述中提取信息 */
 function extractFromVoice(desc: string): PerceivedData {
   const hour = new Date().getHours()
   let timeOfDay: EnvironmentContext['timeOfDay'] = 'afternoon'
@@ -540,31 +615,20 @@ function extractFromVoice(desc: string): PerceivedData {
     sceneType: guessActionType(desc),
     urgency,
     timeOfDay,
-    nearbyPeople: 0, // 由摄像头推断
+    nearbyPeople: 0,
     subjectCount,
     subjectBehavior,
     subjectConsciousness,
-    isIsolated: false, // 由摄像头推断
-    hasCCTV: false, // 由摄像头推断
+    isIsolated: false,
+    hasCCTV: false,
   }
 }
 
-/** 从摄像头感知推断环境（模拟） */
 function inferFromCamera(): Partial<PerceivedData> {
-  // 模拟周围人数推断（随机但偏向合理值）
   const nearbyPeople = Math.random() > 0.5 ? 5 : Math.random() > 0.5 ? 2 : 0
-
-  // 模拟是否有监控（城市环境大概率有）
   const hasCCTV = Math.random() > 0.3
-
-  // 模拟是否偏僻
   const isIsolated = nearbyPeople <= 2 && Math.random() > 0.5
-
-  return {
-    nearbyPeople,
-    isIsolated,
-    hasCCTV,
-  }
+  return { nearbyPeople, isIsolated, hasCCTV }
 }
 
 function guessActionType(desc: string): string {
