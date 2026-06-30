@@ -33,6 +33,7 @@ export default defineAppConfig({
     'pages/witness-network/index',
     'pages/evidence-report/index',
     'pages/protection-mode/index',
+    'pages/safety-check/index',
     'pages/admin-review/index',
     'pages/admin-users/index',
     'pages/admin-config/index',

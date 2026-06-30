@@ -16,6 +16,10 @@ import {
   onSessionChange,
   formatDuration,
 } from '@/services/protection-mode';
+import {
+  triggerSOSWithGuard,
+  SOS_CONFIG,
+} from '@/services/sos-guard';
 import styles from './index.module.scss';
 
 // 模拟紧急联系人数据
@@ -131,20 +135,34 @@ export default function ProtectionModePage() {
     resumeSession();
   }, []);
 
-  /** 紧急求助 */
+  /** 紧急求助（带押金防滥用） */
   const handleSOS = useCallback(() => {
     Taro.showModal({
-      title: '紧急求助',
-      content: '将立即通知所有紧急联系人并发送您的位置信息，确认触发？',
-      confirmText: '立即求助',
+      title: '🆘 紧急求助',
+      content: `将立即通知所有紧急联系人并发送您的位置信息。\n\n⚠️ 防滥用机制：将预扣押金 ¥${SOS_CONFIG.DEPOSIT_AMOUNT}，请在${SOS_CONFIG.CONFIRM_WINDOW_HOURS}小时内提交确认证据（照片/视频/报警回执），确认真实后全额退还。`,
+      confirmText: '确认求助',
       confirmColor: '#F44336',
       success: (res) => {
         if (res.confirm) {
-          triggerSOS('善行者手动触发紧急求助');
+          // 使用带押金防滥用的SOS
+          const result = triggerSOSWithGuard(
+            'protection_mode',
+            'current_user',
+            '善行者',
+            session?.currentGps
+              ? {
+                  latitude: session.currentGps.latitude,
+                  longitude: session.currentGps.longitude,
+                  address: session.currentGps.address,
+                }
+              : undefined
+          );
+          // 先触发保护模式的SOS状态
+          triggerSOS(result.message);
         }
       },
     });
-  }, []);
+  }, [session?.currentGps]);
 
   /** 结束保护 */
   const handleClose = useCallback(() => {
@@ -195,6 +213,16 @@ export default function ProtectionModePage() {
       </View>
 
       <Text className={styles.btnHint}>点击即开始全程录像+录音+GPS定位</Text>
+
+      {/* 定时安全确认入口 */}
+      <View className={styles.safetyCheckEntry} onClick={() => Taro.navigateTo({ url: '/pages/safety-check/index' })}>
+        <Text className={styles.safetyCheckIcon}>⏱️</Text>
+        <View className={styles.safetyCheckText}>
+          <Text className={styles.safetyCheckTitle}>定时安全确认</Text>
+          <Text className={styles.safetyCheckDesc}>设置预计完成时间，超时自动SOS</Text>
+        </View>
+        <Text className={styles.safetyCheckArrow}>→</Text>
+      </View>
     </View>
   );
 
