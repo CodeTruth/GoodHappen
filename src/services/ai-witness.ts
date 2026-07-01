@@ -1,5 +1,5 @@
 import { WitnessRecord, isDelayedPost } from './evidence';
-import { deepseekChat } from './ai';
+import { deepseekChat, analyzeImage, type ImageAnalysisResult } from './ai';
 
 // ===== 类型定义 =====
 
@@ -162,14 +162,17 @@ const fallbackTextMatch = (
 };
 
 /**
- * AI 多媒体分析（模拟）
- * 由于实际环境中无法直接处理音频/视频/图片文件，
- * 我们通过分析媒体内容的文字描述来模拟多模态匹配
+ * AI 多媒体分析（火山方舟多模态 / DeepSeek 兼容）
+ *
+ * 支持两种模式：
+ * 1. 传入图片URL/base64 → 调用 analyzeImage 进行真正的多模态图片分析（火山方舟/DeepSeek vision模型）
+ * 2. 仅传入文本描述 → 调用 deepseekChat 基于文本描述进行AI分析推理
  */
 export const aiAnalyzeMediaMatch = async (
-  _primaryContent: string,
-  _witnessDescription: string,
-  witnessMediaTypes: string[]
+  primaryContent: string,
+  witnessDescription: string,
+  witnessMediaTypes: string[],
+  imageUrl?: string
 ): Promise<{
   audioAnalysis: AIAudioAnalysis | undefined;
   imageAnalysis: AIImageAnalysis | undefined;
@@ -185,31 +188,149 @@ export const aiAnalyzeMediaMatch = async (
     videoAnalysis: undefined,
   };
 
+  // ===== 图片分析：优先使用真正的多模态API =====
+  if (witnessMediaTypes.includes('image') && imageUrl) {
+    try {
+      const imgResult: ImageAnalysisResult = await analyzeImage(
+        imageUrl,
+        `请分析这张图片，判断是否与以下事件描述相符：\n事件描述：${primaryContent}\n见证人描述：${witnessDescription}`
+      );
+      result.imageAnalysis = {
+        score: imgResult.confidence,
+        objectOverlap: imgResult.objects,
+        sceneMatch: imgResult.scene,
+        reasoning: imgResult.description,
+      };
+    } catch (_e) {
+      // 多模态分析失败时回退到文本推理
+      console.warn('[AI Witness] 多模态图片分析失败，回退到文本推理');
+    }
+  }
+
+  // ===== 音频分析：基于文本描述调用AI推理 =====
   if (witnessMediaTypes.includes('audio')) {
-    result.audioAnalysis = {
-      score: 0.82,
-      transcriptSimilarity: 0.78,
-      keyPhrases: ['帮助', '老人', '过马路'],
-      reasoning: '音频转写文本与主事件描述在核心要素上高度吻合，背景环境音（街道、车辆）与事发场景一致',
-    };
+    try {
+      const prompt = `请分析以下音频相关见证是否与主事件匹配：
+
+【主事件】
+${primaryContent}
+
+【见证人音频描述】
+${witnessDescription}
+
+请判断音频证据的可信度，从以下维度分析：
+1. 音频转写内容是否与主事件核心要素一致
+2. 背景环境音是否与事发场景匹配
+3. 给出0-1的置信度评分和详细理由
+
+请严格按JSON格式返回：
+{
+  "score": 0.82,
+  "transcriptSimilarity": 0.78,
+  "keyPhrases": ["关键词1", "关键词2"],
+  "reasoning": "分析理由"
+}`;
+      const response = await deepseekChat([
+        { role: 'system', content: '你是一位专业的音频证据分析专家。' },
+        { role: 'user', content: prompt },
+      ]);
+      const jsonMatch = response.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const parsed = JSON.parse(jsonMatch[0]);
+        result.audioAnalysis = {
+          score: typeof parsed.score === 'number' ? parsed.score : 0.7,
+          transcriptSimilarity: typeof parsed.transcriptSimilarity === 'number' ? parsed.transcriptSimilarity : 0.65,
+          keyPhrases: Array.isArray(parsed.keyPhrases) ? parsed.keyPhrases : ['帮助', '现场'],
+          reasoning: parsed.reasoning || '基于文本描述的音频证据推理分析',
+        };
+      }
+    } catch (_e) {
+      // 保持undefined，让调用方处理
+    }
   }
 
-  if (witnessMediaTypes.includes('image')) {
-    result.imageAnalysis = {
-      score: 0.91,
-      objectOverlap: ['人物动作', '地点特征', '时间光照'],
-      sceneMatch: '室外街道场景，光线角度与事发时间一致',
-      reasoning: '照片中的地标建筑、光照角度与事件描述中的时间和地点高度吻合',
-    };
+  // ===== 图片分析（无图片URL时）：基于文本描述调用AI推理 =====
+  if (witnessMediaTypes.includes('image') && !result.imageAnalysis) {
+    try {
+      const prompt = `请分析以下照片相关见证是否与主事件匹配：
+
+【主事件】
+${primaryContent}
+
+【见证人照片描述】
+${witnessDescription}
+
+请判断照片证据的可信度，从以下维度分析：
+1. 照片中的场景、人物、动作是否与主事件一致
+2. 光线、地标、环境特征是否与事发时间和地点吻合
+3. 给出0-1的置信度评分和详细理由
+
+请严格按JSON格式返回：
+{
+  "score": 0.85,
+  "objectOverlap": ["人物动作", "地点特征"],
+  "sceneMatch": "场景匹配描述",
+  "reasoning": "分析理由"
+}`;
+      const response = await deepseekChat([
+        { role: 'system', content: '你是一位专业的图像证据分析专家。' },
+        { role: 'user', content: prompt },
+      ]);
+      const jsonMatch = response.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const parsed = JSON.parse(jsonMatch[0]);
+        result.imageAnalysis = {
+          score: typeof parsed.score === 'number' ? parsed.score : 0.7,
+          objectOverlap: Array.isArray(parsed.objectOverlap) ? parsed.objectOverlap : ['人物', '场景'],
+          sceneMatch: parsed.sceneMatch || '场景描述匹配',
+          reasoning: parsed.reasoning || '基于文本描述的图像证据推理分析',
+        };
+      }
+    } catch (_e) {
+      // 保持undefined
+    }
   }
 
+  // ===== 视频分析：基于文本描述调用AI推理 =====
   if (witnessMediaTypes.includes('video')) {
-    result.videoAnalysis = {
-      score: 0.95,
-      keyframeMatch: 0.89,
-      activityMatch: '连续动作记录与善行描述完全吻合',
-      reasoning: '视频关键帧提取显示与事件描述相同时段、相同地点的连续动作记录',
-    };
+    try {
+      const prompt = `请分析以下视频相关见证是否与主事件匹配：
+
+【主事件】
+${primaryContent}
+
+【见证人视频描述】
+${witnessDescription}
+
+请判断视频证据的可信度，从以下维度分析：
+1. 视频中的连续动作是否与主事件描述一致
+2. 关键帧内容是否与事发时间和地点吻合
+3. 给出0-1的置信度评分和详细理由
+
+请严格按JSON格式返回：
+{
+  "score": 0.90,
+  "keyframeMatch": 0.85,
+  "activityMatch": "动作匹配描述",
+  "reasoning": "分析理由"
+}`;
+      const response = await deepseekChat([
+        { role: 'system', content: '你是一位专业的视频证据分析专家。' },
+        { role: 'user', content: prompt },
+      ]);
+      const jsonMatch = response.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const parsed = JSON.parse(jsonMatch[0]);
+        result.videoAnalysis = {
+          score: typeof parsed.score === 'number' ? parsed.score : 0.75,
+          keyframeMatch: typeof parsed.keyframeMatch === 'number' ? parsed.keyframeMatch : 0.7,
+          activityMatch: parsed.activityMatch || '连续动作记录与事件描述基本吻合',
+          reasoning: parsed.reasoning || '基于文本描述的视频证据推理分析',
+        };
+      }
+    } catch (_e) {
+      // 保持undefined
+    }
   }
 
   return result;
@@ -239,8 +360,9 @@ export const aiWitnessMatching = async (
         mediaTypes.push('audio');
       }
 
-      // 3. AI 多媒体分析
-      const mediaResult = await aiAnalyzeMediaMatch(primaryContent, witness.description, mediaTypes);
+      // 3. AI 多媒体分析（有图片URL时调用多模态API，否则用AI文本推理）
+      const imageUrl = (witness as unknown as { imageUrl?: string }).imageUrl;
+      const mediaResult = await aiAnalyzeMediaMatch(primaryContent, witness.description, mediaTypes, imageUrl);
 
       // 4. 综合置信度计算
       let totalScore = textAnalysis.score;

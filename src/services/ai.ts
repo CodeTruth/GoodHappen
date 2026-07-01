@@ -29,9 +29,17 @@ if (!API_KEY) {
 console.log(`[AI] 使用${useArk ? '火山方舟' : 'DeepSeek'}后端，模型：${MODEL}`);
 const TIMEOUT = 10000;
 
+/** 单条内容片段（文本或图片） */
+interface ChatContentPart {
+  type: 'text' | 'image_url';
+  text?: string;
+  image_url?: { url: string };
+}
+
 interface ChatMessage {
   role: 'user' | 'assistant' | 'system';
-  content: string;
+  /** 纯文本或多模态内容数组 */
+  content: string | ChatContentPart[];
 }
 
 interface ChatResponse {
@@ -579,4 +587,80 @@ export const getRandomPersona = (): Persona => {
 export const getRandomPersonaByCategory = (category: 'historical' | 'brand'): Persona => {
   const filtered = PERSONAS.filter(p => p.category === category);
   return filtered[Math.floor(Math.random() * filtered.length)];
+};
+
+// ===== 多模态图片分析（火山方舟 / DeepSeek 兼容） =====
+
+/** 多模态分析结果 */
+export interface ImageAnalysisResult {
+  description: string;   // 图片内容描述
+  objects: string[];     // 识别到的物体/人物
+  scene: string;         // 场景类型
+  confidence: number;    // 置信度 0-1
+}
+
+/**
+ * 多模态图片分析
+ * 传入图片 base64 或 URL，调用火山方舟/DeepSeek 多模态模型分析图片内容
+ *
+ * @param imageBase64OrUrl 图片 base64 字符串（含 data:image/jpeg;base64, 前缀）或图片 URL
+ * @param prompt 分析指令，如"描述这张图片中的场景和人物动作"
+ */
+export const analyzeImage = async (
+  imageBase64OrUrl: string,
+  prompt: string = '请详细描述这张图片中的场景、人物、动作和环境信息。'
+): Promise<ImageAnalysisResult> => {
+  const messages: ChatMessage[] = [
+    {
+      role: 'user',
+      content: [
+        { type: 'text', text: prompt },
+        { type: 'image_url', image_url: { url: imageBase64OrUrl } },
+      ],
+    },
+  ];
+
+  try {
+    const response = await deepseekChat([
+      {
+        role: 'system',
+        content: `你是一位专业的图像分析专家。请分析用户提供的图片，并严格按照以下 JSON 格式返回结果（不要输出任何其他文字）：
+{
+  "description": "图片整体内容描述，50-100字",
+  "objects": ["物体1", "物体2", "人物特征"],
+  "scene": "场景类型，如：街道、商场、公园、室内等",
+  "confidence": 0.95
+}`,
+      },
+      ...messages,
+    ]);
+
+    // 尝试从AI回复中解析JSON
+    const jsonMatch = response.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      const parsed = JSON.parse(jsonMatch[0]);
+      return {
+        description: parsed.description || '图片分析完成',
+        objects: Array.isArray(parsed.objects) ? parsed.objects : [],
+        scene: parsed.scene || '未知场景',
+        confidence: typeof parsed.confidence === 'number' ? parsed.confidence : 0.8,
+      };
+    }
+
+    // 回退：如果AI没有返回JSON格式，把文本作为description
+    return {
+      description: response.slice(0, 200),
+      objects: [],
+      scene: '未知场景',
+      confidence: 0.6,
+    };
+  } catch (error) {
+    console.error('[AI] 图片分析失败:', error);
+    return {
+      description: '图片分析服务暂时不可用',
+      objects: [],
+      scene: '未知场景',
+      confidence: 0,
+    };
+  }
 };
