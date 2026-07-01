@@ -16,8 +16,10 @@ import {
   formatDuration,
 } from '@/services/protection-mode';
 import {
-  triggerSOSWithGuard,
   SOS_CONFIG,
+  triggerSOSWithGuard,
+  type SOSSceneContext,
+  type SOSProtectionEvidence,
 } from '@/services/sos-guard';
 import styles from './index.module.scss';
 
@@ -47,12 +49,26 @@ export default function ProtectionModePage() {
   // 来源信息：从AI顾问等页面跳转过来时携带的上下文
   const [sourceFrom, setSourceFrom] = useState('');
   const [sourceScene, setSourceScene] = useState('');
+  const [advisorLevel, setAdvisorLevel] = useState('');
+  const [advisorDangerScore, setAdvisorDangerScore] = useState(0);
+  const [advisorActions, setAdvisorActions] = useState<string[]>([]);
 
   // 读取跳转来源
   useEffect(() => {
     const params = Taro.getCurrentInstance().router?.params;
     if (params?.from) setSourceFrom(params.from);
     if (params?.scene) setSourceScene(decodeURIComponent(params.scene));
+    // 读取AI顾问评估结果
+    if (params?.adv) {
+      try {
+        const adv = JSON.parse(decodeURIComponent(params.adv));
+        if (adv.al) setAdvisorLevel(adv.al);
+        if (adv.ds) setAdvisorDangerScore(adv.ds);
+        if (adv.at) setAdvisorActions(adv.at.split('|'));
+      } catch (_e) {
+        // 忽略解析错误
+      }
+    }
   }, []);
 
   // 监听会话变化
@@ -145,7 +161,7 @@ export default function ProtectionModePage() {
     resumeSession();
   }, []);
 
-  /** 紧急求助（带押金防滥用） */
+  /** 紧急求助（带押金防滥用 + 自动携带保护证据） */
   const handleSOS = useCallback(() => {
     Taro.showModal({
       title: '🆘 紧急求助',
@@ -154,6 +170,31 @@ export default function ProtectionModePage() {
       confirmColor: '#F44336',
       success: (res) => {
         if (res.confirm) {
+          // 从保护模式session中提取证据摘要
+          const protectionEvidence: SOSProtectionEvidence | undefined = session ? {
+            sessionId: session.id,
+            duration: session.duration,
+            videoDuration: session.evidenceCollected.videoDuration,
+            audioDuration: session.evidenceCollected.audioDuration,
+            gpsPoints: session.evidenceCollected.gpsPoints,
+            photos: session.evidenceCollected.photos,
+            lastKnownLocation: session.currentGps,
+            isRecording: session.isRecording,
+            isAudioRecording: session.isAudioRecording,
+            emergencyContactCount: session.emergencyContacts.length,
+          } : undefined;
+
+          // 从URL来源构建场景上下文（AI顾问评估结果 + 场景描述）
+          const sceneContext: SOSSceneContext | undefined = sourceScene ? {
+            adviceLevel: advisorLevel || undefined,
+            dangerScore: advisorDangerScore || undefined,
+            sceneDescription: sourceScene,
+            subjectCount: 1,
+            actionType: sourceScene.includes('老人') ? 'elder_help' : sourceScene.includes('车') ? 'traffic' : 'general',
+            recommendedActions: advisorActions.length > 0 ? advisorActions : undefined,
+            assessedAt: new Date(session?.startedAt || Date.now()).toISOString(),
+          } : undefined;
+
           // 使用带押金防滥用的SOS
           const result = triggerSOSWithGuard(
             'protection_mode',
@@ -165,14 +206,18 @@ export default function ProtectionModePage() {
                   longitude: session.currentGps.longitude,
                   address: session.currentGps.address,
                 }
-              : undefined
+              : undefined,
+            MOCK_CONTACTS.map(c => ({ id: c.id, name: c.name })),
+            [],
+            sceneContext,
+            protectionEvidence
           );
           // 先触发保护模式的SOS状态
           triggerSOS(result.message);
         }
       },
     });
-  }, [session?.currentGps]);
+  }, [session, sourceScene, advisorLevel, advisorDangerScore, advisorActions]);
 
   /** 跳转记录善行（带上保护模式的证据信息） */
   const handleGoRecord = useCallback(() => {

@@ -56,6 +56,9 @@ export interface SOSEvent {
   // 分级通知（P4增强）
   notifications: SOSNotification[];
   totalNotifyCost: number;      // 通知总费用
+  // 行善顾问 + 保护模式上下文
+  sceneContext?: SOSSceneContext;
+  protectionEvidence?: SOSProtectionEvidence;
 }
 
 /** SOS确认证据 */
@@ -67,6 +70,58 @@ export interface SOSConfirmEvidence {
   hasHospitalRecord: boolean;
   description: string;
   uploadedAt: string;
+}
+
+/** AI善行顾问评估的上下文（SOS触发时自动携带） */
+export interface SOSSceneContext {
+  /** AI顾问评估等级 */
+  adviceLevel?: string;
+  /** AI顾问评估的危险系数 */
+  dangerScore?: number;
+  /** 场景描述（用户语音/摄像头感知的内容） */
+  sceneDescription?: string;
+  /** 受助人描述 */
+  subjectDescription?: string;
+  /** 受助人数量 */
+  subjectCount?: number;
+  /** 受助人状态 */
+  subjectStatus?: string;
+  /** 行善类型 */
+  actionType?: string;
+  /** 建议采取的措施 */
+  recommendedActions?: string[];
+  /** 评估时间 */
+  assessedAt?: string;
+}
+
+/** 保护模式收集到的证据摘要（SOS触发时自动携带） */
+export interface SOSProtectionEvidence {
+  /** 保护模式会话ID */
+  sessionId?: string;
+  /** 保护时长（秒） */
+  duration?: number;
+  /** 录像时长（秒） */
+  videoDuration?: number;
+  /** 录音时长（秒） */
+  audioDuration?: number;
+  /** GPS轨迹点数 */
+  gpsPoints?: number;
+  /** 拍照数 */
+  photos?: number;
+  /** 最后已知位置 */
+  lastKnownLocation?: {
+    latitude: number;
+    longitude: number;
+    address: string;
+    accuracy: number;
+    updatedAt: string;
+  };
+  /** 是否正在录像 */
+  isRecording?: boolean;
+  /** 是否正在录音 */
+  isAudioRecording?: boolean;
+  /** 紧急联系人数量 */
+  emergencyContactCount?: number;
 }
 
 /** 定时安全确认任务 */
@@ -178,7 +233,7 @@ const executeTieredNotifications = (
 };
 
 /**
- * 触发SOS（带押金预扣 + 分级通知）
+ * 触发SOS（带押金预扣 + 分级通知 + 场景上下文）
  */
 export const triggerSOSWithGuard = (
   source: SOSSource,
@@ -186,7 +241,9 @@ export const triggerSOSWithGuard = (
   userName: string,
   location?: { latitude: number; longitude: number; address: string; },
   emergencyContacts: { id: string; name: string }[] = [],
-  nearbyUsers: { id: string; name: string }[] = []
+  nearbyUsers: { id: string; name: string }[] = [],
+  sceneContext?: SOSSceneContext,
+  protectionEvidence?: SOSProtectionEvidence
 ): { event: SOSEvent; message: string } => {
   const now = new Date();
   const confirmDeadline = new Date(now.getTime() + SOS_CONFIG.CONFIRM_WINDOW_HOURS * 60 * 60 * 1000);
@@ -211,6 +268,9 @@ export const triggerSOSWithGuard = (
     confirmDeadline: confirmDeadline.toISOString(),
     notifications,
     totalNotifyCost: totalCost,
+    // 自动携带行善顾问评估和保护模式证据
+    sceneContext,
+    protectionEvidence,
   };
 
   _sosEvents = [event, ..._sosEvents];
@@ -233,9 +293,14 @@ export const triggerSOSWithGuard = (
     event,
     message: [
       `🆘 SOS已触发（${sourceLabels[source]}）`,
-      ``,
+      '',
       summary,
-      ``,
+      '',
+      // 附带场景上下文摘要
+      sceneContext?.sceneDescription ? `📍 现场情况：${sceneContext.sceneDescription}` : '',
+      sceneContext?.subjectDescription ? `👤 受助人：${sceneContext.subjectDescription}` : '',
+      protectionEvidence ? `🛡️ 保护模式已运行${Math.floor((protectionEvidence.duration || 0) / 60)}分${(protectionEvidence.duration || 0) % 60}秒（录像${Math.floor((protectionEvidence.videoDuration || 0) / 60)}分${(protectionEvidence.videoDuration || 0) % 60}秒 · 录音${Math.floor((protectionEvidence.audioDuration || 0) / 60)}分${(protectionEvidence.audioDuration || 0) % 60}秒 · GPS${protectionEvidence.gpsPoints || 0}个点 · 照片${protectionEvidence.photos || 0}张）` : '',
+      '',
       `押金 ¥${SOS_CONFIG.DEPOSIT_AMOUNT} 已预扣，请在${SOS_CONFIG.CONFIRM_WINDOW_HOURS}小时内提交确认。`,
       totalCost > 0 ? `通知费用 ¥${totalCost} 将从押金中扣除。` : '',
     ].filter(Boolean).join('\n'),

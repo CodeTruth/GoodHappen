@@ -174,12 +174,19 @@ export default function AIAdvisorPage() {
   // ===== 底部按钮操作 =====
   const handleLevelAction = useCallback((level: string, scene: string) => {
     const encodedScene = encodeURIComponent(scene)
+    const resultData = result
+    const encodedResult = resultData ? encodeURIComponent(JSON.stringify({
+      al: resultData.adviceLevel,
+      ds: resultData.dangerScore,
+      at: resultData.actions.map(a => a.action).join('|'),
+    })) : ''
+
     switch (level) {
       case 'A':
         Taro.navigateTo({ url: `/pages/record/index?from=advisor&level=A&scene=${encodedScene}` })
         break
       case 'B':
-        Taro.navigateTo({ url: `/pages/protection-mode/index?from=advisor&level=B&scene=${encodedScene}` })
+        Taro.navigateTo({ url: `/pages/protection-mode/index?from=advisor&level=B&scene=${encodedScene}&adv=${encodedResult}` })
         break
       case 'C':
         Taro.navigateTo({ url: `/pages/witness-network/index?from=advisor&level=C` })
@@ -197,7 +204,7 @@ export default function AIAdvisorPage() {
         }, 800)
         break
     }
-  }, [])
+  }, [result])
 
   // ===== 危险系数颜色 =====
   const getDangerGradient = (score: number): string => {
