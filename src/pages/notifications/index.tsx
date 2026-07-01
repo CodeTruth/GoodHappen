@@ -100,7 +100,7 @@ const NotificationsPage: React.FC = () => {
       Taro.navigateTo({ url: `/pages/ai-chat/index?characterId=${item.relatedId}` });
     } else if (item.type === 'level_up') {
       // 等级升级通知跳转到我的页查看等级
-      Taro.switchTab({ url: '/pages/my/index' });
+      Taro.switchTab({ url: '/pages/mine/index' });
     }
   };
 

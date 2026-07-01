@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
-import { View, Text, ScrollView } from '@tarojs/components'
+import { View, Text, ScrollView, Textarea } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import {
   consultAIAdvisor,
@@ -46,6 +46,9 @@ export default function AIAdvisorPage() {
   const [voiceText, setVoiceText] = useState('')
   const [isListening, setIsListening] = useState(false)
   const [cameraReady, setCameraReady] = useState(false)
+  // 用户主动输入的补充描述（用于无法实时采集的场景，如"明天见网友"）
+  const [userInput, setUserInput] = useState('')
+  const [showTextInput, setShowTextInput] = useState(false)
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -56,7 +59,7 @@ export default function AIAdvisorPage() {
     if (timeoutRef.current) { clearTimeout(timeoutRef.current); timeoutRef.current = null }
   }, [])
 
-  // ===== 开始引导流程 =====
+  // ===== 开始引导流程（实时感知模式） =====
   const handleStart = useCallback(() => {
     clearAllTimers()
     setStep('guiding_camera')
@@ -160,6 +163,18 @@ export default function AIAdvisorPage() {
     }, 1800)
   }, [])
 
+  // ===== 用户描述场景模式（用于无法实时采集的场景） =====
+  const handleTextInputStart = useCallback(() => {
+    if (!userInput.trim()) {
+      Taro.showToast({ title: '请描述您计划中的善行场景', icon: 'none' })
+      return
+    }
+    setVoiceText(userInput.trim())
+    setStep('analyzing')
+    setGuideText('AI正在综合评估...')
+    handleAutoAnalyze(userInput.trim())
+  }, [userInput, handleAutoAnalyze])
+
   // ===== 重新评估 =====
   const handleReset = useCallback(() => {
     clearAllTimers()
@@ -169,6 +184,7 @@ export default function AIAdvisorPage() {
     setCountdown(3)
     setCameraReady(false)
     setIsListening(false)
+    setUserInput('')
   }, [clearAllTimers])
 
   // ===== 底部按钮操作 =====
@@ -252,6 +268,29 @@ export default function AIAdvisorPage() {
               <Text className={styles.startBtnIcon}>🔮</Text>
               <Text className={styles.startBtnText}>开始AI评估</Text>
             </View>
+
+            {/* 文字描述入口：用于无法实时采集的场景 */}
+            <View className={styles.textInputToggle} onClick={() => setShowTextInput(!showTextInput)}>
+              <Text className={styles.textInputToggleText}>
+                {showTextInput ? '收起' : '计划中的善行？直接描述场景'}
+              </Text>
+            </View>
+            {showTextInput && (
+              <View className={styles.textInputCard}>
+                <Textarea
+                  className={styles.textInputArea}
+                  placeholder='描述您计划中的善行场景，例如：明天要去见网友，对方是异性，约在商场见面，想评估一下风险'
+                  placeholderClass={styles.textInputPlaceholder}
+                  value={userInput}
+                  onInput={(e) => setUserInput(e.detail.value)}
+                  maxlength={300}
+                  autoHeight
+                />
+                <View className={styles.textInputBtn} onClick={handleTextInputStart}>
+                  <Text className={styles.textInputBtnText}>描述场景并评估</Text>
+                </View>
+              </View>
+            )}
           </View>
         </View>
       )}

@@ -5,7 +5,7 @@ import classnames from 'classnames';
 import { useFortuneStore } from '@/store/fortune';
 import { useShopStore } from '@/store/shop';
 import { getProducts, Product, ProductCategory, categoryLabels, categoryDescriptions } from '@/data/products';
-import { TITLES } from '@/utils/fortune';
+import { FORTUNE_LEVELS } from '@/data/fortune-levels';
 import styles from './index.module.scss';
 
 const ShopPage: React.FC = () => {
@@ -71,7 +71,7 @@ const ShopPage: React.FC = () => {
   const checkRedeemable = (product: Product): { canRedeem: boolean; reason?: string } => {
     // 称号等级不足
     if (currentTitle.level < product.requiredTitleLevel) {
-      const requiredTitle = TITLES.find(t => t.level === product.requiredTitleLevel);
+      const requiredTitle = FORTUNE_LEVELS.find(t => t.level === product.requiredTitleLevel);
       return { canRedeem: false, reason: `需${requiredTitle?.name || '更高'}称号` };
     }
     // 里程碑天数不足

@@ -44,6 +44,7 @@ const DetailPage: React.FC = () => {
   const {
     sosRecords,
     getWitnessMatchBySos,
+    triggerSOS: storeTriggerSOS,
   } = useProtectionStore();
 
   useEffect(() => {
@@ -179,23 +180,28 @@ const DetailPage: React.FC = () => {
       success: (res) => {
         if (res.confirm) {
           setSosLoading(true);
-          // 模拟触发 SOS
           setTimeout(() => {
             try {
-              // 调用 store 的方法（实际场景会走 triggerSOS）
-              // 模拟：直接设置 SOS 活跃状态并触发扫描
-              setSosActive(true);
-              setWitnessStatus({
-                matchCount: 3,
-                evidenceChainFormed: true,
-              });
-              setSosLoading(false);
-              Taro.showToast({ title: '已锁定证据，匹配到3条见证', icon: 'success' });
+              storeTriggerSOS(kindness.id, '用户手动发起善行保护求助')
+                .then((res) => {
+                  if (res.success) {
+                    setSosActive(true);
+                    setSosLoading(false);
+                    Taro.showToast({ title: '已锁定证据，正在扫描见证网络', icon: 'none' });
+                  } else {
+                    setSosLoading(false);
+                    Taro.showToast({ title: res.message || '发起失败', icon: 'none' });
+                  }
+                })
+                .catch(() => {
+                  setSosLoading(false);
+                  Taro.showToast({ title: '发起失败', icon: 'none' });
+                });
             } catch (e) {
               setSosLoading(false);
               Taro.showToast({ title: '发起失败', icon: 'none' });
             }
-          }, 1500);
+          }, 800);
         }
       },
     });

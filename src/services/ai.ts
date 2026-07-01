@@ -1,15 +1,32 @@
 import Taro from '@tarojs/taro';
 
 // API Key 从环境变量注入，严禁硬编码在源码中
-// Taro 编译时通过 defineConstants 注入 DEEPSEEK_API_KEY
+// Taro 编译时通过 defineConstants 注入
+// 支持两种后端：
+//   1. DeepSeek（默认）：DEEPSEEK_API_KEY
+//   2. 火山方舟（豆包大模型）：ARK_API_KEY + ARK_BASE_URL + ARK_MODEL
 // eslint-disable-next-line no-undef
 declare const DEEPSEEK_API_KEY: string;
-const API_KEY = (typeof DEEPSEEK_API_KEY !== 'undefined' && DEEPSEEK_API_KEY) ? DEEPSEEK_API_KEY : '';
+declare const ARK_API_KEY: string;
+declare const ARK_BASE_URL: string;
+declare const ARK_MODEL: string;
+
+const DEEPSEEK_KEY = (typeof DEEPSEEK_API_KEY !== 'undefined' && DEEPSEEK_API_KEY) ? DEEPSEEK_API_KEY : '';
+const ARK_KEY = (typeof ARK_API_KEY !== 'undefined' && ARK_API_KEY) ? ARK_API_KEY : '';
+const ARK_URL = (typeof ARK_BASE_URL !== 'undefined' && ARK_BASE_URL) || '';
+const ARK_MDL = (typeof ARK_MODEL !== 'undefined' && ARK_MODEL) || '';
+
+// 优先使用火山方舟（如果配置了ARK_API_KEY），否则回退到DeepSeek
+const useArk = Boolean(ARK_KEY && ARK_URL && ARK_MDL);
+
+const API_KEY = useArk ? ARK_KEY : DEEPSEEK_KEY;
+const API_BASE_URL = useArk ? ARK_URL : 'https://api.deepseek.com';
+const MODEL = useArk ? ARK_MDL : 'deepseek-chat';
+
 if (!API_KEY) {
-  console.warn('[AI] DEEPSEEK_API_KEY 未配置，AI功能将不可用。请在 .env 中配置或在 Taro defineConstants 中注入。');
+  console.warn(`[AI] ${useArk ? 'ARK_API_KEY' : 'DEEPSEEK_API_KEY'} 未配置，AI功能将不可用。`);
 }
-const API_BASE_URL = 'https://api.deepseek.com';
-const MODEL = 'deepseek-chat';
+console.log(`[AI] 使用${useArk ? '火山方舟' : 'DeepSeek'}后端，模型：${MODEL}`);
 const TIMEOUT = 10000;
 
 interface ChatMessage {

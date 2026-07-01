@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import Taro from '@tarojs/taro';
-import { getTitleByFortune, Title } from '@/utils/fortune';
+import { getLevelByFortune } from '@/utils/fortune';
+import type { FortuneLevel } from '@/data/fortune-levels';
 
 const STORAGE_KEY = 'haoshi_fortune_store';
 
@@ -34,10 +35,10 @@ interface FortuneState {
   transactions: FortuneTransaction[];
   dailyStats: DailyStats;
   streak: StreakInfo;
-  highestTitle: Title;
-  currentTitle: Title;
+  highestTitle: FortuneLevel;
+  currentTitle: FortuneLevel;
 
-  addFortune: (amount: number, description: string, relatedId?: string) => void;
+  addFortune: (amount: number, description: string, relatedId?: string, circleId?: string) => void;
   spendFortune: (amount: number, description: string, relatedId?: string) => boolean;
   transferFortune: (amount: number, toUserId: string, description: string) => boolean;
   recordKindness: () => void;
@@ -88,8 +89,8 @@ const initialState = {
 
 export const useFortuneStore = create<FortuneState>((set, get) => ({
   ...initialState,
-  highestTitle: getTitleByFortune(0),
-  currentTitle: getTitleByFortune(0),
+  highestTitle: getLevelByFortune(0),
+  currentTitle: getLevelByFortune(0),
 
   loadFromStorage: () => {
     try {
@@ -116,8 +117,8 @@ export const useFortuneStore = create<FortuneState>((set, get) => ({
           frozenFortune: parsed.frozenFortune || 0,
           dailyStats,
           streak: newStreak,
-          highestTitle: getTitleByFortune(parsed.highestFortune || 0),
-          currentTitle: getTitleByFortune(parsed.totalFortune || 0),
+          highestTitle: getLevelByFortune(parsed.highestFortune || 0),
+          currentTitle: getLevelByFortune(parsed.totalFortune || 0),
         });
       }
     } catch (e) {
@@ -165,7 +166,7 @@ export const useFortuneStore = create<FortuneState>((set, get) => ({
     return Math.max(0, 60 - dailyStats.fortune);
   },
 
-  addFortune: (amount, description, relatedId) => {
+  addFortune: (amount, description, relatedId, circleId) => {
     const state = get();
     const today = getToday();
     let dailyStats = state.dailyStats;
@@ -177,8 +178,13 @@ export const useFortuneStore = create<FortuneState>((set, get) => ({
       return;
     }
 
-    const actualAmount = Math.min(amount, 60 - dailyStats.fortune, 30);
+    // 圈子贡献加成：如果关联了善行圈，福气值 x1.2
+    const bonusMultiplier = circleId ? 1.2 : 1.0;
+    const rawAmount = Math.floor(amount * bonusMultiplier);
+    const actualAmount = Math.min(rawAmount, 60 - dailyStats.fortune, 30);
     if (actualAmount <= 0) return;
+
+    const desc = circleId ? `${description}（圈子加成x1.2）` : description;
 
     const newTotal = state.totalFortune + actualAmount;
     const newAvailable = state.availableFortune + actualAmount;
@@ -188,7 +194,7 @@ export const useFortuneStore = create<FortuneState>((set, get) => ({
       id: `tx_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
       type: 'earn',
       amount: actualAmount,
-      description,
+      description: desc,
       relatedId,
       balanceAfter: newAvailable,
       createdAt: new Date().toISOString(),
@@ -204,8 +210,8 @@ export const useFortuneStore = create<FortuneState>((set, get) => ({
         count: dailyStats.count + 1,
         fortune: dailyStats.fortune + actualAmount,
       },
-      highestTitle: getTitleByFortune(newHighest),
-      currentTitle: getTitleByFortune(newTotal),
+      highestTitle: getLevelByFortune(newHighest),
+      currentTitle: getLevelByFortune(newTotal),
     });
 
     get().saveToStorage();
@@ -384,8 +390,8 @@ export const useFortuneStore = create<FortuneState>((set, get) => ({
       highestFortune: newHighest,
       availableFortune: newAvailable,
       transactions: [...state.transactions, transaction],
-      highestTitle: getTitleByFortune(newHighest),
-      currentTitle: getTitleByFortune(newTotal),
+      highestTitle: getLevelByFortune(newHighest),
+      currentTitle: getLevelByFortune(newTotal),
     });
     get().saveToStorage();
   },

@@ -24,6 +24,9 @@ export default defineConfig<'webpack5'>(async (merge, { command, mode }) => {
     plugins: ['@tarojs/plugin-html'],
     defineConstants: {
       DEEPSEEK_API_KEY: JSON.stringify(process.env.DEEPSEEK_API_KEY || ''),
+      ARK_API_KEY: JSON.stringify(process.env.ARK_API_KEY || ''),
+      ARK_BASE_URL: JSON.stringify(process.env.ARK_BASE_URL || ''),
+      ARK_MODEL: JSON.stringify(process.env.ARK_MODEL || ''),
     },
     copy: {
       patterns: [],

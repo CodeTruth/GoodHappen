@@ -11,7 +11,7 @@
 import { create } from 'zustand';
 import Taro from '@tarojs/taro';
 import { useFortuneStore } from '@/store/fortune';
-import { getTitleByFortune } from '@/utils/fortune';
+import { getLevelByFortune } from '@/utils/fortune';
 import {
   EvidencePackage,
   SOSRecord,
@@ -33,6 +33,7 @@ import {
   getCurrentGPS,
 } from '@/services/evidence';
 import type { AIMediaMatchResult, MediaEvidenceCard } from '@/services/ai-witness';
+import { aiWitnessMatching, getMediaEvidenceCards as buildMediaEvidenceCards } from '@/services/ai-witness';
 
 const STORAGE_KEY = 'haoshi_protection_store';
 
@@ -504,8 +505,6 @@ export const useProtectionStore = create<ProtectionStoreState>((set, get) => ({
 
   /** 扫描见证网络 */
   scanWitnesses: (sosRecordId) => {
-    // TODO: 后续集成 aiEnhancedWitnessMatch 进行 AI 多模态匹配
-    // 当前使用基础文本匹配算法（calculateDescriptionMatch）
     const sosRecord = get().sosRecords.find(s => s.id === sosRecordId);
     if (!sosRecord) {
       return { success: false, matchCount: 0 };
@@ -545,6 +544,20 @@ export const useProtectionStore = create<ProtectionStoreState>((set, get) => ({
     }));
 
     get().saveToStorage();
+
+    // AI 多模态增强匹配：在基础匹配之后异步调用 aiWitnessMatching
+    if (matchedWitnesses.length > 0 && sosRecord.description) {
+      const primaryContent = primaryEvidence.content || sosRecord.description;
+      aiWitnessMatching(primaryContent, matchedWitnesses)
+        .then((aiResults) => {
+          const cards = buildMediaEvidenceCards(matchedWitnesses, aiResults);
+          get().setAIMatchResults(sosRecordId, aiResults, cards);
+        })
+        .catch((e) => {
+          console.warn('[ProtectionStore] AI witness matching failed:', e);
+        });
+    }
+
     return {
       success: true,
       matchCount: matchedWitnesses.length,
@@ -805,32 +818,32 @@ export interface FeeAdvanceRule {
  * - 皓月以上（level≥8）→ 全额垫付
  */
 export const getFeeAdvanceRule = (totalFortune: number): FeeAdvanceRule => {
-  const title = getTitleByFortune(totalFortune);
+  const level = getLevelByFortune(totalFortune);
 
-  if (title.level >= 8) {
-    // 皓月以上 → 全额垫付
+  if (level.level >= 8) {
+    // 大爱无疆以上 → 全额垫付
     return {
-      titleLevel: title.level,
-      titleName: title.name,
+      titleLevel: level.level,
+      titleName: level.name,
       advanceRatio: 1.0,
-      description: '皓月以上善行者，温暖基金全额垫付代理费用',
+      description: `${level.name}以上善行者，温暖基金全额垫付代理费用`,
     };
   }
 
-  if (title.level >= 3) {
-    // 暖阳以上 → 垫付首期
+  if (level.level >= 3) {
+    // 暖阳初升以上 → 垫付首期
     return {
-      titleLevel: title.level,
-      titleName: title.name,
+      titleLevel: level.level,
+      titleName: level.name,
       advanceRatio: 0.5,
-      description: '暖阳以上善行者，温暖基金垫付代理费用首期',
+      description: `${level.name}以上善行者，温暖基金垫付代理费用首期`,
     };
   }
 
   // 暖阳以下 → 暂不垫付，可申请法律援助
   return {
-    titleLevel: title.level,
-    titleName: title.name,
+    titleLevel: level.level,
+    titleName: level.name,
     advanceRatio: 0,
     description: '可申请法律援助中心公益服务，累计善行至暖阳级别可获温暖基金垫付',
   };

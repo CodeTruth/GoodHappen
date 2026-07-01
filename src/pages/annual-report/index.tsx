@@ -3,7 +3,8 @@ import { View, Text, Button } from '@tarojs/components';
 import Taro from '@tarojs/taro';
 import { useFortuneStore } from '@/store/fortune';
 import { mockKindnessList } from '@/data/kindness';
-import { getTitleByFortune, TITLES } from '@/utils/fortune';
+import { getLevelByFortune } from '@/utils/fortune';
+import { FORTUNE_LEVELS } from '@/data/fortune-levels';
 import SharePoster from '@/components/SharePoster';
 import styles from './index.module.scss';
 
@@ -83,9 +84,9 @@ const generateReportData = (totalFortune: number): AnnualReportData => {
   );
 
   // 年度称号（基于福气值）
-  const title = getTitleByFortune(totalFortune);
+  const currentLevel = getLevelByFortune(totalFortune);
   // 找到比当前称号高一级的称号作为目标
-  const nextTitle = TITLES.find(t => t.level === title.level + 1);
+  const nextTitle = FORTUNE_LEVELS.find(l => l.level === currentLevel.level + 1);
 
   return {
     year,
@@ -98,10 +99,10 @@ const generateReportData = (totalFortune: number): AnnualReportData => {
       aiQuote: warmest.aiResponse?.content || '每一次善行，都是温暖世界的火种。',
       date: warmest.createdAt,
     },
-    annualTitle: title.name,
+    annualTitle: currentLevel.name,
     annualTitleDesc: nextTitle
-      ? `${title.description}，距离「${nextTitle.name}」还差 ${nextTitle.minFortune - totalFortune} 福气`
-      : `${title.description}，你已达到最高称号`,
+      ? `${currentLevel.description}，距离「${nextTitle.name}」还差 ${nextTitle.minFortune - totalFortune} 福气`
+      : `${currentLevel.description}，你已达到最高称号`,
   };
 };
 

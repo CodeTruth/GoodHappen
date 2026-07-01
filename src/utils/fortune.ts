@@ -1,4 +1,5 @@
 import { CredibilityLevel } from '@/services/kindness';
+import { FORTUNE_LEVELS, FortuneLevel } from '@/data/fortune-levels';
 
 interface FortuneCalculationInput {
   content: string;
@@ -177,12 +178,25 @@ export const TITLES: Title[] = [
   { level: 8, name: '皓月', minFortune: 50000, description: '皎皎如月，照见初心' }
 ];
 
-export const getTitleByFortune = (totalFortune: number): Title => {
-  let title = TITLES[0];
-  for (const t of TITLES) {
-    if (totalFortune >= t.minFortune) {
-      title = t;
+export const getTitleByFortune = (totalFortune: number): string => {
+  let title = FORTUNE_LEVELS[0].name;
+  for (const level of FORTUNE_LEVELS) {
+    if (totalFortune >= level.minFortune) {
+      title = level.name;
     }
   }
   return title;
+};
+
+/**
+ * 根据福气值获取完整等级对象（包含等级、颜色、图标等信息）
+ */
+export const getLevelByFortune = (totalFortune: number): FortuneLevel => {
+  let level = FORTUNE_LEVELS[0];
+  for (const l of FORTUNE_LEVELS) {
+    if (totalFortune >= l.minFortune) {
+      level = l;
+    }
+  }
+  return level;
 };

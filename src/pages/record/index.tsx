@@ -664,7 +664,7 @@ const RecordPage: React.FC = () => {
       setFortune(fortuneResult.total);
 
       if (recordType === 'self' && fortuneResult.total > 0) {
-        addFortune(fortuneResult.total, '善行记录', content.slice(0, 20));
+        addFortune(fortuneResult.total, '善行记录', content.slice(0, 20), visibleScope === 'circle' ? selectedCircleId : undefined);
         recordKindness();
       }
 
@@ -957,6 +957,19 @@ const RecordPage: React.FC = () => {
                   <Text className={styles.sourceHintTitle}>已关联保护模式证据</Text>
                   <Text className={styles.sourceHintDesc}>
                     录像{Math.floor(protectionMeta.video / 60)}分{protectionMeta.video % 60}秒 · 录音{Math.floor(protectionMeta.audio / 60)}分{protectionMeta.audio % 60}秒 · GPS{protectionMeta.gps}个点 · 照片{protectionMeta.photos}张
+                  </Text>
+                </View>
+              </View>
+            )}
+
+            {/* 主观感受引导：当内容偏客观时提示补充 */}
+            {fromSource && !/\b感觉|心情|觉得|开心|感动|温暖|担心|害怕|庆幸|值得|不应该|应该|希望\b/.test(content) && (
+              <View className={styles.feelingGuideCard}>
+                <Text className={styles.feelingGuideIcon}>💭</Text>
+                <View className={styles.feelingGuideBody}>
+                  <Text className={styles.feelingGuideTitle}>补充你的感受</Text>
+                  <Text className={styles.feelingGuideDesc}>
+                    目前内容偏客观描述，建议补充：当时的心情、帮助后的感受、对方说了什么让你印象深刻的话。越真实的感受越能获得AI的温暖回应和更多福气值。
                   </Text>
                 </View>
               </View>

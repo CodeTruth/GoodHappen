@@ -12,7 +12,7 @@ import {
   MerchantBenefit,
   BenefitType,
 } from '@/data/merchants';
-import { TITLES } from '@/utils/fortune';
+import { FORTUNE_LEVELS } from '@/data/fortune-levels';
 import styles from './index.module.scss';
 
 // 权益类型筛选
@@ -70,7 +70,7 @@ const MerchantListPage: React.FC = () => {
   const handleRedeemBenefit = (benefit: MerchantBenefit) => {
     // 检查称号等级
     if (currentTitle.level < benefit.requiredTitleLevel) {
-      const requiredTitle = TITLES.find(t => t.level === benefit.requiredTitleLevel);
+      const requiredTitle = FORTUNE_LEVELS.find(t => t.level === benefit.requiredTitleLevel);
       Taro.showToast({ title: `需${requiredTitle?.name || '更高'}称号`, icon: 'none' });
       return;
     }
