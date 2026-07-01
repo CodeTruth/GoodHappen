@@ -160,12 +160,13 @@ const AiChatPage: React.FC = () => {
   // 滚动到底部
   useEffect(() => {
     if (scrollViewRef.current) {
-      setTimeout(() => {
+      const timer = setTimeout(() => {
         scrollViewRef.current?.scrollTo?.({
           top: 999999,
           animated: true,
         });
       }, 100);
+      return () => clearTimeout(timer);
     }
   }, [session.messages.length, isLoading]);
 

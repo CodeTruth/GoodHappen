@@ -122,7 +122,8 @@ const AnnualReportPage: React.FC = () => {
       const mockFortune = Math.max(totalFortune, 580);
       setReportData(generateReportData(mockFortune));
       // 延迟启动动画
-      setTimeout(() => setAnimationStart(true), 200);
+      const timer = setTimeout(() => setAnimationStart(true), 200);
+      return () => clearTimeout(timer);
     }
   }, [totalFortune]);
 

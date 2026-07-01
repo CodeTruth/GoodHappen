@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, Textarea, Image } from '@tarojs/components';
 import Taro, { useRouter } from '@tarojs/taro';
 import {
@@ -37,6 +37,17 @@ const CheckinPage: React.FC = () => {
   const [visibility, setVisibility] = useState<CheckinVisibility>('circle');
   // 提交中状态
   const [submitting, setSubmitting] = useState(false);
+
+  const navigateBackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (navigateBackTimerRef.current) {
+        clearTimeout(navigateBackTimerRef.current);
+        navigateBackTimerRef.current = null;
+      }
+    };
+  }, []);
 
   const {
     addCheckin,
@@ -171,7 +182,7 @@ const CheckinPage: React.FC = () => {
       setAiSummary('');
       setContentType('text');
 
-      setTimeout(() => {
+      navigateBackTimerRef.current = setTimeout(() => {
         Taro.navigateBack();
       }, 1000);
     } catch (e) {

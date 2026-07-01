@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { View, Text, Image } from '@tarojs/components';
 import Taro from '@tarojs/taro';
 import { getCurrentUser } from '@/data/users';
@@ -6,7 +6,6 @@ import { useFortuneStore } from '@/store/fortune';
 import { useUserStore, checkIsMinor } from '@/store/user';
 
 import { getLevelProgress } from '@/data/fortune-levels';
-import CustomTabBar from '@/components/CustomTabBar';
 import styles from './index.module.scss';
 
 const MinePage: React.FC = () => {
@@ -37,10 +36,21 @@ const MinePage: React.FC = () => {
   // 用户体系（Phase 5）
   const { isLoggedIn, userInfo, logout, loadFromStorage: loadUserFromStorage } = useUserStore();
 
+  const navigateTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   useEffect(() => {
     loadFromStorage();
     resetIfNeeded();
     loadUserFromStorage();
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (navigateTimerRef.current) {
+        clearTimeout(navigateTimerRef.current);
+        navigateTimerRef.current = null;
+      }
+    };
   }, []);
 
   // 展示用户信息：已登录用 store 数据，未登录用 mock 数据
@@ -82,7 +92,7 @@ const MinePage: React.FC = () => {
   const requireAuthAction = (url: string) => {
     if (!isLoggedIn) {
       Taro.showToast({ title: '请先登录', icon: 'none' });
-      setTimeout(() => {
+      navigateTimerRef.current = setTimeout(() => {
         Taro.navigateTo({ url: '/pages/login/index' });
       }, 1000);
       return;
@@ -308,7 +318,6 @@ const MinePage: React.FC = () => {
         <Text>好事发生 v1.0.0</Text>
       </View>
     </View>
-    <CustomTabBar currentPath="pages/mine/index" />
     </View>
   );
 };

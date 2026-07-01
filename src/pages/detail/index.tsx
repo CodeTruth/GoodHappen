@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { View, Text, Image, Input } from '@tarojs/components';
 import Taro, { useRouter } from '@tarojs/taro';
 import { Kindness } from '@/types/kindness';
@@ -35,6 +35,8 @@ const DetailPage: React.FC = () => {
     matchCount: number;
     evidenceChainFormed: boolean;
   } | null>(null);
+
+  const sosTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // 从 store 获取已发布的善行（用于查找用户自己发布的）
   const publishedList = useKindnessStore((s) => s.publishedList);
@@ -80,6 +82,15 @@ const DetailPage: React.FC = () => {
       }
     }
   }, [kindness?.id, sosRecords]);
+
+  useEffect(() => {
+    return () => {
+      if (sosTimerRef.current) {
+        clearTimeout(sosTimerRef.current);
+        sosTimerRef.current = null;
+      }
+    };
+  }, []);
 
   // Mock 评论数据
   const mockComments = useMemo<MockComment[]>(() => {
@@ -180,7 +191,7 @@ const DetailPage: React.FC = () => {
       success: (res) => {
         if (res.confirm) {
           setSosLoading(true);
-          setTimeout(() => {
+          sosTimerRef.current = setTimeout(() => {
             try {
               storeTriggerSOS(kindness.id, '用户手动发起善行保护求助')
                 .then((res) => {

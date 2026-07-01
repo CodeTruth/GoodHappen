@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { View, Text } from '@tarojs/components';
 import Taro from '@tarojs/taro';
 import {
@@ -53,6 +53,8 @@ export default function ProtectionModePage() {
   const [advisorDangerScore, setAdvisorDangerScore] = useState(0);
   const [advisorActions, setAdvisorActions] = useState<string[]>([]);
 
+  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   // 读取跳转来源
   useEffect(() => {
     const params = Taro.getCurrentInstance().router?.params;
@@ -69,6 +71,15 @@ export default function ProtectionModePage() {
         // 忽略解析错误
       }
     }
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (closeTimerRef.current) {
+        clearTimeout(closeTimerRef.current);
+        closeTimerRef.current = null;
+      }
+    };
   }, []);
 
   // 监听会话变化
@@ -245,7 +256,7 @@ export default function ProtectionModePage() {
           closeSession();
           // 如果来自AI顾问建议，自动引导到记录页
           if (sourceFrom === 'advisor') {
-            setTimeout(() => {
+            closeTimerRef.current = setTimeout(() => {
               handleGoRecord();
             }, 600);
           }

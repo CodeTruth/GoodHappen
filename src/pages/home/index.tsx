@@ -11,7 +11,6 @@ import { useSocialStore } from '@/store/social';
 import { useUserStore } from '@/store/user';
 import { useInteractionStore } from '@/store/interaction';
 import { useKindnessStore } from '@/store/kindness';
-import CustomTabBar from '@/components/CustomTabBar';
 import WelcomeGuide from '@/components/WelcomeGuide';
 import { useNotificationStore } from '@/store/notification';
 import { useCircleStore } from '@/store/circle';
@@ -28,6 +27,179 @@ type SquareTab = 'all' | 'self' | 'witness' | 'following' | 'recommend';
 const ALL_TAGS = ['助人', '环保', '见证', '公益', '邻里互助', '孝亲', '陪伴', '关怀', '工作', '亲子'];
 // 所有可用地区（省级）
 const ALL_REGIONS = ['北京市', '上海市', '广州市', '深圳市', '杭州市', '成都市', '武汉市', '南京市', '西安市', '重庆市'];
+
+// ===== 子组件：本周圈子榜样（提取到外部避免每次渲染重新创建） =====
+const CircleExampleCard = React.memo(() => {
+  const { getCircleById } = useCircleStore();
+  const [examples, setExamples] = useState<any[]>([]);
+
+  useEffect(() => {
+    // 获取所有圈子的榜样记录（取前3条）
+    const allExamples: any[] = [];
+    const circleIds = ['circle1', 'circle2', 'circle3'];
+    circleIds.forEach((cid) => {
+      const exs = getExampleWall(cid).slice(0, 1);
+      const circle = getCircleById(cid);
+      if (circle && exs.length > 0) {
+        const typeConfig = getCircleTypeConfig((circle.type as CircleType) || 'public');
+        allExamples.push({
+          ...exs[0],
+          circleName: circle.name,
+          circleType: circle.type,
+          exampleLabel: typeConfig.labels.example,
+        });
+      }
+    });
+    setExamples(allExamples.slice(0, 3));
+  }, []);
+
+  if (examples.length === 0) return null;
+
+  return (
+    <View className={styles.exampleSection}>
+      <View className={styles.exampleHeader}>
+        <Text className={styles.exampleTitle}>⭐ 本周圈子榜样</Text>
+        <Text
+          className={styles.exampleMore}
+          onClick={() => Taro.switchTab({ url: '/pages/circle/index' })}
+        >
+          查看全部 →
+        </Text>
+      </View>
+      <ScrollView className={styles.exampleScroll} scrollX>
+        {examples.map((ex) => (
+          <View
+            key={ex.id}
+            className={styles.exampleCard}
+            onClick={() => Taro.navigateTo({ url: `/pages/student-profile/index?circleId=${ex.circleId || 'circle1'}&userId=${ex.userId}` })}
+          >
+            <View className={styles.exampleCardHeader}>
+              <Image className={styles.exampleAvatar} src={ex.userAvatar} />
+              <View className={styles.exampleInfo}>
+                <Text className={styles.exampleName}>{ex.userName}</Text>
+                <Text className={styles.exampleCircle}>{ex.circleName}</Text>
+              </View>
+              <Text className={styles.exampleBadge}>{ex.exampleLabel}</Text>
+            </View>
+            <Text className={styles.exampleContent} numberOfLines={2}>{ex.content}</Text>
+            {ex.teacherComment && (
+              <Text className={styles.exampleComment}>👩‍🏫 {ex.teacherComment}</Text>
+            )}
+          </View>
+        ))}
+      </ScrollView>
+    </View>
+  );
+});
+
+// ===== 子组件：善行保护快捷入口 =====
+const ProtectionCard = React.memo(() => {
+  const { insurance, loadFromStorage: loadProtection } = useProtectionStore();
+  useEffect(() => { loadProtection(); }, []);
+  const isProtected = insurance?.active;
+  return (
+    <View className={styles.protectionCard}>
+      <View className={styles.protectionHeader}>
+        <Text className={styles.protectionTitle}>🛡️ 善行保护</Text>
+        <Text
+          className={styles.protectionMore}
+          onClick={() => Taro.navigateTo({ url: '/pages/insurance/index' })}
+        >
+          详情 →
+        </Text>
+      </View>
+      <View className={styles.protectionItems}>
+        <View
+          className={`${styles.protectionItem} ${isProtected ? styles.protectionItemActive : ''}`}
+          onClick={() => Taro.navigateTo({ url: '/pages/insurance/index' })}
+        >
+          <Text className={styles.protectionItemIcon}>🏥</Text>
+          <Text className={styles.protectionItemName}>善行保险</Text>
+          <Text className={styles.protectionItemStatus}>{isProtected ? '已生效' : '未达标'}</Text>
+        </View>
+        <View
+          className={styles.protectionItem}
+          onClick={() => Taro.navigateTo({ url: '/pages/legal-aid/index' })}
+        >
+          <Text className={styles.protectionItemIcon}>⚖️</Text>
+          <Text className={styles.protectionItemName}>法律援助</Text>
+          <Text className={styles.protectionItemStatus}>绿色通道</Text>
+        </View>
+        <View
+          className={styles.protectionItem}
+          onClick={() => Taro.navigateTo({ url: '/pages/witness-network/index' })}
+        >
+          <Text className={styles.protectionItemIcon}>📸</Text>
+          <Text className={styles.protectionItemName}>网络见证</Text>
+          <Text className={styles.protectionItemStatus}>独立证据链</Text>
+        </View>
+      </View>
+    </View>
+  );
+});
+
+// ===== 子组件：平台善行数据概览 =====
+const PlatformStatsBar = React.memo(() => (
+  <View className={styles.statsBar}>
+    <ScrollView scrollX enableFlex className={styles.statsScroll}>
+      <View className={styles.statsInner}>
+        <View className={styles.statItem}>
+          <Text className={styles.statNumber}>12,847</Text>
+          <Text className={styles.statLabel}>件善行被记录</Text>
+        </View>
+        <View className={styles.statDivider} />
+        <View className={styles.statItem}>
+          <Text className={styles.statNumber}>3,256</Text>
+          <Text className={styles.statLabel}>人参与其中</Text>
+        </View>
+        <View className={styles.statDivider} />
+        <View className={styles.statItem}>
+          <Text className={styles.statNumber}>8</Text>
+          <Text className={styles.statLabel}>位先贤守护</Text>
+        </View>
+        <View className={styles.statDivider} />
+        <View className={styles.statItem}>
+          <Text className={styles.statNumber}>156</Text>
+          <Text className={styles.statLabel}>所学校在用</Text>
+        </View>
+      </View>
+    </ScrollView>
+  </View>
+));
+
+// ===== 子组件：每日善行灵感 =====
+const DailySuggestionCard = React.memo(() => {
+  const suggestion = useMemo(() => getTodaySuggestion(), []);
+  const [visible, setVisible] = useState(true);
+  // 仅代表性建议才展示风险标签
+  const showRisk = useMemo(() => {
+    if (!suggestion.risk) return false;
+    return isRepresentative(suggestion.suggestion, suggestion.risk).representative;
+  }, [suggestion]);
+  if (!visible) return null;
+  return (
+    <View className={styles.dailyCard}>
+      <View className={styles.dailyHeader}>
+        <Text className={styles.dailyIcon}>💡</Text>
+        <Text className={styles.dailyTitle}>今日善行灵感</Text>
+        {showRisk && suggestion.risk && (
+          <View className={styles.dailyRiskTag} style={{ background: suggestion.risk.color }}>
+            <Text className={styles.dailyRiskTagText}>{suggestion.risk.icon} {suggestion.risk.level === 'high' ? '高风险' : '注意'}</Text>
+          </View>
+        )}
+        <Text className={styles.dailyClose} onClick={() => setVisible(false)}>✕</Text>
+      </View>
+      <Text className={styles.dailyContent}>{suggestion.suggestion}</Text>
+      {showRisk && suggestion.risk && (
+        <View className={styles.dailyRiskBanner}>
+          <Text className={styles.dailyRiskAdvice}>💡 {suggestion.risk.advice[0]}</Text>
+          <Text className={styles.dailyRiskShield}>🛡️ 做好事前开启保护模式，系统全程兜底</Text>
+        </View>
+      )}
+      <Text className={styles.dailyQuote}>—— {suggestion.persona}：「{suggestion.quote}」</Text>
+    </View>
+  );
+});
 
 const HomePage: React.FC = () => {
   // 更新自定义 tabBar 选中状态（H5环境中用useEffect替代useDidShow）
@@ -77,7 +249,7 @@ const HomePage: React.FC = () => {
   // 下拉刷新
   const handleRefresh = useCallback(() => {
     setRefreshing(true);
-    setTimeout(() => {
+    const timer = setTimeout(() => {
       loadUser();
       loadSocial();
       loadInteraction();
@@ -88,6 +260,7 @@ const HomePage: React.FC = () => {
       setRefreshing(false);
       Taro.showToast({ title: '已刷新', icon: 'success' });
     }, 800);
+    return () => clearTimeout(timer);
   }, [loadUser, loadSocial, loadInteraction, loadKindness, loadNotification, loadMockNotification, cleanupExpired]);
 
   // 原始善行列表 = mock数据 + 用户本地发布的新善行（用户善行优先排列）
@@ -182,177 +355,6 @@ const HomePage: React.FC = () => {
     setRegionPickerOpen(false);
   };
 
-  // 本周圈子榜样推荐位
-  const CircleExampleCard = React.memo(() => {
-    const { getCircleById } = useCircleStore();
-    const [examples, setExamples] = useState<any[]>([]);
-
-    useEffect(() => {
-      // 获取所有圈子的榜样记录（取前3条）
-      const allExamples: any[] = [];
-      const circleIds = ['circle1', 'circle2', 'circle3'];
-      circleIds.forEach((cid) => {
-        const exs = getExampleWall(cid).slice(0, 1);
-        const circle = getCircleById(cid);
-        if (circle && exs.length > 0) {
-          const typeConfig = getCircleTypeConfig((circle.type as CircleType) || 'public');
-          allExamples.push({
-            ...exs[0],
-            circleName: circle.name,
-            circleType: circle.type,
-            exampleLabel: typeConfig.labels.example,
-          });
-        }
-      });
-      setExamples(allExamples.slice(0, 3));
-    }, []);
-
-    if (examples.length === 0) return null;
-
-    return (
-      <View className={styles.exampleSection}>
-        <View className={styles.exampleHeader}>
-          <Text className={styles.exampleTitle}>⭐ 本周圈子榜样</Text>
-          <Text
-            className={styles.exampleMore}
-            onClick={() => Taro.switchTab({ url: '/pages/circle/index' })}
-          >
-            查看全部 →
-          </Text>
-        </View>
-        <ScrollView className={styles.exampleScroll} scrollX>
-          {examples.map((ex) => (
-            <View
-              key={ex.id}
-              className={styles.exampleCard}
-              onClick={() => Taro.navigateTo({ url: `/pages/student-profile/index?circleId=${ex.circleId || 'circle1'}&userId=${ex.userId}` })}
-            >
-              <View className={styles.exampleCardHeader}>
-                <Image className={styles.exampleAvatar} src={ex.userAvatar} />
-                <View className={styles.exampleInfo}>
-                  <Text className={styles.exampleName}>{ex.userName}</Text>
-                  <Text className={styles.exampleCircle}>{ex.circleName}</Text>
-                </View>
-                <Text className={styles.exampleBadge}>{ex.exampleLabel}</Text>
-              </View>
-              <Text className={styles.exampleContent} numberOfLines={2}>{ex.content}</Text>
-              {ex.teacherComment && (
-                <Text className={styles.exampleComment}>👩‍🏫 {ex.teacherComment}</Text>
-              )}
-            </View>
-          ))}
-        </ScrollView>
-      </View>
-    );
-  });
-
-  // 善行保护快捷入口
-  const ProtectionCard = React.memo(() => {
-    const { insurance, loadFromStorage: loadProtection } = useProtectionStore();
-    useEffect(() => { loadProtection(); }, []);
-    const isProtected = insurance?.active;
-    return (
-      <View className={styles.protectionCard}>
-        <View className={styles.protectionHeader}>
-          <Text className={styles.protectionTitle}>🛡️ 善行保护</Text>
-          <Text
-            className={styles.protectionMore}
-            onClick={() => Taro.navigateTo({ url: '/pages/insurance/index' })}
-          >
-            详情 →
-          </Text>
-        </View>
-        <View className={styles.protectionItems}>
-          <View
-            className={`${styles.protectionItem} ${isProtected ? styles.protectionItemActive : ''}`}
-            onClick={() => Taro.navigateTo({ url: '/pages/insurance/index' })}
-          >
-            <Text className={styles.protectionItemIcon}>🏥</Text>
-            <Text className={styles.protectionItemName}>善行保险</Text>
-            <Text className={styles.protectionItemStatus}>{isProtected ? '已生效' : '未达标'}</Text>
-          </View>
-          <View
-            className={styles.protectionItem}
-            onClick={() => Taro.navigateTo({ url: '/pages/legal-aid/index' })}
-          >
-            <Text className={styles.protectionItemIcon}>⚖️</Text>
-            <Text className={styles.protectionItemName}>法律援助</Text>
-            <Text className={styles.protectionItemStatus}>绿色通道</Text>
-          </View>
-          <View
-            className={styles.protectionItem}
-            onClick={() => Taro.navigateTo({ url: '/pages/witness-network/index' })}
-          >
-            <Text className={styles.protectionItemIcon}>📸</Text>
-            <Text className={styles.protectionItemName}>网络见证</Text>
-            <Text className={styles.protectionItemStatus}>独立证据链</Text>
-          </View>
-        </View>
-      </View>
-    );
-  });
-
-  // 平台善行数据概览
-  const PlatformStatsBar = React.memo(() => (
-    <View className={styles.statsBar}>
-      <ScrollView scrollX enableFlex className={styles.statsScroll}>
-        <View className={styles.statsInner}>
-          <View className={styles.statItem}>
-            <Text className={styles.statNumber}>12,847</Text>
-            <Text className={styles.statLabel}>件善行被记录</Text>
-          </View>
-          <View className={styles.statDivider} />
-          <View className={styles.statItem}>
-            <Text className={styles.statNumber}>3,256</Text>
-            <Text className={styles.statLabel}>人参与其中</Text>
-          </View>
-          <View className={styles.statDivider} />
-          <View className={styles.statItem}>
-            <Text className={styles.statNumber}>8</Text>
-            <Text className={styles.statLabel}>位先贤守护</Text>
-          </View>
-          <View className={styles.statDivider} />
-          <View className={styles.statItem}>
-            <Text className={styles.statNumber}>156</Text>
-            <Text className={styles.statLabel}>所学校在用</Text>
-          </View>
-        </View>
-      </ScrollView>
-    </View>
-  ));
-
-  const DailySuggestionCard = React.memo(() => {
-    const suggestion = useMemo(() => getTodaySuggestion(), []);
-    const [visible, setVisible] = useState(true);
-    // 仅代表性建议才展示风险标签
-    const showRisk = useMemo(() => {
-      if (!suggestion.risk) return false;
-      return isRepresentative(suggestion.suggestion, suggestion.risk).representative;
-    }, [suggestion]);
-    if (!visible) return null;
-    return (
-      <View className={styles.dailyCard}>
-        <View className={styles.dailyHeader}>
-          <Text className={styles.dailyIcon}>💡</Text>
-          <Text className={styles.dailyTitle}>今日善行灵感</Text>
-          {showRisk && suggestion.risk && (
-            <View className={styles.dailyRiskTag} style={{ background: suggestion.risk.color }}>
-              <Text className={styles.dailyRiskTagText}>{suggestion.risk.icon} {suggestion.risk.level === 'high' ? '高风险' : '注意'}</Text>
-            </View>
-          )}
-          <Text className={styles.dailyClose} onClick={() => setVisible(false)}>✕</Text>
-        </View>
-        <Text className={styles.dailyContent}>{suggestion.suggestion}</Text>
-        {showRisk && suggestion.risk && (
-          <View className={styles.dailyRiskBanner}>
-            <Text className={styles.dailyRiskAdvice}>💡 {suggestion.risk.advice[0]}</Text>
-            <Text className={styles.dailyRiskShield}>🛡️ 做好事前开启保护模式，系统全程兜底</Text>
-          </View>
-        )}
-        <Text className={styles.dailyQuote}>—— {suggestion.persona}：「{suggestion.quote}」</Text>
-      </View>
-    );
-  });
 
   // 是否显示筛选栏（"为你推荐"和"全部"显示）
   const showFilterBar = activeTab === 'all' || activeTab === 'recommend';
@@ -562,7 +564,6 @@ const HomePage: React.FC = () => {
         )}
       </View>
     </ScrollView>
-    <CustomTabBar currentPath="pages/home/index" />
 
     {/* 悬浮保护按钮 */}
     <View

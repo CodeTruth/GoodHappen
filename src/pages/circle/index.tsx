@@ -2,7 +2,6 @@ import React, { useEffect } from 'react';
 import { View, Text } from '@tarojs/components';
 import Taro from '@tarojs/taro';
 import { getCircles } from '@/data/users';
-import CustomTabBar from '@/components/CustomTabBar';
 import styles from './index.module.scss';
 
 const CirclePage: React.FC = () => {
@@ -84,7 +83,6 @@ const CirclePage: React.FC = () => {
         ))}
       </View>
     </View>
-    <CustomTabBar currentPath="pages/circle/index" />
     </View>
   );
 };

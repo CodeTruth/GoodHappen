@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, Input, Button } from '@tarojs/components';
 import Taro from '@tarojs/taro';
 import { useUserStore } from '@/store/user';
@@ -110,11 +110,11 @@ const LoginPage: React.FC = () => {
     }
   };
 
-  // 清理定时器
-  React.useEffect(() => {
+  useEffect(() => {
     return () => {
       if (timerRef.current) {
         clearInterval(timerRef.current);
+        timerRef.current = null;
       }
     };
   }, []);

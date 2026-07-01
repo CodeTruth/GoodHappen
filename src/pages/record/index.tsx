@@ -17,7 +17,6 @@ import { CircleType, getCircleTypeConfig } from '@/config/circle-types';
 import { Kindness } from '@/types/kindness';
 import { detectRisk, RiskScenario } from '@/services/risk-detection';
 import MilestonePopup from '@/components/MilestonePopup';
-import CustomTabBar from '@/components/CustomTabBar';
 import styles from './index.module.scss';
 
 // 先贤语录库
@@ -162,7 +161,7 @@ const RecordPage: React.FC = () => {
 
   // ====== 媒体类型切换（任务1）======
   // 使用 Set 存储已选择的媒体类型，支持多选组合
-  const [selectedMediaTypes, setSelectedMediaTypes] = useState<Set<MediaType>>(new Set(['text']));
+  const [selectedMediaTypes, setSelectedMediaTypes] = useState<Set<MediaType>>(() => new Set(['text']));
 
   const toggleMediaType = (type: MediaType) => {
     const newSet = new Set(selectedMediaTypes);
@@ -720,7 +719,7 @@ const RecordPage: React.FC = () => {
       runFeedbackSequence(fortuneResult.total);
 
       // 等待 AI 卡片出现后再开始流式输出（仪式关闭时立即开始）
-      setTimeout(async () => {
+      const streamTimer = setTimeout(async () => {
         setIsStreaming(true);
         setAiResponses([]);
         aiAbortedRef.current = false;
@@ -780,6 +779,7 @@ const RecordPage: React.FC = () => {
         );
 
       }, ritualEnabled ? 1500 : 0); // 仪式开启时等待1.5s，关闭时立即开始
+      feedbackTimersRef.current.push(streamTimer);
 
       // 任务4：检查里程碑触发（善行数+1 后检查）
       if (recordType === 'self') {
@@ -787,12 +787,13 @@ const RecordPage: React.FC = () => {
         // 这里用 dailyStats.count + transactions 中 earn 类型数估算
         // 简化：用 totalFortune + fortuneResult.total 作为累计善行数指标
         // 实际应使用专门的计数器，这里用 transactions 长度近似
-        setTimeout(() => {
+        const milestoneTimer = setTimeout(() => {
           checkAndTrigger(
             useFortuneStore.getState().transactions.filter(t => t.type === 'earn').length,
             useFortuneStore.getState().streak.currentStreak
           );
         }, 2000);
+        feedbackTimersRef.current.push(milestoneTimer);
       }
     } catch (error) {
       console.error('[Record] Submit failed:', error);
@@ -1426,7 +1427,6 @@ const RecordPage: React.FC = () => {
         </View>
       )}
     </View>
-    <CustomTabBar currentPath="pages/record/index" />
     </View>
   );
 };
