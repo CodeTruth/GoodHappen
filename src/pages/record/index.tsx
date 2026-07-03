@@ -665,16 +665,7 @@ const RecordPage: React.FC = () => {
       }
 
       const credibilityResult = await evaluateCredibility(content || voiceText || '记录一件善事');
-
-      if (credibilityResult.level === 'suspicious') {
-        Taro.showModal({
-          title: '提示',
-          content: '该内容需要人工审核，审核通过后将计入福气',
-          showCancel: false
-        });
-        setPhase('input');
-        return;
-      }
+      // 信誉评估结果不阻断发布，仅做后端标记
 
       const fortuneResult = calculateFortune({
         content: content || voiceText || '',

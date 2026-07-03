@@ -1,27 +1,17 @@
 import React, { useState, useMemo } from 'react';
 import { View, Text } from '@tarojs/components';
 import classnames from 'classnames';
+import { PROVINCE_WARMTH_DATA, ProvinceWarmthData as ProvinceWarmth } from '@/data/warmth-map-data';
 import styles from './index.module.scss';
 
-// 本地定义（原 @/data/warmthMap、@/data/warmthStats 已移除）
-interface ProvinceWarmth {
-  name: string;
-  shortName?: string;
-  warmthLevel: number;
-  participantCount: number;
-  monthlyFortune?: number;
-  kindnessCount?: number;
-  gridArea?: { row: number; col: number };
-  typeDistribution?: { type: string; percentage: number }[];
-  stories?: { id: string; title: string; summary: string }[];
-}
-
-const getProvinceWarmthList = (): ProvinceWarmth[] => [];
-const getWarmthLevelColor = (_level: number): string => '#1890FF';
+const getWarmthLevelColor = (level: number): string => {
+  const colors = ['#E8F4F8', '#B8E0F0', '#88CCE8', '#58B8E0', '#28A4D8'];
+  return colors[level - 1] || '#1890FF';
+};
 const formatParticipantCount = (count: number): string => `${count}人`;
 
 const WarmthMapPage: React.FC = () => {
-  const provinceList = useState(getProvinceWarmthList())[0];
+  const provinceList = PROVINCE_WARMTH_DATA;
   const [selectedProvince, setSelectedProvince] = useState<ProvinceWarmth | null>(null);
 
   // 构建地图网格（6列 x 5行）

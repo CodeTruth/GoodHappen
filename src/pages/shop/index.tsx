@@ -4,9 +4,11 @@ import Taro from '@tarojs/taro';
 import classnames from 'classnames';
 import { useFortuneStore } from '@/store/fortune';
 import { useShopStore } from '@/store/shop';
+import { SHOP_PRODUCTS } from '@/data/shop-products';
+import { FORTUNE_LEVELS } from '@/data/fortune-levels';
 import styles from './index.module.scss';
 
-// 本地定义（原 @/data/products、@/data/fortune-levels 已移除）
+// 本地定义（原 @/data/products 已移除，现从数据文件加载）
 type ProductCategory = 'daily' | 'food' | 'culture' | 'experience' | 'charity' | 'virtual' | 'brand' | 'milestone' | 'annual';
 
 interface Product {
@@ -50,8 +52,7 @@ const categoryDescriptions: Record<ProductCategory, string> = {
   annual: '温暖年鉴',
 };
 
-const getProducts = (): Product[] => [];
-const FORTUNE_LEVELS: { level: number; name: string; min: number }[] = [];
+const getProducts = (): Product[] => SHOP_PRODUCTS as Product[];
 
 const ShopPage: React.FC = () => {
   const { availableFortune, currentTitle, streak, loadFromStorage } = useFortuneStore();

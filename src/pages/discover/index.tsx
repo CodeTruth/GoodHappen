@@ -11,6 +11,7 @@ import { useCircleStore } from '@/store/circle';
 import { useProtectionStore } from '@/store/protection';
 import { getExampleWall } from '@/services/moral-dashboard';
 import { getCircleTypeConfig, CircleType } from '@/config/circle-types';
+import { WARM_PARTNERS } from '@/data/warm-partners';
 import { Kindness } from '@/types/kindness';
 import styles from './index.module.scss';
 
@@ -27,8 +28,8 @@ const useUpdateTabBar = () => {
   }, []);
 };
 
-// 本地定义
-const getWeeklyWarmPartners = () => [] as any[];
+// 温暖伙伴数据
+const getWeeklyWarmPartners = () => WARM_PARTNERS;
 
 // 广场Tab类型
 type SquareTab = 'all' | 'self' | 'witness' | 'following' | 'recommend';
