@@ -1,13 +1,14 @@
 @use '@/styles/variables.scss' as *;
 
 .pageWrapper {
-  min-height: 100vh;
+  height: 100vh;
   display: flex;
   flex-direction: column;
   background: $color-bg-page;
+  padding-bottom: 120px; // 系统 TabBar 高度
 }
 
-// ===== 顶部固定区域：搜索 + 功能入口 =====
+// ===== 顶部区域：搜索 + 功能入口 =====
 .topArea {
   background: #fff;
   padding: $spacing-md $spacing-lg;
@@ -83,65 +84,10 @@
   font-weight: $font-weight-medium;
 }
 
-// ===== 分类Tab（Sticky） =====
-.tabSticky {
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  background: #fff;
-  border-bottom: 1rpx solid $color-border;
-  flex-shrink: 0;
-}
-
-.tabsScroll {
-  white-space: nowrap;
-}
-
-.tabsInner {
-  display: inline-flex;
-  gap: $spacing-xs;
-  padding: $spacing-sm $spacing-lg;
-}
-
-.tabItem {
-  padding: 12rpx 24rpx;
-  border-radius: 32rpx;
-  cursor: pointer;
-  transition: all 0.2s;
-  display: flex;
-  align-items: center;
-  gap: 4rpx;
-
-  &:active {
-    opacity: 0.7;
-  }
-}
-
-.tabText {
-  font-size: $font-size-sm;
-  color: $color-text-tertiary;
-  font-weight: $font-weight-medium;
-}
-
-.tabActive {
-  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
-
-  .tabText {
-    color: #fff;
-  }
-}
-
-.tabBadge {
-  font-size: $font-size-xs;
-  color: #fff;
-  opacity: 0.9;
-}
-
 // ===== 内容滚动区域 =====
 .contentScroll {
   flex: 1;
   padding: $spacing-md $spacing-lg;
-  padding-bottom: calc(#{$spacing-lg} + 120px);
 }
 
 // 筛选栏
@@ -293,4 +239,47 @@
   font-size: $font-size-md;
   color: $color-text-tertiary;
   line-height: $line-height-loose;
+}
+
+// ===== 底部固定分类Tab =====
+.bottomTabs {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  background: #fff;
+  border-top: 1rpx solid $color-border;
+  padding: 12rpx 0 calc(12rpx + env(safe-area-inset-bottom));
+  flex-shrink: 0;
+  box-shadow: 0 -4rpx 20rpx rgba(0, 0, 0, 0.05);
+}
+
+.bottomTabItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8rpx;
+  padding: 8rpx 24rpx;
+  cursor: pointer;
+  position: relative;
+}
+
+.bottomTabText {
+  font-size: 28rpx;
+  color: $color-text-tertiary;
+  font-weight: $font-weight-medium;
+  transition: color 0.2s;
+}
+
+.bottomTabActive {
+  .bottomTabText {
+    color: $color-primary;
+    font-weight: $font-weight-semibold;
+  }
+}
+
+.bottomTabLine {
+  width: 32rpx;
+  height: 4rpx;
+  border-radius: 2rpx;
+  background: linear-gradient(90deg, $color-primary, $color-primary-light);
 }

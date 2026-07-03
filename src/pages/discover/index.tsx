@@ -35,20 +35,20 @@ const ALL_TAGS = ['助人', '环保', '见证', '公益', '邻里互助', '孝�
 // 所有可用地区（省级）
 const ALL_REGIONS = ['北京市', '上海市', '广州市', '深圳市', '杭州市', '成都市', '武汉市', '南京市', '西安市', '重庆市'];
 
-// ===== 快捷功能入口配置 =====
+// ===== 快捷功能入口配置（去掉首页已有的，补充缺失的） =====
 const QUICK_ENTRIES = [
-  { icon: '🛡️', label: '善行保护', page: '/pages/protection-mode/index', color: '#1A73E8' },
-  { icon: '💬', label: 'AI顾问', page: '/pages/ai-advisor/index', color: '#E67E22' },
   { icon: '🗺️', label: '温暖地图', page: '/pages/warmth-map/index', color: '#34A853' },
   { icon: '🏪', label: '福气商城', page: '/pages/shop/index', color: '#C4956A' },
   { icon: '👥', label: '善行圈', page: '/pages/circle/index', color: '#9B59B6' },
   { icon: '🏥', label: '善行保险', page: '/pages/insurance/index', color: '#E74C3C' },
   { icon: '⚖️', label: '法律援助', page: '/pages/legal-aid/index', color: '#3498DB' },
-  { icon: '📊', label: '温暖统计', page: '/pages/warmth-stats/index', color: '#2ECC71' },
+  { icon: '📜', label: 'AI对话', page: '/pages/ai-chat/index', color: '#D4534A' },
+  { icon: '📊', label: '年度报告', page: '/pages/annual-report/index', color: '#2ECC71' },
+  { icon: '🎁', label: '邀请好友', page: '/pages/invite/index', color: '#E67E22' },
 ];
 
 // Tab 配置
-type TabConfig = { key: SquareTab; label: string; badge?: string };
+type TabConfig = { key: SquareTab; label: string };
 const TABS: TabConfig[] = [
   { key: 'all', label: '全部' },
   { key: 'self', label: '善行' },
@@ -190,9 +190,8 @@ const DiscoverPage: React.FC = () => {
 
   return (
     <View className={styles.pageWrapper}>
-      {/* ===== 顶部区域：搜索 + 功能入口（不随内容滚动） ===== */}
+      {/* ===== 顶部区域：搜索 + 功能入口 ===== */}
       <View className={styles.topArea}>
-        {/* 搜索栏 */}
         <View
           className={styles.searchBar}
           onClick={() => Taro.navigateTo({ url: '/pages/search/index' })}
@@ -201,7 +200,6 @@ const DiscoverPage: React.FC = () => {
           <Text className={styles.searchPlaceholder}>搜索善行、用户、话题...</Text>
         </View>
 
-        {/* 快捷功能入口网格 */}
         <View className={styles.quickGrid}>
           {QUICK_ENTRIES.map((item) => (
             <View
@@ -219,26 +217,6 @@ const DiscoverPage: React.FC = () => {
             </View>
           ))}
         </View>
-      </View>
-
-      {/* ===== 分类Tab（Sticky固定在内容区顶部） ===== */}
-      <View className={styles.tabSticky}>
-        <ScrollView className={styles.tabsScroll} scrollX enableFlex>
-          <View className={styles.tabsInner}>
-            {TABS.map((tab) => (
-              <View
-                key={tab.key}
-                className={`${styles.tabItem} ${activeTab === tab.key ? styles.tabActive : ''}`}
-                onClick={() => handleTabChange(tab.key)}
-              >
-                <Text className={styles.tabText}>{tab.label}</Text>
-                {tab.badge && activeTab === tab.key && (
-                  <Text className={styles.tabBadge}>{tab.badge}</Text>
-                )}
-              </View>
-            ))}
-          </View>
-        </ScrollView>
       </View>
 
       {/* ===== 内容滚动区域 ===== */}
@@ -345,6 +323,20 @@ const DiscoverPage: React.FC = () => {
           )}
         </View>
       </ScrollView>
+
+      {/* ===== 底部固定分类Tab ===== */}
+      <View className={styles.bottomTabs}>
+        {TABS.map((tab) => (
+          <View
+            key={tab.key}
+            className={`${styles.bottomTabItem} ${activeTab === tab.key ? styles.bottomTabActive : ''}`}
+            onClick={() => handleTabChange(tab.key)}
+          >
+            <Text className={styles.bottomTabText}>{tab.label}</Text>
+            {activeTab === tab.key && <View className={styles.bottomTabLine} />}
+          </View>
+        ))}
+      </View>
     </View>
   );
 };
