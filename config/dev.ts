@@ -9,7 +9,7 @@ export default {
     publicPath: '/',
     devServer: {
       host: '0.0.0.0',
-      port: 10086,
+      port: 10088,
       open: false,
     },
   },
