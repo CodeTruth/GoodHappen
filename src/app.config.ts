@@ -2,6 +2,7 @@ export default defineAppConfig({
   pages: [
     'pages/home/index',
     'pages/record/index',
+    'pages/witness-record/index',
     'pages/mine/index',
     'pages/discover/index',
     'pages/circle/index',

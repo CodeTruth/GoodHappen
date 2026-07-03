@@ -27,7 +27,7 @@ const HOME_ACTIONS = [
     desc: '记录别人做的好事，让善意被看见',
     gradient: 'linear-gradient(135deg, #34A853 0%, #5BBF7A 100%)',
     shadow: 'rgba(52, 168, 83, 0.4)',
-    page: '/pages/record/index?mode=witness',
+    page: '/pages/witness-record/index',
   },
   {
     id: 'advisor',
