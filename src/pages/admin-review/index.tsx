@@ -4,7 +4,7 @@ import Taro from '@tarojs/taro';
 import classnames from 'classnames';
 import { useAdminStore } from '@/store/admin';
 import { useModerationStore } from '@/store/moderation';
-import type { AdminReviewTask, AdminReviewStatus } from '@/data/admin';
+import type { AdminReviewTask, AdminReviewStatus } from '@/store/admin';
 import styles from './index.module.scss';
 
 // 审核队列标签

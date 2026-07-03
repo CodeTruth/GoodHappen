@@ -139,6 +139,17 @@ export const generateAIResponseStream = async (
 /**
  * 流式生成多人回复（第一个流式完成后，第二个非流式获取）
  * 返回所有人设 ID
+ *
+ * @param kindnessContent - 善行记录的文本内容
+ * @param isWitness - 是否为见证模式（true 时 AI 回复风格调整为赞美用户善于发现善意）
+ * @param callbacks - 回调函数集合，用于在流式输出的不同阶段接收数据：
+ *   - firstPersonaStart: 第一位名人开始生成时调用
+ *   - firstChunk: 第一位名人流式输出的每个文本片段
+ *   - firstComplete: 第一位名人完整回复生成完毕
+ *   - secondComplete: 第二位名人完整回复生成完毕
+ *   - allComplete: 所有名人回复均已完成
+ *   - onError: 生成过程中发生错误时调用
+ * @returns Promise<void>，无返回值，结果通过 callbacks 传递
  */
 export const generateMultiAIResponseStream = async (
   kindnessContent: string,
@@ -202,6 +213,26 @@ export interface CredibilityResult {
   reason?: string;
 }
 
+/**
+ * 真实性评估：评估善行记录的可信程度
+ *
+ * 调用 AI 大模型对善行记录内容进行真实性分析，评估记录的可信度等级。
+ * 评估标准基于内容的具体程度、可验证性和合理性：
+ * - high（高可信）：描述具体，包含时间、地点、人物等细节，可验证感强
+ * - medium（中等可信）：正常描述，有一定细节，无明显问题
+ * - low（低可信）：内容模糊、泛化、存疑（如"今天帮助了很多人"）
+ * - suspicious（疑似虚构）：内容不合理、过于完美、疑似AI编造
+ *
+ * 可信度评分（score）影响福气值的计算系数：
+ * - high: 1.2x 福气加成
+ * - medium/low: 1.0x 正常系数
+ * - suspicious: 触发人工审核
+ *
+ * 当 AI 调用失败或结果解析失败时，默认返回 medium（安全降级策略）。
+ *
+ * @param content - 待评估的善行记录文本内容
+ * @returns 可信度评估结果，包含可信度等级、评分（0-1）和理由说明
+ */
 export const evaluateCredibility = async (content: string): Promise<CredibilityResult> => {
   const systemPrompt = `你是一个真实性评估专家。请评估以下善行记录的真实可信度。
 
@@ -245,6 +276,20 @@ export interface ModerationResponse {
   suggestions?: string[];
 }
 
+/**
+ * 内容审核：评估善行记录是否符合社区规范
+ *
+ * 调用 AI 大模型对用户提交的内容进行自动审核，判断是否包含违规信息。
+ * 审核结果分为三档：
+ * - approved：内容合规，允许发布
+ * - needs_modification：内容存在轻微问题（模糊、疑似AI编造等），需用户修改后重新提交
+ * - rejected：内容明确违规（暴力、色情、政治敏感、广告等），直接拒绝
+ *
+ * 当 AI 调用失败或结果解析失败时，默认返回 approved（安全降级策略）。
+ *
+ * @param content - 待审核的文本内容
+ * @returns 审核结果，包含审核结论、原因说明和修改建议
+ */
 export const moderateContent = async (content: string): Promise<ModerationResponse> => {
   const systemPrompt = `你是一个内容审核专家。请审核以下内容是否符合社区规范。
 

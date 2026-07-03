@@ -1,32 +1,145 @@
 import { create } from 'zustand';
 import Taro from '@tarojs/taro';
-import {
-  mockAdminUsers,
-  mockAdminTopics,
-  mockAdminReviewTasks,
-  mockConfigItems,
-  mockConfigHistory,
-  mockDashboardData,
-  mockDashboardTrend,
-  mockViolationRecords,
-  mockFortuneFlows,
-  type AdminUser,
-  type AdminTopic,
-  type AdminReviewTask,
-  type AdminReviewStatus,
-  type ConfigItem,
-  type ConfigHistory,
-  type ConfigCategory,
-  type TimeRange,
-  type DashboardMetric,
-  type DashboardTrend,
-  type AccountStatus,
-  type UserMarkType,
-  type ViolationRecord,
-  type FortuneFlow,
-} from '@/data/admin';
 
 const STORAGE_KEY = 'haoshi_admin_store';
+
+// ============================================
+// 本地类型定义（原 @/data/admin 已移除）
+// ============================================
+
+export type AdminReviewStatus = 'pending' | 'reviewing' | 'approved' | 'returned' | 'rejected';
+export type AccountStatus = 'active' | 'banned' | 'marked';
+export type UserMarkType = 'normal' | 'vip' | 'verified' | 'suspect';
+export type ConfigCategory = 'fortune' | 'title' | 'ai' | 'moderation' | 'aggregation';
+export type TimeRange = 'today' | 'week' | 'month' | 'quarter';
+export type TopicStatus = 'online' | 'offline';
+
+export interface AdminUser {
+  id: string;
+  name: string;
+  avatar: string;
+  region: string;
+  bio?: string;
+  createdAt: string;
+  lastActiveAt: string;
+  accountStatus: AccountStatus;
+  markType: UserMarkType;
+  kindnessCount: number;
+  witnessCount: number;
+  blessingValue: number;
+  violationCount: number;
+  bannedAt?: string;
+  bannedReason?: string;
+  bannedDuration?: number;
+}
+
+export interface AdminTopic {
+  id: string;
+  name: string;
+  description: string;
+  color: string;
+  sortWeight: number;
+  status: TopicStatus;
+  creatorId: string;
+  creatorName: string;
+  kindnessCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AdminReviewTask {
+  id: string;
+  contentId: string;
+  content: string;
+  tags: string[];
+  userId: string;
+  userName: string;
+  userAvatar: string;
+  userRegion: string;
+  aiResult: 'rejected' | 'needs_revision' | 'needs_modification';
+  aiConfidence: number;
+  aiReason?: string;
+  status: AdminReviewStatus;
+  reviewer?: string;
+  reviewedAt?: string;
+  reviewNote?: string;
+  returnReason?: string;
+  createdAt: string;
+  kindnessType: 'self' | 'witness';
+  blessingValue: number;
+  images?: string[];
+}
+
+export interface ConfigItem {
+  key: string;
+  label: string;
+  description: string;
+  type: 'number' | 'string' | 'boolean' | 'select';
+  value: number | string | boolean;
+  defaultValue: number | string | boolean;
+  category: ConfigCategory;
+  min?: number;
+  max?: number;
+  unit?: string;
+  options?: string[];
+}
+
+export interface ConfigHistory {
+  id: string;
+  key: string;
+  label: string;
+  oldValue: number | string | boolean;
+  newValue: number | string | boolean;
+  operator: string;
+  operatedAt: string;
+  reason?: string;
+}
+
+export interface DashboardMetric {
+  totalUsers: number;
+  activeUsers: number;
+  newUsers: number;
+  kindnessCount: number;
+  charityCount: number;
+  completedCharity: number;
+  fortuneTotal: number;
+  fortuneDistributed: number;
+  reviewPending: number;
+  reviewApproved: number;
+  reviewRejected: number;
+  dau?: number;
+  mau?: number;
+  challengeParticipationRate?: number;
+  charityCompletionRate?: number;
+  totalKindness?: number;
+}
+
+export interface DashboardTrend {
+  dates?: string[];
+  values?: number[];
+  userGrowth?: { label: string; value: number }[];
+  kindnessTrend?: { label: string; value: number }[];
+  categoryDistribution?: { label: string; value: number }[];
+}
+
+export interface ViolationRecord {
+  id: string;
+  userId: string;
+  userName: string;
+  type: string;
+  description: string;
+  penalty: 'ban_3d' | 'ban_7d' | 'ban_permanent' | 'warning';
+  createdAt: string;
+  operator: string;
+}
+
+export interface FortuneFlow {
+  id: string;
+  userId: string;
+  amount: number;
+  description: string;
+  createdAt: string;
+}
 
 // ============================================
 // 管理后台 Store 类型定义
@@ -140,13 +253,13 @@ const validateConfigValue = (item: ConfigItem, value: number | string | boolean)
 };
 
 export const useAdminStore = create<AdminState>((set, get) => ({
-  reviewTasks: mockAdminReviewTasks,
-  users: mockAdminUsers,
-  topics: mockAdminTopics,
-  configItems: mockConfigItems,
-  configHistory: mockConfigHistory,
-  violationRecords: mockViolationRecords,
-  fortuneFlows: mockFortuneFlows,
+  reviewTasks: [],
+  users: [],
+  topics: [],
+  configItems: [],
+  configHistory: [],
+  violationRecords: [],
+  fortuneFlows: [],
 
   // ========== 审核操作 ==========
   approveReviewTask: (id, reviewer, note) => {
@@ -480,12 +593,29 @@ export const useAdminStore = create<AdminState>((set, get) => ({
   },
 
   // ========== 看板数据 ==========
-  getDashboardMetric: (range) => {
-    return mockDashboardData[range];
+  getDashboardMetric: (_range) => {
+    // 返回默认空指标，实际数据应从后端获取
+    return {
+      totalUsers: 0,
+      activeUsers: 0,
+      newUsers: 0,
+      kindnessCount: 0,
+      charityCount: 0,
+      completedCharity: 0,
+      fortuneTotal: 0,
+      fortuneDistributed: 0,
+      reviewPending: 0,
+      reviewApproved: 0,
+      reviewRejected: 0,
+    } as DashboardMetric;
   },
 
-  getDashboardTrend: (range) => {
-    return mockDashboardTrend[range];
+  getDashboardTrend: (_range) => {
+    // 返回默认空趋势，实际数据应从后端获取
+    return {
+      dates: [],
+      values: [],
+    } as DashboardTrend;
   },
 
   // ========== 持久化 ==========
@@ -495,13 +625,13 @@ export const useAdminStore = create<AdminState>((set, get) => ({
       if (data) {
         const parsed = JSON.parse(data);
         set({
-          reviewTasks: parsed.reviewTasks || mockAdminReviewTasks,
-          users: parsed.users || mockAdminUsers,
-          topics: parsed.topics || mockAdminTopics,
-          configItems: parsed.configItems || mockConfigItems,
-          configHistory: parsed.configHistory || mockConfigHistory,
-          violationRecords: parsed.violationRecords || mockViolationRecords,
-          fortuneFlows: parsed.fortuneFlows || mockFortuneFlows,
+          reviewTasks: parsed.reviewTasks || [],
+          users: parsed.users || [],
+          topics: parsed.topics || [],
+          configItems: parsed.configItems || [],
+          configHistory: parsed.configHistory || [],
+          violationRecords: parsed.violationRecords || [],
+          fortuneFlows: parsed.fortuneFlows || [],
         });
       }
     } catch (e) {

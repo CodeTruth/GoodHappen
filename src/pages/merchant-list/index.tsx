@@ -4,16 +4,49 @@ import Taro from '@tarojs/taro';
 import classnames from 'classnames';
 import { useFortuneStore } from '@/store/fortune';
 import { useShopStore } from '@/store/shop';
-import {
-  getMerchantsByDistance,
-  formatDistance,
-  benefitTypeLabels,
-  Merchant,
-  MerchantBenefit,
-  BenefitType,
-} from '@/data/merchants';
-import { FORTUNE_LEVELS } from '@/data/fortune-levels';
 import styles from './index.module.scss';
+
+// 本地定义（原 @/data/merchants、@/data/fortune-levels 已移除）
+type BenefitType = 'discount' | 'gift' | 'service' | 'experience' | 'event' | 'cooperation';
+
+interface MerchantBenefit {
+  id: string;
+  name: string;
+  type: BenefitType;
+  title: string;
+  description: string;
+  fortuneCost: number;
+  cost: number;
+  icon: string;
+  requiredTitleLevel?: number;
+  requiredTitleLabel?: string;
+}
+
+interface Merchant {
+  id: string;
+  name: string;
+  logo: string;
+  category: string;
+  address: string;
+  distance: number;
+  businessHours: string;
+  isAnnualExclusive?: boolean;
+  benefits: MerchantBenefit[];
+}
+
+const benefitTypeLabels: Record<BenefitType, { label: string; icon: string }> = {
+  discount: { label: '折扣优惠', icon: '💰' },
+  gift: { label: '实物礼品', icon: '🎁' },
+  service: { label: '服务体验', icon: '🔧' },
+  experience: { label: '体验活动', icon: '🎉' },
+  event: { label: '限时活动', icon: '🎫' },
+  cooperation: { label: '社区联名', icon: '🏛️' },
+};
+
+const getMerchantsByDistance = (): Merchant[] => [];
+const formatDistance = (distance: number): string => `${distance}m`;
+
+const FORTUNE_LEVELS: { level: number; name: string; min: number }[] = [];
 
 // 权益类型筛选
 type FilterType = 'all' | BenefitType;
@@ -69,7 +102,7 @@ const MerchantListPage: React.FC = () => {
   // 兑换权益（生成福气码）
   const handleRedeemBenefit = (benefit: MerchantBenefit) => {
     // 检查称号等级
-    if (currentTitle.level < benefit.requiredTitleLevel) {
+    if (benefit.requiredTitleLevel && currentTitle.level < benefit.requiredTitleLevel) {
       const requiredTitle = FORTUNE_LEVELS.find(t => t.level === benefit.requiredTitleLevel);
       Taro.showToast({ title: `需${requiredTitle?.name || '更高'}称号`, icon: 'none' });
       return;
@@ -107,8 +140,8 @@ const MerchantListPage: React.FC = () => {
 
   // 判断权益是否可兑换
   const checkBenefitRedeemable = (benefit: MerchantBenefit): { canRedeem: boolean; reason?: string } => {
-    if (currentTitle.level < benefit.requiredTitleLevel) {
-      return { canRedeem: false, reason: `需${benefit.requiredTitleLabel}` };
+    if (benefit.requiredTitleLevel && currentTitle.level < benefit.requiredTitleLevel) {
+      return { canRedeem: false, reason: `需${benefit.requiredTitleLabel || '更高称号'}` };
     }
     if (availableFortune < benefit.cost) {
       return { canRedeem: false, reason: `还差${benefit.cost - availableFortune}福气` };

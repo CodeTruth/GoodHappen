@@ -3,12 +3,7 @@ import { View, Text, ScrollView, Image } from '@tarojs/components';
 import Taro from '@tarojs/taro';
 import classnames from 'classnames';
 import { useFortuneStore } from '@/store/fortune';
-import { useCharityFundStore } from '@/store/charityFund';
-import {
-  Recipient,
-  RecipientType,
-  RECIPIENT_TYPE_MAP,
-} from '@/data/charityFund';
+import { useCharityFundStore, Recipient, RecipientType, RECIPIENT_TYPE_MAP } from '@/store/charityFund';
 import styles from './index.module.scss';
 
 // 类型筛选标签
@@ -150,7 +145,7 @@ const RecipientsPage: React.FC = () => {
                 {/* 头部：头像 + 类型标签 */}
                 <View className={styles.cardHeader}>
                   <Image
-                    src={recipient.avatar}
+                    src={recipient.avatar || ''}
                     className={styles.avatar}
                     mode="aspectFill"
                   />

@@ -344,6 +344,72 @@
   text-align: center;
 }
 
+// ============================================
+// 善行影响力 — 暖金色设计
+// ============================================
+.impactSection {
+  background: linear-gradient(135deg, #FFF9F0 0%, #FFF3E0 100%);
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  margin: 0 $page-padding $spacing-md;
+  box-shadow: $shadow-card;
+  border: 1rpx solid rgba(196, 149, 106, 0.2);
+}
+
+.impactTitle {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: #5D4E37;
+  margin-bottom: $spacing-md;
+  position: relative;
+  padding-left: $spacing-md;
+
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 6rpx;
+    height: 28rpx;
+    background: linear-gradient(180deg, #C4956A, #D4A76A);
+    border-radius: 3rpx;
+  }
+}
+
+.impactGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: $spacing-sm;
+}
+
+.impactItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: $spacing-sm 0;
+  border-radius: $radius-md;
+  background: rgba(255, 255, 255, 0.6);
+  transition: all $transition-base;
+
+  &:active {
+    background: rgba(196, 149, 106, 0.1);
+  }
+}
+
+.impactValue {
+  font-size: 36rpx;
+  font-weight: $font-weight-bold;
+  color: #C4956A;
+  font-variant-numeric: tabular-nums;
+  margin-bottom: 4rpx;
+}
+
+.impactLabel {
+  font-size: $font-size-xs;
+  color: #8B7355;
+}
+
 .streakCard {
   display: flex;
   align-items: center;

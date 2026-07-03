@@ -8,6 +8,8 @@ export default {
   h5: {
     publicPath: '/',
     devServer: {
+      host: '0.0.0.0',
+      port: 10086,
       open: false,
     },
   },

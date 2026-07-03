@@ -128,7 +128,7 @@ export default function AIAdvisorPage() {
     // 模拟分析延迟
     timeoutRef.current = setTimeout(() => {
       const perceived = extractFromVoice(finalVoice)
-      const cameraData = inferFromCamera()
+      const cameraData = inferFromCamera(finalVoice)
       const merged = { ...perceived, ...cameraData }
 
       const userProfile: UserProfile = {
@@ -229,6 +229,14 @@ export default function AIAdvisorPage() {
     if (score < 70) return 'linear-gradient(90deg, #FAAD14 0%, #FF7A45 100%)'
     return 'linear-gradient(90deg, #FF7A45 0%, #F44336 100%)'
   }
+
+  // ===== 处理从首页聊天入口跳转（mode=text 直接显示文字输入模式） =====
+  useEffect(() => {
+    const params = Taro.getCurrentInstance().router?.params
+    if (params?.mode === 'text') {
+      setShowTextInput(true)
+    }
+  }, [])
 
   // ===== 页面卸载时清理 =====
   useEffect(() => {
@@ -391,7 +399,7 @@ export default function AIAdvisorPage() {
                   className={`${styles.voiceWaveBar} ${isListening ? styles.active : ''}`}
                   style={{
                     animationDelay: `${i * 0.05}s`,
-                    height: isListening ? `${Math.random() * 40 + 10}px` : '6px',
+                    height: isListening ? `${(i % 5) * 8 + 10}px` : '6px',
                   }}
                 />
               ))}
@@ -687,11 +695,20 @@ function extractFromVoice(desc: string): PerceivedData {
   }
 }
 
-function inferFromCamera(): Partial<PerceivedData> {
-  const nearbyPeople = Math.random() > 0.5 ? 5 : Math.random() > 0.5 ? 2 : 0
-  const hasCCTV = Math.random() > 0.3
-  const isIsolated = nearbyPeople <= 2 && Math.random() > 0.5
-  return { nearbyPeople, isIsolated, hasCCTV }
+function inferFromCamera(desc: string): Partial<PerceivedData> {
+  // 基于输入文本的确定性映射：使用关键词分析替代 Math.random()
+  if (/偏僻|无人|少人|夜晚|荒凉|偏僻路段|人烟稀少/.test(desc)) {
+    return { nearbyPeople: 0, isIsolated: true, hasCCTV: false }
+  }
+  if (/人多|繁华|商场|街道|市中心|人群|热闹|闹市/.test(desc)) {
+    return { nearbyPeople: 10, isIsolated: false, hasCCTV: true }
+  }
+  // 默认情况：根据文本中有无"监控|camera|摄像头"判断
+  return {
+    nearbyPeople: 3,
+    isIsolated: false,
+    hasCCTV: /监控|camera|摄像头/.test(desc),
+  }
 }
 
 function guessActionType(desc: string): string {

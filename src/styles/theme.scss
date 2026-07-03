@@ -22,6 +22,8 @@ $color-info: #7B9E87; // 石青绿，辅助信息色
 $color-bg-page: #F8F4EE;       // 宣纸白
 $color-bg-card: #FFFCF8;       // 暖白卡片
 $color-bg-hover: #F0EBE3;      // 暖灰悬停
+$color-bg-muted: #F2EDE6;       // 柔和背景（标签、徽章底色）
+$color-bg-base: #F8F4EE;        // 基础背景（与页面背景一致）
 
 // 文本色 —— 墨色层次
 $color-text-primary: #2C2419;   // 浓墨（标题）
@@ -32,4 +34,5 @@ $color-text-white: #ffffff;
 
 // 边框色 —— 淡墨晕染
 $color-border: #E5DDD3;
+$color-border-light: #EDE8E0;
 $color-divider: #EDE8E0;

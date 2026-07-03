@@ -4,9 +4,24 @@ import Taro from '@tarojs/taro';
 import KindnessCard from '@/components/KindnessCard';
 import WarmPartnerCard from '@/components/WarmPartnerCard';
 import { getKindnessList } from '@/data/kindness';
-import { getWeeklyWarmPartners } from '@/data/social';
-import { getTodaySuggestion } from '@/data/daily-kindness';
 import { isRepresentative } from '@/services/risk-detection';
+
+// 本地定义（原 @/data/social、@/data/daily-kindness、@/data/onboarding-tasks 已移除）
+const getWeeklyWarmPartners = () => [] as any[];
+const getTodaySuggestion = () => ({
+  suggestion: '今天做一件力所能及的小事，比如帮邻居开门、给陌生人一个微笑。',
+  persona: '苏东坡',
+  quote: '勿以善小而不为',
+  risk: null as any,
+});
+interface DailyTask {
+  id: string;
+  day: number;
+  title: string;
+  description: string;
+  isCompleted: boolean;
+}
+const onboardingDailyTasks: DailyTask[] = [];
 import { useSocialStore } from '@/store/social';
 import { useUserStore } from '@/store/user';
 import { useInteractionStore } from '@/store/interaction';
@@ -15,6 +30,7 @@ import WelcomeGuide from '@/components/WelcomeGuide';
 import { useNotificationStore } from '@/store/notification';
 import { useCircleStore } from '@/store/circle';
 import { useProtectionStore } from '@/store/protection';
+import { useOnboardingStore } from '@/store/onboarding';
 import { getExampleWall } from '@/services/moral-dashboard';
 import { getCircleTypeConfig, CircleType } from '@/config/circle-types';
 import { Kindness } from '@/types/kindness';
@@ -167,6 +183,39 @@ const PlatformStatsBar = React.memo(() => (
   </View>
 ));
 
+// ===== 子组件：Slogan Banner =====
+const SloganBanner = React.memo(() => (
+  <View className={styles.sloganBanner}>
+    <Text className={styles.sloganText}>再小的善意也值得被看见</Text>
+  </View>
+));
+
+// ===== 子组件：首次进入3步引导 =====
+const FirstTimeGuide = React.memo(() => {
+  const steps = [
+    { icon: '👀', text: '发现身边温暖' },
+    { icon: '✍️', text: '也可以见证别人的善行' },
+    { icon: '🌱', text: '获得福气成长' },
+  ];
+  return (
+    <View className={styles.guideSection}>
+      <Text className={styles.guideTitle}>🚀 三步开启善行之旅</Text>
+      <View className={styles.guideSteps}>
+        {steps.map((step, index) => (
+          <View
+            key={index}
+            className={styles.guideStep}
+            onClick={() => Taro.navigateTo({ url: '/pages/record/index' })}
+          >
+            <Text className={styles.guideStepIcon}>{step.icon}</Text>
+            <Text className={styles.guideStepText}>{step.text}</Text>
+          </View>
+        ))}
+      </View>
+    </View>
+  );
+});
+
 // ===== 子组件：每日善行灵感 =====
 const DailySuggestionCard = React.memo(() => {
   const suggestion = useMemo(() => getTodaySuggestion(), []);
@@ -197,6 +246,60 @@ const DailySuggestionCard = React.memo(() => {
         </View>
       )}
       <Text className={styles.dailyQuote}>—— {suggestion.persona}：「{suggestion.quote}」</Text>
+    </View>
+  );
+});
+
+// ===== 子组件：新手任务进度条（仅 userKindnessList.length < 3 时显示） =====
+const OnboardingProgressBar = React.memo(() => {
+  const { loadFromStorage } = useOnboardingStore();
+  const [tasksState, setTasksState] = useState<DailyTask[]>([]);
+
+  useEffect(() => {
+    loadFromStorage();
+    // 从本地存储读取已完成状态
+    try {
+      const stored = Taro.getStorageSync('haoshi_onboarding_daily');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        setTasksState(parsed);
+      } else {
+        setTasksState(onboardingDailyTasks);
+      }
+    } catch {
+      setTasksState(onboardingDailyTasks);
+    }
+  }, []);
+
+  // 计算已完成天数
+  const completedCount = tasksState.filter(t => t.isCompleted).length;
+  const totalDays = 3;
+  const percent = (completedCount / totalDays) * 100;
+
+  return (
+    <View
+      className={styles.onboardingProgress}
+      onClick={() => Taro.navigateTo({ url: '/pages/onboarding/index' })}
+    >
+      <View className={styles.onboardingProgressTop}>
+        <Text className={styles.onboardingProgressIcon}>🌱</Text>
+        <Text className={styles.onboardingProgressTitle}>新手行善任务</Text>
+        <Text className={styles.onboardingProgressArrow}>→</Text>
+      </View>
+      <View className={styles.onboardingProgressBody}>
+        <Text className={styles.onboardingProgressText}>
+          第{Math.min(completedCount + 1, totalDays)}天/共{totalDays}天
+        </Text>
+        <View className={styles.onboardingProgressBarTrack}>
+          <View
+            className={styles.onboardingProgressBarFill}
+            style={{ width: `${percent}%` }}
+          />
+        </View>
+        <Text className={styles.onboardingProgressCount}>
+          {completedCount}/{totalDays}
+        </Text>
+      </View>
     </View>
   );
 });
@@ -299,16 +402,42 @@ const HomePage: React.FC = () => {
           (item.visibleScope === 'public' || item.visibleScope === 'followers')
       );
     } else if (activeTab === 'recommend') {
-      // 为你推荐：基于用户类型偏好和地区（轻量推荐，不优化停留时间）
+      // 为你推荐：基于用户善行标签偏好 + 同地区 + 时间倒序
       const userRegion = userInfo?.region || '北京市';
-      // 模拟用户偏好：偏好"self"类型
-      const preferredType: 'self' | 'witness' = 'self';
-      result = result.filter((item) => {
-        // 同地区优先，或同类型偏好
-        const sameRegion = item.location?.includes(userRegion.slice(0, 2));
-        const sameType = item.type === preferredType;
-        return sameRegion || sameType;
+      // 从用户已有的善行记录中提取标签偏好
+      const userTags = userKindnessList.flatMap(k => k.tags);
+      const tagCountMap = new Map<string, number>();
+      userTags.forEach(tag => {
+        tagCountMap.set(tag, (tagCountMap.get(tag) || 0) + 1);
       });
+      // 按出现频率排序的偏好标签
+      const preferredTags = [...tagCountMap.entries()]
+        .sort((a, b) => b[1] - a[1])
+        .map(e => e[0]);
+
+      // 为每条内容计算推荐得分（同标签+3，同地区+2）
+      const scored = result.map((item) => {
+        let score = 0;
+        // 新手用户未发布过善行时，优先展示witness类型善行
+        if (userKindnessList.length === 0 && item.type === 'witness') {
+          score += 5;
+        }
+        // 同标签匹配
+        const matchedTags = preferredTags.filter(tag => item.tags.includes(tag)).length;
+        score += matchedTags * 3;
+        // 同地区匹配
+        const sameRegion = item.location?.includes(userRegion.slice(0, 2));
+        if (sameRegion) score += 2;
+        return { item, score };
+      });
+
+      // 按得分从高到低排序，得分相同则按时间倒序
+      scored.sort((a, b) => {
+        if (b.score !== a.score) return b.score - a.score;
+        return new Date(b.item.createdAt).getTime() - new Date(a.item.createdAt).getTime();
+      });
+
+      result = scored.map(s => s.item);
     }
 
     // 2. 按标签筛选
@@ -330,7 +459,7 @@ const HomePage: React.FC = () => {
 
     // 5. 默认按发布时间倒序
     return sortByTimeDesc(result);
-  }, [allKindness, activeTab, selectedTag, selectedRegion, onlyFollowing, followingIds, isFollowing, userInfo]);
+  }, [allKindness, activeTab, selectedTag, selectedRegion, onlyFollowing, followingIds, isFollowing, userInfo, userKindnessList]);
 
   const handleTabChange = (tab: SquareTab) => {
     setActiveTab(tab);
@@ -377,6 +506,9 @@ const HomePage: React.FC = () => {
       refresherTriggered={refreshing}
       onRefresherRefresh={handleRefresh}
     >
+      {/* Slogan Banner */}
+      <SloganBanner />
+
       {/* 页面头部 */}
       <View className={styles.header}>
         <View className={styles.headerLeft}>
@@ -424,6 +556,34 @@ const HomePage: React.FC = () => {
         <Text className={styles.advisorEntryArrow}>→</Text>
       </View>
 
+      {/* 每日善行建议（置顶到筛选Tab上方） */}
+      <DailySuggestionCard />
+
+      {/* 新手行善任务进度条（仅未完成3天任务时显示） */}
+      {userKindnessList.length < 3 && <OnboardingProgressBar />}
+
+      {/* 任务4：AI顾问聊天式引导入口 */}
+      <View
+        className={styles.aiChatEntry}
+        onClick={() => Taro.navigateTo({ url: '/pages/ai-advisor/index?mode=text' })}
+      >
+        <View className={styles.aiChatEntryLeft}>
+          <View className={styles.aiChatEntryAvatar}>
+            <Text className={styles.aiChatEntryAvatarIcon}>💬</Text>
+          </View>
+          <View className={styles.aiChatEntryText}>
+            <Text className={styles.aiChatEntryTitle}>AI顾问</Text>
+            <Text className={styles.aiChatEntryDesc}>有善行想法但不确定怎么做？和AI聊聊</Text>
+          </View>
+        </View>
+        <View className={styles.aiChatEntryArrow}>
+          <Text className={styles.aiChatEntryArrowIcon}>→</Text>
+        </View>
+      </View>
+
+      {/* 首次进入3步引导 */}
+      {userKindnessList.length === 0 && <FirstTimeGuide />}
+
       {/* 标签切换 */}
       <ScrollView className={styles.tabs} scrollX enableFlex>
         <View className={styles.tabsInner}>
@@ -445,6 +605,9 @@ const HomePage: React.FC = () => {
           >
             我见证的温暖
           </Text>
+          {activeTab === 'witness' && (
+            <Text className={styles.witnessTabBadge}>观察即参与</Text>
+          )}
           <Text
             className={`${styles.tab} ${activeTab === 'following' ? styles.active : ''}`}
             onClick={() => handleTabChange('following')}
@@ -459,9 +622,6 @@ const HomePage: React.FC = () => {
           </Text>
         </View>
       </ScrollView>
-
-      {/* 每日善行建议 */}
-      <DailySuggestionCard />
 
       {/* 筛选栏 */}
       {showFilterBar && (
@@ -541,6 +701,19 @@ const HomePage: React.FC = () => {
 
       {/* 善行保护入口 */}
       <ProtectionCard />
+
+      {/* 模拟体验保护流程入口 */}
+      <View
+        className={styles.demoEntry}
+        onClick={() => Taro.navigateTo({ url: '/pages/protection-mode/index?demo=true' })}
+      >
+        <Text className={styles.demoEntryIcon}>🎮</Text>
+        <View className={styles.demoEntryText}>
+          <Text className={styles.demoEntryTitle}>模拟体验完整保护流程</Text>
+          <Text className={styles.demoEntryDesc}>无需真实操作，一键模拟全程录像+录音+GPS存证流程</Text>
+        </View>
+        <Text className={styles.demoEntryArrow}>→</Text>
+      </View>
 
       {/* 善行列表 */}
       <View className={styles.kindnessList}>

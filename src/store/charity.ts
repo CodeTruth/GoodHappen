@@ -2,7 +2,6 @@ import { create } from 'zustand';
 import Taro from '@tarojs/taro';
 import { useFortuneStore } from '@/store/fortune';
 import { useUserStore, checkIsMinor } from '@/store/user';
-import { mockCharityNeeds } from '@/data/charity';
 import {
   CharityNeed,
   CharityStatus,
@@ -112,7 +111,7 @@ const initDailyReward = { date: getToday(), amount: 0 };
 const initMonthlyReward = { month: getMonth(), amount: 0 };
 
 export const useCharityStore = create<CharityState>((set, get) => ({
-  needs: [...mockCharityNeeds],
+  needs: [],
   dailyRewardOut: { ...initDailyReward },
   monthlyRewardOut: { ...initMonthlyReward },
 
@@ -121,15 +120,8 @@ export const useCharityStore = create<CharityState>((set, get) => ({
       const data = Taro.getStorageSync(STORAGE_KEY);
       if (data) {
         const parsed = JSON.parse(data);
-        // 合并 mock 数据与本地存储（本地存储优先，但保留 mock 中未覆盖的项）
-        const mockIds = new Set(mockCharityNeeds.map(n => n.id));
-        const localNeeds = (parsed.needs || []).filter((n: CharityNeed) => !mockIds.has(n.id));
-        const overriddenMock = mockCharityNeeds.map(mockNeed => {
-          const local = (parsed.needs || []).find((n: CharityNeed) => n.id === mockNeed.id);
-          return local || mockNeed;
-        });
         set({
-          needs: [...overriddenMock, ...localNeeds],
+          needs: parsed.needs || [],
           dailyRewardOut: parsed.dailyRewardOut?.date === getToday()
             ? parsed.dailyRewardOut
             : { ...initDailyReward },

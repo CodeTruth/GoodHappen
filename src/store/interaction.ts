@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import Taro from '@tarojs/taro';
 import { validateComment, recordComment, extractMentions } from '@/utils/sensitive';
+import { isSupabaseAvailable } from '@/services/supabase';
+import { interactionApi } from '@/services/db';
 
 const STORAGE_KEY = 'haoshi_interaction_store';
 
@@ -53,7 +55,7 @@ interface InteractionState {
   getCommentCount: (kindnessId: string, baseCount: number) => number;
 
   // 持久化
-  loadFromStorage: () => void;
+  loadFromStorage: () => Promise<void>;
   saveToStorage: () => void;
 }
 
@@ -81,6 +83,17 @@ export const useInteractionStore = create<InteractionState>((set, get) => ({
         },
       });
       get().saveToStorage();
+      // 同步到后端
+      if (isSupabaseAvailable()) {
+        interactionApi.toggleLike({
+          kindnessId,
+          userId: state.currentUserId,
+          userName: _userName || '用户',
+          userAvatar: _userAvatar || '',
+        }).catch((e) => {
+          console.warn('[InteractionStore] Failed to sync unlike to backend:', e);
+        });
+      }
       return false;
     } else {
       // 点赞
@@ -96,6 +109,17 @@ export const useInteractionStore = create<InteractionState>((set, get) => ({
         },
       });
       get().saveToStorage();
+      // 同步到后端
+      if (isSupabaseAvailable()) {
+        interactionApi.toggleLike({
+          kindnessId,
+          userId: state.currentUserId,
+          userName: _userName || '用户',
+          userAvatar: _userAvatar || '',
+        }).catch((e) => {
+          console.warn('[InteractionStore] Failed to sync like to backend:', e);
+        });
+      }
       return true;
     }
   },
@@ -150,6 +174,12 @@ export const useInteractionStore = create<InteractionState>((set, get) => ({
     recordComment(content);
 
     get().saveToStorage();
+    // 同步到后端
+    if (isSupabaseAvailable()) {
+      interactionApi.addComment(comment).catch((e) => {
+        console.warn('[InteractionStore] Failed to sync comment to backend:', e);
+      });
+    }
     return { success: true };
   },
 
@@ -163,7 +193,7 @@ export const useInteractionStore = create<InteractionState>((set, get) => ({
     return baseCount + commentList.length;
   },
 
-  loadFromStorage: () => {
+  loadFromStorage: async () => {
     try {
       const data = Taro.getStorageSync(STORAGE_KEY);
       if (data) {
@@ -176,6 +206,16 @@ export const useInteractionStore = create<InteractionState>((set, get) => ({
       }
     } catch (e) {
       console.error('[InteractionStore] Load from storage failed:', e);
+    }
+    // 如果Supabase可用，从后端同步当前用户的互动数据
+    if (isSupabaseAvailable()) {
+      try {
+        // 互动数据按善行查询，全局加载时不批量拉取
+        // 在查看具体善行详情时，会通过 kindnessApi.getKindnessById 附带互动数据
+        console.log('[InteractionStore] Skipping bulk sync, will load per-kindness');
+      } catch (e) {
+        console.warn('[InteractionStore] Failed to sync interactions from backend:', e);
+      }
     }
   },
 

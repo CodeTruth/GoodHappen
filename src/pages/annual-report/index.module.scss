@@ -288,6 +288,70 @@
   font-weight: $font-weight-medium;
 }
 
+// 引导页 — 温暖金色风格
+.guideContainer {
+  min-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: $spacing-xl;
+}
+
+.guideIcon {
+  font-size: 120rpx;
+  margin-bottom: $spacing-lg;
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-20rpx); }
+}
+
+.guideTitle {
+  font-size: 56rpx;
+  font-weight: $font-weight-bold;
+  color: $color-text-white;
+  margin-bottom: $spacing-md;
+  text-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.15);
+}
+
+.guideDesc {
+  font-size: $font-size-md;
+  color: rgba(255, 255, 255, 0.9);
+  line-height: $line-height-loose;
+  margin-bottom: $spacing-xl;
+  white-space: pre-line;
+}
+
+.guideBtn {
+  background: linear-gradient(135deg, #FFD700 0%, #FFB800 100%);
+  border-radius: $radius-button;
+  padding: 28rpx 56rpx;
+  box-shadow: 0 8rpx 32rpx rgba(255, 184, 0, 0.4);
+  cursor: pointer;
+  transition: all 0.3s ease;
+
+  &:active {
+    transform: scale(0.96);
+    box-shadow: 0 4rpx 16rpx rgba(255, 184, 0, 0.3);
+  }
+}
+
+.guideBtnText {
+  font-size: $font-size-lg;
+  color: #5C3D00;
+  font-weight: $font-weight-semibold;
+}
+
+.guideFooter {
+  font-size: $font-size-xs;
+  color: rgba(255, 255, 255, 0.6);
+  margin-top: $spacing-lg;
+}
+
 // 数字滚动动画容器
 .animatedNumber {
   display: inline-block;

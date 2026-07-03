@@ -1,13 +1,45 @@
 import { create } from 'zustand';
 import Taro from '@tarojs/taro';
-import { MoralTask, TaskSubmission } from '@/data/mock-moral-tasks';
-import {
-  mockMoralTasks,
-  mockTaskSubmissions,
-} from '@/data/mock-moral-tasks';
 import { useFortuneStore } from '@/store/fortune';
 
 const STORAGE_KEY = 'haoshi_moral_task_store';
+
+// ============================================
+// 本地类型定义（原 @/data/mock-moral-tasks 已移除）
+// ============================================
+
+export type MoralCategory = string;
+
+export interface MoralTask {
+  id: string;
+  circleId: string;
+  title: string;
+  description: string;
+  category: MoralCategory;
+  status: 'active' | 'archived';
+  requireVideo?: boolean;
+  weekRange?: { start: string; end: string };
+  createdAt: string;
+}
+
+export interface TaskSubmission {
+  id: string;
+  circleId: string;
+  taskId?: string;
+  userId: string;
+  userName: string;
+  userAvatar: string;
+  content: string;
+  imageUrl?: string;
+  videoUrl?: string;
+  isExample: boolean;
+  needsRevision: boolean;
+  teacherComment?: string;
+  likes: number;
+  likedBy: string[];
+  comments?: { id: string; userId: string; userName: string; content: string; createdAt: string }[];
+  createdAt: string;
+}
 
 interface MoralTaskState {
   tasks: MoralTask[];
@@ -39,13 +71,8 @@ const generateId = (prefix: string): string =>
   `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 
 export const useMoralTaskStore = create<MoralTaskState>((set, get) => ({
-  tasks: [...mockMoralTasks],
-  submissions: mockTaskSubmissions.map((s) => ({
-    ...s,
-    likes: s.likes || (s.isExample ? Math.floor(Math.random() * 15) + 3 : 0),
-    likedBy: s.likedBy || [],
-    comments: s.comments || [],
-  })),
+  tasks: [],
+  submissions: [],
 
   getTasksByCircle: (circleId) => {
     return get().tasks.filter((t) => t.circleId === circleId);
@@ -197,13 +224,10 @@ export const useMoralTaskStore = create<MoralTaskState>((set, get) => ({
       const data = Taro.getStorageSync(STORAGE_KEY);
       if (data) {
         const parsed = JSON.parse(data);
-        // 仅当存储中有数据时覆盖mock数据，否则保留mock
-        if (parsed.tasks && parsed.tasks.length > mockMoralTasks.length) {
-          set({ tasks: parsed.tasks });
-        }
-        if (parsed.submissions && parsed.submissions.length > mockTaskSubmissions.length) {
-          set({ submissions: parsed.submissions });
-        }
+        set({
+          tasks: parsed.tasks || [],
+          submissions: parsed.submissions || [],
+        });
       }
     } catch (e) {
       console.error('[MoralTaskStore] Load from storage failed:', e);

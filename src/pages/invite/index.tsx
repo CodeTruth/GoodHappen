@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { View, Text, Image, Button } from '@tarojs/components';
 import Taro from '@tarojs/taro';
-import { useInviteStore, INVITE_REWARD } from '@/store/invite';
+import { useInviteStore, INVITE_REWARD, InviteMilestone } from '@/store/invite';
 import styles from './index.module.scss';
 
 const InvitePage: React.FC = () => {
@@ -12,6 +12,8 @@ const InvitePage: React.FC = () => {
     generateInviteCode,
     simulateInviteRegister,
     getInviteStats,
+    getInviteMilestones,
+    getNextMilestone,
     copyInviteCode,
     generateInviteText,
     loadFromStorage,
@@ -25,6 +27,11 @@ const InvitePage: React.FC = () => {
   }, []);
 
   const stats = getInviteStats();
+  const milestones = getInviteMilestones();
+  const nextMilestone = getNextMilestone();
+
+  // 计算进度条百分比（按10人满额）
+  const progressPercent = Math.min((totalInvited / 10) * 100, 100);
 
   // 复制邀请码
   const handleCopyCode = () => {
@@ -82,6 +89,13 @@ const InvitePage: React.FC = () => {
     return date.toLocaleDateString('zh-CN');
   };
 
+  // 获取里程碑图标
+  const getMilestoneIcon = (milestone: InviteMilestone): string => {
+    if (milestone.achieved) return '✅';
+    if (milestone.type === 'title') return '🏆';
+    return '🎯';
+  };
+
   return (
     <View className={styles.container}>
       {/* 顶部海报卡片 */}
@@ -124,11 +138,56 @@ const InvitePage: React.FC = () => {
         </View>
       </View>
 
-      {/* 邀请排行榜（不排名，只显示数量） */}
-      <View className={styles.rankCard}>
-        <Text className={styles.rankTitle}>🏆 我的邀请</Text>
-        <Text className={styles.rankText}>你已邀请 {totalInvited} 人</Text>
-        <Text className={styles.rankSub}>不排名、不对抗，让温暖一起传递</Text>
+      {/* 邀请进度条（里程碑） */}
+      <View className={styles.milestoneCard}>
+        <Text className={styles.milestoneTitle}>🏆 邀请里程碑</Text>
+        <View className={styles.milestoneProgress}>
+          <View className={styles.milestoneBar}>
+            <View
+              className={styles.milestoneBarFill}
+              style={{ width: `${progressPercent}%` }}
+            />
+          </View>
+          <Text className={styles.milestoneCount}>{totalInvited}/10</Text>
+        </View>
+        {/* 里程碑节点 */}
+        <View className={styles.milestoneNodes}>
+          {milestones.map((milestone) => (
+            <View
+              key={milestone.invitesNeeded}
+              className={`${styles.milestoneNode} ${milestone.achieved ? styles.milestoneNodeAchieved : ''} ${totalInvited >= milestone.invitesNeeded ? styles.milestoneNodeReached : ''}`}
+            >
+              <View className={styles.milestoneNodeIcon}>
+                <Text>{getMilestoneIcon(milestone)}</Text>
+              </View>
+              <Text className={styles.milestoneNodeLabel}>{milestone.label}</Text>
+              {milestone.achieved ? (
+                <Text className={styles.milestoneNodeStatus}>已达成</Text>
+              ) : milestone.type === 'fortune' ? (
+                <Text className={styles.milestoneNodeReward}>+{milestone.reward}福气</Text>
+              ) : (
+                <Text className={styles.milestoneNodeReward}>称号"{milestone.titleName}"</Text>
+              )}
+            </View>
+          ))}
+        </View>
+        {/* 下一个里程碑提示 */}
+        {nextMilestone && (
+          <View className={styles.nextMilestone}>
+            <Text className={styles.nextMilestoneLabel}>下一个里程碑：</Text>
+            <Text className={styles.nextMilestoneText}>
+              {nextMilestone.type === 'fortune'
+                ? `邀请${nextMilestone.invitesNeeded}人 → 获得 ${nextMilestone.reward} 福气`
+                : `邀请${nextMilestone.invitesNeeded}人 → 解锁「${nextMilestone.titleName}」称号`
+              }
+            </Text>
+          </View>
+        )}
+        {!nextMilestone && (
+          <View className={styles.nextMilestone}>
+            <Text className={styles.nextMilestoneLabel}>🎉 恭喜你达成全部里程碑！</Text>
+          </View>
+        )}
       </View>
 
       {/* 邀请记录 */}

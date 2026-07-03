@@ -45,6 +45,7 @@
   padding: $spacing-lg;
   margin-bottom: $spacing-lg;
   box-shadow: $shadow-card;
+  border: 2rpx solid rgba($color-primary, 0.15);
 }
 
 .progressHeader {
@@ -88,7 +89,37 @@
   color: $color-text-tertiary;
 }
 
-// 任务列表
+// 全部完成卡片
+.allCompletedCard {
+  background: linear-gradient(135deg, #FFFBE6 0%, #FFF1B8 100%);
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  margin: $spacing-lg 0;
+  text-align: center;
+  border: 2rpx solid rgba($color-warning, 0.3);
+}
+
+.allCompletedIcon {
+  font-size: 80rpx;
+  display: block;
+  margin-bottom: $spacing-sm;
+}
+
+.allCompletedTitle {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-warning;
+  display: block;
+  margin-bottom: $spacing-xs;
+}
+
+.allCompletedDesc {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  display: block;
+}
+
+// 3天任务列表
 .taskList {
   margin-bottom: $spacing-lg;
 }
@@ -104,10 +135,27 @@
   box-shadow: $shadow-card;
   border: 2rpx solid transparent;
   transition: all $transition-base;
+  position: relative;
+  overflow: hidden;
+
+  // 左侧暖金色装饰条
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 6rpx;
+    background: linear-gradient(180deg, $color-primary 0%, $color-primary-light 100%);
+    border-radius: 0 4rpx 4rpx 0;
+  }
 
   &.completed {
     background: linear-gradient(135deg, #F6FFED 0%, #F0FFE0 100%);
-    border-color: rgba($color-success, 0.3);
+
+    &::before {
+      background: linear-gradient(180deg, $color-success 0%, #6BD42A 100%);
+    }
   }
 
   &:active {
@@ -115,25 +163,35 @@
   }
 }
 
-.taskIcon {
+.taskIconWrap {
   font-size: 48rpx;
   width: 80rpx;
   height: 80rpx;
-  background: $color-bg-page;
+  background: linear-gradient(135deg, #FFF9F0 0%, #FFF3E0 100%);
   border-radius: $radius-md;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  border: 2rpx solid rgba($color-primary, 0.15);
 }
 
-.taskCard.completed .taskIcon {
+.taskCard.completed .taskIconWrap {
   background: rgba($color-success, 0.15);
+  border-color: rgba($color-success, 0.3);
 }
 
 .taskInfo {
   flex: 1;
   min-width: 0;
+}
+
+.taskDay {
+  font-size: $font-size-xs;
+  color: $color-primary;
+  font-weight: $font-weight-medium;
+  display: block;
+  margin-bottom: 2rpx;
 }
 
 .taskTitle {
@@ -194,55 +252,14 @@
   font-weight: $font-weight-bold;
 }
 
-// 全部完成卡片
-.allCompletedCard {
-  background: linear-gradient(135deg, #FFFBE6 0%, #FFF1B8 100%);
-  border-radius: $radius-lg;
-  padding: $spacing-lg;
-  margin: $spacing-lg 0;
+// 底部提示
+.footerTip {
   text-align: center;
-  border: 2rpx solid rgba($color-warning, 0.3);
+  padding: $spacing-lg 0;
 }
 
-.allCompletedIcon {
-  font-size: 80rpx;
-  display: block;
-  margin-bottom: $spacing-sm;
-}
-
-.allCompletedTitle {
-  font-size: $font-size-lg;
-  font-weight: $font-weight-semibold;
-  color: $color-warning;
-  display: block;
-  margin-bottom: $spacing-xs;
-}
-
-.allCompletedDesc {
-  font-size: $font-size-sm;
-  color: $color-text-secondary;
-  display: block;
-}
-
-// 底部按钮
-.footerBtn {
-  width: 100%;
-  height: $button-height-lg;
-  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
-  border-radius: $radius-button;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-top: $spacing-lg;
-
-  &:active {
-    opacity: 0.9;
-    transform: scale(0.98);
-  }
-}
-
-.footerBtnText {
-  font-size: $font-size-lg;
-  color: $color-text-white;
-  font-weight: $font-weight-medium;
+.footerTipText {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  line-height: $line-height-normal;
 }

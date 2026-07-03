@@ -3,9 +3,53 @@
 .container {
   min-height: 100vh;
   background: $color-bg-page;
-  padding: $page-padding;
+  padding: 0 $page-padding $page-padding;
   display: flex;
   flex-direction: column;
+}
+
+// 模式状态横幅
+.modeBanner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: $spacing-md;
+  padding: $spacing-sm $spacing-md;
+  background: $color-bg-card;
+  border-radius: $radius-md;
+  box-shadow: $shadow-card;
+}
+
+.modeTag {
+  font-size: $font-size-xs;
+  padding: 4rpx $spacing-sm;
+  border-radius: $radius-xs;
+  flex-shrink: 0;
+
+  &.modeTagMock {
+    background: rgba(250, 173, 20, 0.15);
+    color: $color-warning;
+  }
+
+  &.modeTagReal {
+    background: rgba(82, 196, 26, 0.15);
+    color: $color-success;
+  }
+}
+
+.modeTagText {
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+}
+
+.modeSwitchBtn {
+  font-size: $font-size-xs;
+  color: $color-primary;
+  font-weight: $font-weight-medium;
+
+  &:active {
+    opacity: 0.7;
+  }
 }
 
 // 统计概览

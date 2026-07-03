@@ -1,13 +1,24 @@
 import React, { useState, useMemo } from 'react';
 import { View, Text } from '@tarojs/components';
 import classnames from 'classnames';
-import {
-  getProvinceWarmthList,
-  getWarmthLevelColor,
-  ProvinceWarmth,
-} from '@/data/warmthMap';
-import { formatParticipantCount } from '@/data/warmthStats';
 import styles from './index.module.scss';
+
+// 本地定义（原 @/data/warmthMap、@/data/warmthStats 已移除）
+interface ProvinceWarmth {
+  name: string;
+  shortName?: string;
+  warmthLevel: number;
+  participantCount: number;
+  monthlyFortune?: number;
+  kindnessCount?: number;
+  gridArea?: { row: number; col: number };
+  typeDistribution?: { type: string; percentage: number }[];
+  stories?: { id: string; title: string; summary: string }[];
+}
+
+const getProvinceWarmthList = (): ProvinceWarmth[] => [];
+const getWarmthLevelColor = (_level: number): string => '#1890FF';
+const formatParticipantCount = (count: number): string => `${count}人`;
 
 const WarmthMapPage: React.FC = () => {
   const provinceList = useState(getProvinceWarmthList())[0];
@@ -21,7 +32,7 @@ const WarmthMapPage: React.FC = () => {
       const rowData: (ProvinceWarmth | null)[] = [];
       for (let col = 1; col <= 6; col++) {
         const province = provinceList.find(
-          (p) => p.gridArea.row === row && p.gridArea.col === col
+          (p) => p.gridArea && p.gridArea.row === row && p.gridArea.col === col
         );
         rowData.push(province || null);
       }
@@ -128,7 +139,7 @@ const WarmthMapPage: React.FC = () => {
                       isLight && styles.textDarkSmall
                     )}
                   >
-                    {formatNumber(province.monthlyFortune)}
+                    {formatNumber(province.monthlyFortune || 0)}
                   </Text>
                 </View>
               );
@@ -176,7 +187,7 @@ const WarmthMapPage: React.FC = () => {
               </View>
               <View className={styles.detailStat}>
                 <Text className={styles.detailStatValue}>
-                  {formatNumber(selectedProvince.monthlyFortune)}
+                  {formatNumber(selectedProvince.monthlyFortune || 0)}
                 </Text>
                 <Text className={styles.detailStatLabel}>本月温暖值</Text>
               </View>
@@ -185,7 +196,7 @@ const WarmthMapPage: React.FC = () => {
             {/* 善行类型分布 */}
             <View className={styles.detailSection}>
               <Text className={styles.detailSectionTitle}>善行类型分布</Text>
-              {selectedProvince.typeDistribution.map((item) => (
+              {(selectedProvince.typeDistribution || []).map((item) => (
                 <View key={item.type} className={styles.typeItem}>
                   <Text className={styles.typeName}>{item.type}</Text>
                   <View className={styles.typeBarWrap}>
@@ -202,8 +213,8 @@ const WarmthMapPage: React.FC = () => {
             {/* 本区域温暖故事 */}
             <View className={styles.detailSection}>
               <Text className={styles.detailSectionTitle}>本区域温暖故事</Text>
-              {selectedProvince.stories.length > 0 ? (
-                selectedProvince.stories.map((story) => (
+              {(selectedProvince.stories || []).length > 0 ? (
+                (selectedProvince.stories || []).map((story) => (
                   <View key={story.id} className={styles.storyItem}>
                     <Text className={styles.storyItemTitle}>{story.title}</Text>
                     <Text className={styles.storyItemSummary}>

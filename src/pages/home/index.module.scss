@@ -254,7 +254,7 @@
 .advisorEntryTitle {
   font-size: $font-size-md;
   font-weight: $font-weight-semibold;
-  color: darken($color-primary, 10%);
+  color: #A67B5B;
 }
 
 .advisorEntryDesc {
@@ -265,6 +265,103 @@
 .advisorEntryArrow {
   font-size: $font-size-lg;
   color: $color-primary;
+  font-weight: $font-weight-bold;
+}
+
+// ============================================
+// 任务4：AI顾问聊天式引导入口
+// ============================================
+.aiChatEntry {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: $spacing-md $spacing-lg;
+  margin-bottom: $spacing-lg;
+  background: linear-gradient(135deg, #FFF8EE 0%, #FFF3E0 100%);
+  border-radius: $radius-lg;
+  border: 2rpx solid rgba(196, 149, 106, 0.2);
+  cursor: pointer;
+  transition: all $transition-base;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4rpx;
+    background: linear-gradient(90deg, #C4956A, #D4A76A, #C4956A);
+  }
+
+  &:active {
+    transform: scale(0.98);
+    box-shadow: $shadow-card-hover;
+  }
+}
+
+.aiChatEntryLeft {
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+  flex: 1;
+  min-width: 0;
+}
+
+.aiChatEntryAvatar {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #C4956A 0%, #D4A76A 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4rpx 12rpx rgba(196, 149, 106, 0.3);
+  flex-shrink: 0;
+}
+
+.aiChatEntryAvatarIcon {
+  font-size: 40rpx;
+}
+
+.aiChatEntryText {
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+  min-width: 0;
+}
+
+.aiChatEntryTitle {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: #5D4E37;
+}
+
+.aiChatEntryDesc {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.aiChatEntryArrow {
+  flex-shrink: 0;
+  width: 48rpx;
+  height: 48rpx;
+  border-radius: 50%;
+  background: rgba(196, 149, 106, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: $spacing-sm;
+}
+
+.aiChatEntryArrowIcon {
+  font-size: $font-size-md;
+  color: #C4956A;
   font-weight: $font-weight-bold;
 }
 
@@ -700,6 +797,78 @@
   margin: 0 24rpx;
 }
 
+// ===== 新手行善任务进度条 =====
+.onboardingProgress {
+  margin: 16rpx 24rpx;
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  border-radius: 20rpx;
+  padding: 24rpx 28rpx;
+  cursor: pointer;
+  transition: transform 0.2s;
+  animation: fadeInUp 0.4s ease;
+
+  &:active {
+    transform: scale(0.98);
+  }
+}
+
+.onboardingProgressTop {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12rpx;
+}
+
+.onboardingProgressIcon {
+  font-size: 32rpx;
+  margin-right: 8rpx;
+}
+
+.onboardingProgressTitle {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #FFFFFF;
+  flex: 1;
+}
+
+.onboardingProgressArrow {
+  font-size: 24rpx;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.onboardingProgressBody {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.onboardingProgressText {
+  font-size: 22rpx;
+  color: rgba(255, 255, 255, 0.9);
+  white-space: nowrap;
+}
+
+.onboardingProgressBarTrack {
+  flex: 1;
+  height: 12rpx;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 999rpx;
+  overflow: hidden;
+}
+
+.onboardingProgressBarFill {
+  height: 100%;
+  background: #FFFFFF;
+  border-radius: 999rpx;
+  transition: width 0.6s ease;
+}
+
+.onboardingProgressCount {
+  font-size: 22rpx;
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
 // ===== 每日善行建议卡片（新版） =====
 .dailyCard {
   margin: 16rpx 24rpx;
@@ -746,4 +915,127 @@
   color: #8B7355;
   font-style: italic;
 }
+
+// ===== Slogan Banner =====
+.sloganBanner {
+  margin: 0 0 $spacing-lg 0;
+  padding: $spacing-lg $spacing-xl;
+  background: linear-gradient(135deg, #C4956A 0%, #D4A76A 50%, #E8C97A 100%);
+  border-radius: $radius-lg;
+  text-align: center;
+  box-shadow: 0 4rpx 20rpx rgba(196, 149, 106, 0.3);
+  animation: fadeInUp 0.5s ease-out;
+}
+
+.sloganText {
+  font-size: 32rpx;
+  font-weight: $font-weight-semibold;
+  color: #FFFFFF;
+  text-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.15);
+  letter-spacing: 4rpx;
+}
+
+// ===== 首次进入3步引导 =====
+.guideSection {
+  margin-bottom: $spacing-lg;
+  padding: $spacing-lg;
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-card;
+  border: 2rpx solid rgba($color-primary, 0.15);
+  animation: fadeInUp 0.4s ease-out;
+}
+
+.guideTitle {
+  display: block;
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin-bottom: $spacing-md;
+  text-align: center;
+}
+
+.guideSteps {
+  display: flex;
+  justify-content: space-around;
+  gap: $spacing-sm;
+}
+
+.guideStep {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: $spacing-md $spacing-lg;
+  background: linear-gradient(135deg, #FFF9F0 0%, #FFF3E0 100%);
+  border-radius: $radius-md;
+  min-width: 160rpx;
+  cursor: pointer;
+  transition: all $transition-base;
+
+  &:active {
+    transform: scale(0.95);
+    opacity: 0.8;
+  }
+}
+
+.guideStepIcon {
+  font-size: 48rpx;
+  margin-bottom: $spacing-xs;
+}
+
+.guideStepText {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  font-weight: $font-weight-medium;
+}
+
+// ===== 模拟体验入口 =====
+.demoEntry {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: $spacing-md $spacing-lg;
+  margin-bottom: $spacing-lg;
+  background: linear-gradient(135deg, #F0FFF4 0%, #E8F8EE 100%);
+  border-radius: $radius-lg;
+  border-left: 4rpx solid #52C41A;
+  border-style: dashed;
+  border-width: 2rpx;
+  border-color: #52C41A;
+  border-left-width: 4rpx;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.demoEntry:active {
+  transform: scale(0.98);
+}
+
+.demoEntryIcon {
+  font-size: 44rpx;
+  margin-right: $spacing-sm;
+}
+
+.demoEntryText {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2rpx;
+}
+
+.demoEntryTitle {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: #3A8A5A;
+}
+
+.demoEntryDesc {
+  font-size: $font-size-xs;
+  color: #6AAA7A;
+}
+
+.demoEntryArrow {
+  font-size: $font-size-lg;
+  color: #52C41A;
+  font-weight: $font-weight-bold;
 }

@@ -48,6 +48,7 @@ const CircleDetailPage: React.FC = () => {
     const activeTasks = tasks.filter((t) => t.circleId === id && t.status === 'active');
     const urgent: any[] = [];
     activeTasks.forEach((task) => {
+      if (!task.weekRange) return;
       const endDate = new Date(task.weekRange.end);
       const diffDays = Math.ceil((endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
       // 3天内截止且用户未提交

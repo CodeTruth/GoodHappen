@@ -3,9 +3,8 @@ import { View, Text, ScrollView } from '@tarojs/components';
 import Taro from '@tarojs/taro';
 import classnames from 'classnames';
 import { useFortuneStore } from '@/store/fortune';
-import { useCharityFundStore } from '@/store/charityFund';
+import { useCharityFundStore, FundFlow } from '@/store/charityFund';
 import { useUserStore } from '@/store/user';
-import { FundFlow } from '@/data/charityFund';
 import styles from './index.module.scss';
 
 // 资金流向状态映射

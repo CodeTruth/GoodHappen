@@ -651,7 +651,92 @@
   font-weight: 600;
 }
 
-/* === 善行保障中心 === */
+/* === 我要见证区域（与善行保护同样醒目） === */
+.witnessTriggerSection {
+  margin: 24rpx 24rpx 0;
+}
+
+.witnessTriggerCard {
+  background: linear-gradient(135deg, #FFF9F0 0%, #FFEED8 100%);
+  border-radius: 20rpx;
+  padding: 24rpx;
+  border-left: 6rpx solid #D4A76A;
+  position: relative;
+  overflow: hidden;
+
+  // 装饰光晕
+  &::after {
+    content: '';
+    position: absolute;
+    top: -60rpx;
+    right: -40rpx;
+    width: 200rpx;
+    height: 200rpx;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(#C4956A, 0.10) 0%, transparent 70%);
+    pointer-events: none;
+  }
+}
+
+.witnessTriggerContent {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 16rpx;
+  position: relative;
+  z-index: 1;
+}
+
+.witnessTriggerIcon {
+  font-size: 40rpx;
+  margin-right: 14rpx;
+  margin-top: 2rpx;
+}
+
+.witnessTriggerTextWrapper {
+  flex: 1;
+}
+
+.witnessTriggerTitle {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: #8B6D3F;
+  display: block;
+  margin-bottom: 6rpx;
+}
+
+.witnessTriggerDesc {
+  font-size: 24rpx;
+  color: #A68B5C;
+  line-height: 1.5;
+}
+
+.witnessTriggerBtn {
+  background: linear-gradient(135deg, #C4956A 0%, #D4A76A 100%);
+  border-radius: 40rpx;
+  padding: 18rpx 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 1;
+  box-shadow: 0 4rpx 16rpx rgba(#C4956A, 0.3);
+  transition: all $transition-base;
+
+  &:active {
+    opacity: 0.85;
+    transform: scale(0.97);
+    box-shadow: 0 2rpx 8rpx rgba(#C4956A, 0.2);
+  }
+}
+
+.witnessTriggerBtnText {
+  font-size: 28rpx;
+  color: #fff;
+  font-weight: 700;
+  letter-spacing: 2rpx;
+}
+
+/* === 善行保障中心 - 流程可视化 === */
 .safetyCenterCard {
   margin: 24rpx 24rpx 0;
   background: $color-bg-card;
@@ -664,7 +749,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 20rpx;
+  margin-bottom: 24rpx;
 }
 
 .safetyCenterTitle {
@@ -678,35 +763,131 @@
   color: $color-text-secondary;
 }
 
-.safetyCenterGrid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16rpx;
-}
-
-.safetyCenterItem {
+/* 流程步骤容器 */
+.safetyFlow {
   display: flex;
   flex-direction: column;
+  gap: 0;
+  position: relative;
+}
+
+/* 连接线（伪元素） */
+.safetyFlow::before {
+  content: '';
+  position: absolute;
+  left: 32rpx;
+  top: 48rpx;
+  bottom: 24rpx;
+  width: 3rpx;
+  background: linear-gradient(180deg, $color-primary 0%, rgba($color-primary, 0.15) 100%);
+  z-index: 0;
+}
+
+.safetyFlowStep {
+  display: flex;
+  gap: 20rpx;
+  padding: 16rpx 0;
+  position: relative;
+  z-index: 1;
+}
+
+/* 状态圆点 */
+.safetyFlowDot {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 50%;
+  display: flex;
   align-items: center;
-  gap: 8rpx;
-  padding: 20rpx 0;
-  background: $color-bg-page;
-  border-radius: 16rpx;
+  justify-content: center;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 2;
 }
 
-.safetyCenterItemIcon {
-  font-size: 40rpx;
+.safetyFlowDotInner {
+  font-size: 28rpx;
 }
 
-.safetyCenterItemName {
-  font-size: 24rpx;
-  font-weight: 500;
+.safetyFlowDotActive {
+  background: rgba($color-primary, 0.15);
+  border: 3rpx solid $color-primary;
+  box-shadow: 0 0 0 6rpx rgba($color-primary, 0.08);
+}
+
+.safetyFlowDotDone {
+  background: rgba($color-success, 0.15);
+  border: 3rpx solid $color-success;
+  box-shadow: 0 0 0 6rpx rgba($color-success, 0.08);
+}
+
+.safetyFlowDotPending {
+  background: $color-bg-hover;
+  border: 3rpx solid $color-border;
+}
+
+/* 步骤内容 */
+.safetyFlowContent {
+  flex: 1;
+  min-width: 0;
+  padding-top: 8rpx;
+}
+
+.safetyFlowStepTitle {
+  font-size: 26rpx;
+  font-weight: 600;
   color: $color-text-primary;
+  display: block;
+  margin-bottom: 4rpx;
 }
 
-.safetyCenterItemDesc {
-  font-size: 20rpx;
+.safetyFlowStepDesc {
+  font-size: 22rpx;
   color: $color-text-tertiary;
+  display: block;
+  line-height: 1.5;
+  margin-bottom: 8rpx;
+}
+
+/* 步骤数据可视化 */
+.safetyFlowData {
+  display: flex;
+  gap: 16rpx;
+  flex-wrap: wrap;
+  background: $color-bg-page;
+  border-radius: 12rpx;
+  padding: 12rpx 16rpx;
+  margin-top: 8rpx;
+}
+
+.safetyFlowDataItem {
+  font-size: 22rpx;
+  color: $color-text-secondary;
+}
+
+.safetyFlowDataValue {
+  color: $color-primary;
+  font-weight: 600;
+}
+
+/* 步骤操作按钮 */
+.safetyFlowAction {
+  display: inline-block;
+  background: rgba($color-primary, 0.08);
+  border-radius: 8rpx;
+  padding: 8rpx 20rpx;
+  margin-top: 4rpx;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:active {
+    background: rgba($color-primary, 0.15);
+  }
+}
+
+.safetyFlowActionText {
+  font-size: 22rpx;
+  color: $color-primary;
+  font-weight: 500;
 }
 
 /* === 事前学习卡片 === */

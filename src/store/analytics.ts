@@ -122,13 +122,6 @@ const getToday = (): string => {
   return new Date().toISOString().split('T')[0];
 };
 
-// 获取N天前的日期字符串
-const getDateDaysAgo = (days: number): string => {
-  const d = new Date();
-  d.setDate(d.getDate() - days);
-  return d.toISOString().split('T')[0];
-};
-
 // 默认当日计数器
 const defaultTodayCounters: TodayCounters = {
   kindnessPublished: 0,
@@ -151,40 +144,7 @@ const defaultWarmthMetrics: WarmthMetrics = {
   storySpreadCount: 0,
 };
 
-// 生成Mock每日指标数据（最近14天）
-const generateMockDailyMetrics = (): DailyMetric[] => {
-  const metrics: DailyMetric[] = [];
-  for (let i = 13; i >= 0; i--) {
-    const date = getDateDaysAgo(i);
-    // 模拟数据：DAU在800-1200之间波动
-    const dau = 800 + Math.floor(Math.random() * 400);
-    const newRegistrations = 20 + Math.floor(Math.random() * 30);
-    const kindnessCount = 300 + Math.floor(Math.random() * 200);
-    const publicKindnessCount = Math.floor(kindnessCount * (0.6 + Math.random() * 0.2));
-    const challengeParticipants = Math.floor(dau * (0.15 + Math.random() * 0.1));
-    const charityTotal = 15 + Math.floor(Math.random() * 20);
-    const charityCompleted = Math.floor(charityTotal * (0.6 + Math.random() * 0.2));
-    const inviteShares = 50 + Math.floor(Math.random() * 50);
-    const inviteRegistrations = Math.floor(inviteShares * (0.1 + Math.random() * 0.1));
-    const registered14DaysAgo = 30 + Math.floor(Math.random() * 20);
-    const stillActive14Days = Math.floor(registered14DaysAgo * (0.3 + Math.random() * 0.2));
-    metrics.push({
-      date,
-      dau,
-      newRegistrations,
-      kindnessCount,
-      publicKindnessCount,
-      challengeParticipants,
-      charityTotal,
-      charityCompleted,
-      inviteShares,
-      inviteRegistrations,
-      registered14DaysAgo,
-      stillActive14Days,
-    });
-  }
-  return metrics;
-};
+
 
 export const useAnalyticsStore = create<AnalyticsState>((set, get) => ({
   dailyMetrics: [],
@@ -374,33 +334,9 @@ export const useAnalyticsStore = create<AnalyticsState>((set, get) => ({
     }
   },
 
-  // 加载Mock数据
+  // 加载Mock数据（已废弃，不再使用mock数据）
   loadMockData: () => {
-    const state = get();
-    if (state.dailyMetrics.length === 0) {
-      const mockMetrics = generateMockDailyMetrics();
-      // 计算温暖指标（基于Mock数据）
-      const totalKindness = mockMetrics.reduce((sum, m) => sum + m.kindnessCount, 0);
-      const totalDau = mockMetrics.reduce((sum, m) => sum + m.dau, 0);
-      const avgKindnessPerUser = totalDau > 0 ? totalKindness / totalDau : 0;
-      const mockWarmth: WarmthMetrics = {
-        // 人均善行数：活跃用户平均每月善行数（按14天数据折算到月）
-        avgKindnessPerUser: Math.round(avgKindnessPerUser * 2.1 * 10) / 10,
-        // 平均连续天数
-        avgStreakDays: 5 + Math.random() * 3,
-        // AI共鸣互动率
-        aiResonanceRate: 0.35 + Math.random() * 0.15,
-        // 温暖故事传播率
-        storySpreadRate: 0.2 + Math.random() * 0.1,
-        // 温暖故事传播次数
-        storySpreadCount: 150 + Math.floor(Math.random() * 100),
-      };
-      set({
-        dailyMetrics: mockMetrics,
-        warmthMetrics: mockWarmth,
-      });
-      get().saveToStorage();
-    }
+    // 种子数据由 App 启动时注入，此处不再加载 mock
   },
 
   loadFromStorage: () => {

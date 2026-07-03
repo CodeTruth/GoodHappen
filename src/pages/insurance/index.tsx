@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useRef, useCallback } from 'react';
 import { View, Text, ScrollView, Input } from '@tarojs/components';
 import Taro from '@tarojs/taro';
 import classnames from 'classnames';
@@ -13,6 +13,9 @@ import { useFortuneStore } from '@/store/fortune';
 import { useUserStore } from '@/store/user';
 import styles from './index.module.scss';
 
+// 理赔审核模拟状态
+type ClaimProgress = 'idle' | 'submitted' | 'reviewing' | 'approved' | 'paid';
+
 /**
  * 善行保险页面 - Phase 9 P3
  *
@@ -23,6 +26,7 @@ import styles from './index.module.scss';
  * 4. 赔付条件：善行记录时间戳和争议事件时间吻合 + 第三方证据或最终判决
  * 5. 不赔条件：善行记录在争议发生后才创建
  * 6. 展示"你的善行保护已生效"，一键理赔入口
+ * 7. 理赔进度可视化：提交→审核中→审核通过→赔付到账
  */
 const InsurancePage: React.FC = () => {
   const {
@@ -40,6 +44,8 @@ const InsurancePage: React.FC = () => {
   const [claimModalVisible, setClaimModalVisible] = useState(false);
   const [claimType, setClaimType] = useState<'legal_fee' | 'compensation'>('legal_fee');
   const [claimAmount, setClaimAmount] = useState('');
+  const [claimProgress, setClaimProgress] = useState<ClaimProgress>('idle');
+  const progressTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     loadFromStorage();
@@ -47,6 +53,15 @@ const InsurancePage: React.FC = () => {
     loadUser();
     // 检查保险资格
     checkInsuranceEligibility();
+  }, []);
+
+  // 清理定时器
+  useEffect(() => {
+    return () => {
+      if (progressTimerRef.current) {
+        clearTimeout(progressTimerRef.current);
+      }
+    };
   }, []);
 
   // 格式化金额
@@ -76,6 +91,11 @@ const InsurancePage: React.FC = () => {
     return '未开启';
   }, [insurance]);
 
+  // 最新SOS的见证证据数
+  const latestSosWitnessCount = useMemo(() => {
+    return sosRecords.length > 0 ? sosRecords[0].witnessMatchCount : 0;
+  }, [sosRecords]);
+
   // 理赔状态映射
   const claimStatusMap: Record<string, { label: string; className: string }> = {
     pending: { label: '待审核', className: styles.claimStatusPending },
@@ -102,11 +122,34 @@ const InsurancePage: React.FC = () => {
       return;
     }
     if (sosRecords.length === 0) {
-      Taro.showToast({ title: '请先发起求助', icon: 'none' });
+      Taro.showToast({ title: '请先在善行详情页发起求助，再申请理赔', icon: 'none' });
       return;
     }
     setClaimModalVisible(true);
   };
+
+  // 模拟理赔审核进度
+  const simulateClaimProgress = useCallback(() => {
+    setClaimProgress('submitted');
+    // 1秒后变为审核中
+    progressTimerRef.current = setTimeout(() => {
+      setClaimProgress('reviewing');
+      // 3秒后变为审核通过
+      progressTimerRef.current = setTimeout(() => {
+        setClaimProgress('approved');
+        Taro.showToast({ title: '审核通过！赔付将很快到账', icon: 'success' });
+        // 2秒后变为已赔付
+        progressTimerRef.current = setTimeout(() => {
+          setClaimProgress('paid');
+          Taro.showToast({ title: '赔付已到账', icon: 'success' });
+          // 3秒后重置状态
+          progressTimerRef.current = setTimeout(() => {
+            setClaimProgress('idle');
+          }, 3000);
+        }, 2000);
+      }, 3000);
+    }, 1000);
+  }, []);
 
   // 提交理赔
   const handleSubmitClaim = () => {
@@ -119,12 +162,22 @@ const InsurancePage: React.FC = () => {
     const latestSos = sosRecords[0];
     const result = submitClaim(latestSos.id, claimType, amount, '善行保险理赔申请');
     if (result.success) {
-      Taro.showToast({ title: result.message, icon: 'success' });
       setClaimModalVisible(false);
       setClaimAmount('');
+      // 显示理赔进度
+      simulateClaimProgress();
     } else {
       Taro.showToast({ title: result.message, icon: 'none' });
     }
+  };
+
+  // 理赔进度文本
+  const progressStepText: Record<ClaimProgress, string> = {
+    idle: '',
+    submitted: '理赔已提交',
+    reviewing: '审核中...',
+    approved: '审核通过',
+    paid: '赔付已到账',
   };
 
   return (
@@ -254,6 +307,16 @@ const InsurancePage: React.FC = () => {
           遇到纠纷？发起求助后可一键申请理赔{'\n'}
           系统将自动校验善行记录时间戳与证据链
         </Text>
+
+        {/* SOS见证证据关联 */}
+        {sosRecords.length > 0 && (
+          <View className={styles.witnessInfo}>
+            <Text className={styles.witnessInfoText}>
+              最新求助见证证据：{latestSosWitnessCount} 条
+            </Text>
+          </View>
+        )}
+
         <View
           className={classnames(
             styles.claimButton,
@@ -261,9 +324,54 @@ const InsurancePage: React.FC = () => {
           )}
           onClick={handleClaim}
         >
-          {insurance.active ? '一键理赔' : '善行保护未生效'}
+          {insurance.active
+            ? (sosRecords.length > 0 ? '一键理赔' : '一键理赔（请先发起求助）')
+            : '善行保护未生效'
+          }
         </View>
+        {insurance.active && sosRecords.length === 0 && (
+          <Text className={styles.claimHint}>
+            请先在善行详情页发起求助，再申请理赔
+          </Text>
+        )}
       </View>
+
+      {/* 理赔进度可视化 */}
+      {claimProgress !== 'idle' && (
+        <View className={styles.progressCard}>
+          <Text className={styles.progressCardTitle}>理赔进度</Text>
+          <View className={styles.progressSteps}>
+            <View className={`${styles.progressStep} ${styles.progressStepActive}`}>
+              <View className={`${styles.progressDot} ${styles.progressDotActive}`} />
+              <Text className={`${styles.progressStepText} ${styles.progressStepTextActive}`}>
+                已提交
+              </Text>
+            </View>
+            <View className={`${styles.progressLine} ${['reviewing', 'approved', 'paid'].includes(claimProgress) ? styles.progressLineActive : ''}`} />
+            <View className={`${styles.progressStep} ${['reviewing', 'approved', 'paid'].includes(claimProgress) ? styles.progressStepActive : ''}`}>
+              <View className={`${styles.progressDot} ${['reviewing', 'approved', 'paid'].includes(claimProgress) ? styles.progressDotActive : ''}`} />
+              <Text className={`${styles.progressStepText} ${['reviewing', 'approved', 'paid'].includes(claimProgress) ? styles.progressStepTextActive : ''}`}>
+                审核中
+              </Text>
+            </View>
+            <View className={`${styles.progressLine} ${['approved', 'paid'].includes(claimProgress) ? styles.progressLineActive : ''}`} />
+            <View className={`${styles.progressStep} ${['approved', 'paid'].includes(claimProgress) ? styles.progressStepActive : ''}`}>
+              <View className={`${styles.progressDot} ${['approved', 'paid'].includes(claimProgress) ? styles.progressDotActive : ''}`} />
+              <Text className={`${styles.progressStepText} ${['approved', 'paid'].includes(claimProgress) ? styles.progressStepTextActive : ''}`}>
+                审核通过
+              </Text>
+            </View>
+            <View className={`${styles.progressLine} ${claimProgress === 'paid' ? styles.progressLineActive : ''}`} />
+            <View className={`${styles.progressStep} ${claimProgress === 'paid' ? styles.progressStepActive : ''}`}>
+              <View className={`${styles.progressDot} ${claimProgress === 'paid' ? styles.progressDotActive : ''}`} />
+              <Text className={`${styles.progressStepText} ${claimProgress === 'paid' ? styles.progressStepTextActive : ''}`}>
+                赔付到账
+              </Text>
+            </View>
+          </View>
+          <Text className={styles.progressStatusText}>{progressStepText[claimProgress]}</Text>
+        </View>
+      )}
 
       {/* 理赔记录 */}
       {claims.length > 0 && (
@@ -283,7 +391,7 @@ const InsurancePage: React.FC = () => {
                 <Text className={styles.claimReason}>{claim.reason}</Text>
                 <Text className={styles.claimDate}>申请时间：{formatTime(claim.createdAt)}</Text>
                 {claim.witnessChainFormed && (
-                  <Text className={styles.claimEvidence}>✓ 已形成见证证据链</Text>
+                  <Text className={styles.claimEvidence}>已形成见证证据链</Text>
                 )}
               </View>
             );
@@ -321,6 +429,19 @@ const InsurancePage: React.FC = () => {
               理赔申请
             </Text>
 
+            {/* 关联SOS证据信息 */}
+            <View style={{
+              padding: '16rpx',
+              background: '#FFF8F0',
+              borderRadius: '8rpx',
+              marginBottom: '24rpx',
+              border: '1rpx solid rgba(196, 149, 106, 0.2)',
+            }}>
+              <Text style={{ fontSize: '22rpx', color: '#C4956A', display: 'block' }}>
+                关联求助见证证据：{latestSosWitnessCount} 条
+              </Text>
+            </View>
+
             {/* 理赔类型选择 */}
             <Text style={{ fontSize: '24rpx', color: '#666', display: 'block', marginBottom: '16rpx' }}>
               理赔类型
@@ -333,7 +454,7 @@ const InsurancePage: React.FC = () => {
                   borderRadius: '8rpx',
                   textAlign: 'center',
                   fontSize: '24rpx',
-                  background: claimType === 'legal_fee' ? '#FF6B6B' : '#f2f3f5',
+                  background: claimType === 'legal_fee' ? '#C4956A' : '#f2f3f5',
                   color: claimType === 'legal_fee' ? '#fff' : '#666',
                 }}
                 onClick={() => setClaimType('legal_fee')}
@@ -347,7 +468,7 @@ const InsurancePage: React.FC = () => {
                   borderRadius: '8rpx',
                   textAlign: 'center',
                   fontSize: '24rpx',
-                  background: claimType === 'compensation' ? '#FF6B6B' : '#f2f3f5',
+                  background: claimType === 'compensation' ? '#C4956A' : '#f2f3f5',
                   color: claimType === 'compensation' ? '#fff' : '#666',
                 }}
                 onClick={() => setClaimType('compensation')}
@@ -404,7 +525,7 @@ const InsurancePage: React.FC = () => {
                   flex: 1,
                   height: '80rpx',
                   borderRadius: '48rpx',
-                  background: 'linear-gradient(135deg, #FF6B6B 0%, #FFA07A 100%)',
+                  background: 'linear-gradient(135deg, #C4956A 0%, #D4A76A 100%)',
                   color: '#fff',
                   fontSize: '28rpx',
                   fontWeight: 600,

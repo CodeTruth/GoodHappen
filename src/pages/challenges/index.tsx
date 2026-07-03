@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, Image, Input, Textarea } from '@tarojs/components';
 import Taro from '@tarojs/taro';
 import { useChallengeStore, personalChallengeTemplates } from '@/store/challenge';
-import { ChallengeType } from '@/data/challenges';
 import styles from './index.module.scss';
+
+// 本地定义（原 @/data/challenges 已移除）
+type ChallengeType = 'theme' | 'personal' | 'team';
 
 const ChallengesPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<ChallengeType>('theme');

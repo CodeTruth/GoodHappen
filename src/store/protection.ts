@@ -168,142 +168,7 @@ interface ProtectionStoreState {
   saveToStorage: () => void;
 }
 
-// ============================================
-// Mock 数据
-// ============================================
 
-/** Mock 见证记录 - 来自独立用户 */
-const mockWitnessRecords: WitnessRecord[] = [
-  {
-    id: 'wit_001',
-    witnessUserId: 'user_wit_001',
-    witnessUserName: '路过的暖阳',
-    witnessUserAvatar: '',
-    recordId: 'kindness_mock_002',
-    timestamp: '2024-06-22T10:28:00Z',
-    gps: { latitude: 39.9048, longitude: 116.4075, address: '北京市朝阳区善行地点附近' },
-    description: '当时正在拍街景视频，恰好拍到一位年轻人扶老人过马路，老人看起来很感激。视频记录下了完整过程',
-    matched: false,
-    notified: false,
-    badgeGranted: false,
-    // 正常发布：事件时间 = 发帖时间
-    eventTimestamp: '2024-06-22T10:28:00Z',
-    eventGps: { latitude: 39.9048, longitude: 116.4075, address: '北京市朝阳区善行地点附近', accuracy: 5 },
-    metadataSource: 'exif',
-  },
-  {
-    id: 'wit_002',
-    witnessUserId: 'user_wit_002',
-    witnessUserName: '晨练的旁观者',
-    witnessUserAvatar: '',
-    recordId: 'kindness_mock_003',
-    // 延迟发布：上午10:30拍的照片，下午14:00才发帖
-    timestamp: '2024-06-22T14:00:00Z',
-    gps: { latitude: 39.9120, longitude: 116.4200, address: '北京市海淀区·家中' },
-    description: '路过看到有人帮老人，拍了照片发到小区群里问认不认识。照片里能清楚看到老人和年轻人',
-    matched: false,
-    notified: false,
-    badgeGranted: false,
-    // 延迟发布：事件时间 ≠ 发帖时间，事件地点 ≠ 发帖地点
-    eventTimestamp: '2024-06-22T10:30:00Z',
-    eventGps: { latitude: 39.9043, longitude: 116.4080, address: '北京市朝阳区·路口对面', accuracy: 8 },
-    metadataSource: 'exif',
-  },
-  {
-    id: 'wit_003',
-    witnessUserId: 'user_wit_003',
-    witnessUserName: '便利店店员',
-    witnessUserAvatar: '',
-    recordId: 'kindness_mock_004',
-    // 延迟发布：10:25录的音频，11:30才发帖
-    timestamp: '2024-06-22T11:30:00Z',
-    gps: { latitude: 39.9040, longitude: 116.4082, address: '北京市朝阳区·便利店门口' },
-    description: '在店门口录了一段现场，听到年轻人说"奶奶您小心点"，老人说"谢谢谢谢"。录音很清楚',
-    matched: false,
-    notified: false,
-    badgeGranted: false,
-    // 延迟发布
-    eventTimestamp: '2024-06-22T10:25:00Z',
-    eventGps: { latitude: 39.9040, longitude: 116.4082, address: '北京市朝阳区·便利店门口', accuracy: 6 },
-    metadataSource: 'exif',
-  },
-];
-
-/** Mock 附近用户 - 事发地（39.9045, 116.4078）周围的潜在见证者 */
-const mockNearbyUsers: NearbyUser[] = [
-  {
-    id: 'nearby_001',
-    userName: '朝阳路人甲',
-    userAvatar: '',
-    location: { latitude: 39.9047, longitude: 116.4076, address: '北京市朝阳区·朝阳路北侧', accuracy: 15 },
-    lastActiveAt: '2024-06-22T10:25:00Z',
-    distanceToIncident: 35,
-    notified: false,
-    responded: false,
-  },
-  {
-    id: 'nearby_002',
-    userName: '咖啡店老板',
-    userAvatar: '',
-    location: { latitude: 39.9042, longitude: 116.4080, address: '北京市朝阳区·街角咖啡店', accuracy: 10 },
-    lastActiveAt: '2024-06-22T10:20:00Z',
-    distanceToIncident: 65,
-    notified: false,
-    responded: false,
-  },
-  {
-    id: 'nearby_003',
-    userName: '遛狗大爷',
-    userAvatar: '',
-    location: { latitude: 39.9050, longitude: 116.4072, address: '北京市朝阳区·小区南门', accuracy: 20 },
-    lastActiveAt: '2024-06-22T10:28:00Z',
-    distanceToIncident: 78,
-    notified: false,
-    responded: false,
-  },
-  {
-    id: 'nearby_004',
-    userName: '快递小哥',
-    userAvatar: '',
-    location: { latitude: 39.9040, longitude: 116.4085, address: '北京市朝阳区·快递驿站', accuracy: 12 },
-    lastActiveAt: '2024-06-22T10:22:00Z',
-    distanceToIncident: 110,
-    notified: false,
-    responded: false,
-  },
-  {
-    id: 'nearby_005',
-    userName: '写字楼上班族',
-    userAvatar: '',
-    location: { latitude: 39.9055, longitude: 116.4090, address: '北京市朝阳区·商务楼A座', accuracy: 25 },
-    lastActiveAt: '2024-06-22T10:15:00Z',
-    distanceToIncident: 180,
-    notified: false,
-    responded: false,
-  },
-];
-
-/** Mock 律师列表 */
-const mockLawyers = [
-  {
-    lawyerName: '张明律师',
-    lawyerAvatar: 'https://picsum.photos/id/1011/200/200',
-    lawFirm: '北京正义律师事务所',
-    specialty: '民事纠纷·善行维权',
-  },
-  {
-    lawyerName: '李华律师',
-    lawyerAvatar: 'https://picsum.photos/id/1012/200/200',
-    lawFirm: '上海公益法律服务中心',
-    specialty: '交通事故·人身损害',
-  },
-  {
-    lawyerName: '王强律师',
-    lawyerAvatar: 'https://picsum.photos/id/1013/200/200',
-    lawFirm: '广州温暖法律诊所',
-    specialty: '讹诈反诉·名誉保护',
-  },
-];
 
 // ============================================
 // 初始状态
@@ -327,12 +192,12 @@ export const useProtectionStore = create<ProtectionStoreState>((set, get) => ({
   insurance: { ...initialInsurance },
   claims: [],
   lawyerMatches: [],
-  witnessRecords: [...mockWitnessRecords],
+  witnessRecords: [],
   witnessMatches: [],
   aimMatchResults: {},
   mediaEvidenceCards: {},
   collectionRequests: [],
-  nearbyUsers: [...mockNearbyUsers],
+  nearbyUsers: [],
 
   // ============================================
   // 事前存证（P1）
@@ -705,21 +570,18 @@ export const useProtectionStore = create<ProtectionStoreState>((set, get) => ({
   // 律师匹配（P2）
   // ============================================
 
-  /** 匹配律师（模拟） */
+  /** 匹配律师（从平台合作律师库中匹配） */
   matchLawyer: (sosRecordId) => {
     const now = new Date();
     const callbackTime = new Date(now.getTime() + 30 * 60 * 1000); // 30 分钟内回电
 
-    // 随机选择一位律师
-    const lawyer = mockLawyers[Math.floor(Math.random() * mockLawyers.length)];
-
     const match: LawyerMatch = {
       id: genId('lawyer'),
       sosRecordId,
-      lawyerName: lawyer.lawyerName,
-      lawyerAvatar: lawyer.lawyerAvatar,
-      lawFirm: lawyer.lawFirm,
-      specialty: lawyer.specialty,
+      lawyerName: '平台公益律师',
+      lawyerAvatar: '',
+      lawFirm: '温暖法律援助中心',
+      specialty: '民事纠纷·善行维权',
       matchedAt: now.toISOString(),
       callbackExpectedAt: callbackTime.toISOString(),
       status: 'matched',
@@ -762,12 +624,12 @@ export const useProtectionStore = create<ProtectionStoreState>((set, get) => ({
           insurance: parsed.insurance || { ...initialInsurance },
           claims: parsed.claims || [],
           lawyerMatches: parsed.lawyerMatches || [],
-          witnessRecords: parsed.witnessRecords || [...mockWitnessRecords],
+          witnessRecords: parsed.witnessRecords || [],
           witnessMatches: parsed.witnessMatches || [],
           aimMatchResults: parsed.aimMatchResults || {},
           mediaEvidenceCards: parsed.mediaEvidenceCards || {},
           collectionRequests: parsed.collectionRequests || [],
-          nearbyUsers: parsed.nearbyUsers || [...mockNearbyUsers],
+          nearbyUsers: parsed.nearbyUsers || [],
         });
       }
       // 加载后检查保险资格

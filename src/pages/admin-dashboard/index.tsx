@@ -3,7 +3,7 @@ import { View, Text } from '@tarojs/components';
 import Taro from '@tarojs/taro';
 import classnames from 'classnames';
 import { useAdminStore } from '@/store/admin';
-import type { TimeRange } from '@/data/admin';
+import type { TimeRange } from '@/store/admin';
 import styles from './index.module.scss';
 
 // 时间范围选项
@@ -30,31 +30,35 @@ const AdminDashboardPage: React.FC = () => {
   const trend = useMemo(() => getDashboardTrend(timeRange), [getDashboardTrend, timeRange]);
 
   // 计算柱状图最大值（用于归一化）
+  const userGrowth = trend.userGrowth || [];
+  const kindnessTrend = trend.kindnessTrend || [];
+  const categoryDistribution = trend.categoryDistribution || [];
+
   const userGrowthMax = useMemo(() => {
-    return Math.max(...trend.userGrowth.map((p) => p.value), 1);
-  }, [trend.userGrowth]);
+    return Math.max(...userGrowth.map((p) => p.value), 1);
+  }, [userGrowth]);
 
   const kindnessTrendMax = useMemo(() => {
-    return Math.max(...trend.kindnessTrend.map((p) => p.value), 1);
-  }, [trend.kindnessTrend]);
+    return Math.max(...kindnessTrend.map((p) => p.value), 1);
+  }, [kindnessTrend]);
 
   // 品类分布总和
   const categoryTotal = useMemo(() => {
-    return trend.categoryDistribution.reduce((sum, p) => sum + p.value, 0) || 1;
-  }, [trend.categoryDistribution]);
+    return categoryDistribution.reduce((sum, p) => sum + p.value, 0) || 1;
+  }, [categoryDistribution]);
 
   // 生成饼图 conic-gradient 字符串
   const pieGradient = useMemo(() => {
     let cumulative = 0;
     const stops: string[] = [];
-    trend.categoryDistribution.forEach((item, idx) => {
+    categoryDistribution.forEach((item, idx) => {
       const percent = (item.value / categoryTotal) * 100;
       const color = PIE_COLORS[idx % PIE_COLORS.length];
       stops.push(`${color} ${cumulative}% ${cumulative + percent}%`);
       cumulative += percent;
     });
     return `conic-gradient(${stops.join(', ')})`;
-  }, [trend.categoryDistribution, categoryTotal]);
+  }, [categoryDistribution, categoryTotal]);
 
   // 导出数据（模拟）
   const handleExport = () => {
@@ -121,7 +125,7 @@ const AdminDashboardPage: React.FC = () => {
               <Text className={styles.metricIcon}>👥</Text>
               <Text className={styles.metricLabel}>DAU 日活</Text>
             </View>
-            <Text className={styles.metricValue}>{formatNumber(metric.dau)}</Text>
+            <Text className={styles.metricValue}>{formatNumber(metric.dau || 0)}</Text>
             <Text className={styles.metricSub}>日活跃用户数</Text>
           </View>
           <View className={classnames(styles.metricCard, styles.metricCardPrimary)}>
@@ -129,7 +133,7 @@ const AdminDashboardPage: React.FC = () => {
               <Text className={styles.metricIcon}>📊</Text>
               <Text className={styles.metricLabel}>MAU 月活</Text>
             </View>
-            <Text className={styles.metricValue}>{formatNumber(metric.mau)}</Text>
+            <Text className={styles.metricValue}>{formatNumber(metric.mau || 0)}</Text>
             <Text className={styles.metricSub}>月活跃用户数</Text>
           </View>
         </View>
@@ -200,7 +204,7 @@ const AdminDashboardPage: React.FC = () => {
               <Text className={styles.metricIcon}>💚</Text>
               <Text className={styles.metricLabel}>总善行数</Text>
             </View>
-            <Text className={styles.metricValue}>{formatNumber(metric.totalKindness)}</Text>
+            <Text className={styles.metricValue}>{formatNumber(metric.totalKindness || 0)}</Text>
             <Text className={styles.metricSub}>累计善行记录</Text>
           </View>
         </View>
@@ -209,7 +213,7 @@ const AdminDashboardPage: React.FC = () => {
         <View className={styles.chartCard}>
           <Text className={styles.chartTitle}>📊 用户增长趋势</Text>
           <View className={styles.barChart}>
-            {trend.userGrowth.map((point, idx) => (
+            {userGrowth.map((point, idx) => (
               <View key={idx} className={styles.barItem}>
                 <Text className={styles.barValue}>{formatNumber(point.value)}</Text>
                 <View
@@ -227,7 +231,7 @@ const AdminDashboardPage: React.FC = () => {
           <Text className={styles.chartTitle}>📈 善行发布趋势</Text>
           <View className={styles.lineChart}>
             <View className={styles.lineChartBars}>
-              {trend.kindnessTrend.map((point, idx) => {
+              {kindnessTrend.map((point, idx) => {
                 const heightPercent = (point.value / kindnessTrendMax) * 80;
                 return (
                   <View key={idx} className={styles.lineBar}>
@@ -243,7 +247,7 @@ const AdminDashboardPage: React.FC = () => {
             </View>
           </View>
           <View className={styles.lineLabels}>
-            {trend.kindnessTrend.map((point, idx) => (
+            {kindnessTrend.map((point, idx) => (
               <Text key={idx} className={styles.lineLabel}>{point.label}</Text>
             ))}
           </View>
@@ -260,7 +264,7 @@ const AdminDashboardPage: React.FC = () => {
               </View>
             </View>
             <View className={styles.pieLegend}>
-              {trend.categoryDistribution.map((item, idx) => (
+              {categoryDistribution.map((item, idx) => (
                 <View key={idx} className={styles.legendItem}>
                   <View
                     className={styles.legendDot}

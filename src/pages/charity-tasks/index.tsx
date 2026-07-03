@@ -2,8 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { View, Text, ScrollView, Input } from '@tarojs/components';
 import Taro from '@tarojs/taro';
 import classnames from 'classnames';
-import { useCharityFundStore, TASK_LEVEL_MAP, TASK_STATUS_MAP } from '@/store/charityFund';
-import { CharityTask, TaskLevel, TaskSource } from '@/data/charityFund';
+import { useCharityFundStore, TASK_LEVEL_MAP, TASK_STATUS_MAP, CharityTask, TaskLevel, TaskSource } from '@/store/charityFund';
 import styles from './index.module.scss';
 
 // 任务来源标签

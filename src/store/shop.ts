@@ -1,9 +1,11 @@
 import { create } from 'zustand';
 import Taro from '@tarojs/taro';
 import { useFortuneStore } from './fortune';
-import { getProductById } from '@/data/products';
 
 const STORAGE_KEY = 'haoshi_shop_store';
+
+// 本地定义（原 @/data/products 已移除）
+const getProductById = (_id: string): any => undefined;
 
 // 兑换记录
 export interface RedemptionRecord {

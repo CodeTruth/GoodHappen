@@ -1,19 +1,86 @@
 import { create } from 'zustand';
 import Taro from '@tarojs/taro';
-import {
-  ThemeChallenge,
-  PersonalChallenge,
-  TeamChallenge,
-  TeamMember,
-  ChallengeStatus,
-  personalChallengeTemplates,
-  generateInviteCode,
-  getThemeChallenges,
-  getPersonalChallenges,
-  getTeamChallenges,
-} from '@/data/challenges';
 
 const STORAGE_KEY = 'haoshi_challenge_store';
+
+// ============================================
+// 本地类型定义（原 @/data/challenges 已移除）
+// ============================================
+
+export type ChallengeStatus = 'ongoing' | 'completed';
+
+export interface TeamMember {
+  userId: string;
+  name: string;
+  avatar: string;
+  contribution: number;
+  joinedAt: string;
+}
+
+export interface ThemeChallenge {
+  id: string;
+  title: string;
+  description: string;
+  icon: string;
+  targetDays: number;
+  startDate: string;
+  badge?: string;
+  coverColor?: string;
+  coverColorEnd?: string;
+  participantCount?: number;
+}
+
+export interface PersonalChallenge {
+  id: string;
+  type: 'personal';
+  title: string;
+  description?: string;
+  icon: string;
+  targetDays: number;
+  targetCount: number;
+  completedDays: number;
+  completedCount: number;
+  startDate: string;
+  status: ChallengeStatus;
+  isCustom: boolean;
+  badge?: string;
+}
+
+export interface TeamChallenge {
+  id: string;
+  type: 'team';
+  title: string;
+  description: string;
+  icon: string;
+  coverColor: string;
+  coverColorEnd: string;
+  targetCount: number;
+  teamTotalCount: number;
+  members: TeamMember[];
+  captainId: string;
+  inviteCode: string;
+  startDate: string;
+  endDate: string;
+  badge: string;
+  maxMembers: number;
+}
+
+/** 生成邀请码 */
+export const generateInviteCode = (): string => {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let code = '';
+  for (let i = 0; i < 8; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return code;
+};
+
+/** 个人挑战模板 */
+export const personalChallengeTemplates = [
+  { title: '每日一善', description: '每天记录一件善行', icon: '🌟', targetDays: 7, targetCount: 7, badge: '每日善行者' },
+  { title: '温暖21天', description: '连续21天坚持行善', icon: '🔥', targetDays: 21, targetCount: 21, badge: '温暖坚持者' },
+  { title: '善行百日', description: '坚持100天记录善行', icon: '💯', targetDays: 100, targetCount: 100, badge: '百日善人' },
+];
 
 // ============================================
 // Phase 10 - H1 挑战系统 Store
@@ -67,9 +134,9 @@ interface ChallengeState {
 }
 
 const initialState = {
-  themeChallenges: getThemeChallenges(),
-  personalChallenges: getPersonalChallenges(),
-  teamChallenges: getTeamChallenges(),
+  themeChallenges: [] as ThemeChallenge[],
+  personalChallenges: [] as PersonalChallenge[],
+  teamChallenges: [] as TeamChallenge[],
   currentUserId: 'currentUser',
 };
 
@@ -299,10 +366,9 @@ export const useChallengeStore = create<ChallengeState>((set, get) => ({
       if (data) {
         const parsed = JSON.parse(data);
         set({
-          // 主题挑战始终从 mock 加载（系统预设）
-          themeChallenges: getThemeChallenges(),
-          personalChallenges: parsed.personalChallenges || getPersonalChallenges(),
-          teamChallenges: parsed.teamChallenges || getTeamChallenges(),
+          themeChallenges: parsed.themeChallenges || [],
+          personalChallenges: parsed.personalChallenges || [],
+          teamChallenges: parsed.teamChallenges || [],
           currentUserId: parsed.currentUserId || 'currentUser',
         });
       }
@@ -325,6 +391,3 @@ export const useChallengeStore = create<ChallengeState>((set, get) => ({
     }
   },
 }));
-
-// 导出预设模板供页面使用
-export { personalChallengeTemplates };

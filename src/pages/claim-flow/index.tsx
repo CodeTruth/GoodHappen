@@ -1,12 +1,11 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { View, Text, ScrollView } from '@tarojs/components';
 import classnames from 'classnames';
-import { useCharityFundStore, CLAIM_STEP_MAP, CLAIM_STEP_ORDER } from '@/store/charityFund';
-import { ClaimFlow, ClaimStep } from '@/data/charityFund';
+import { useCharityFundStore, CLAIM_STEP_MAP, CLAIM_STEP_ORDER, ClaimFlow, ClaimStepKey } from '@/store/charityFund';
 import styles from './index.module.scss';
 
 // 步骤图标映射
-const STEP_ICON: Record<ClaimStep, string> = {
+const STEP_ICON: Record<ClaimStepKey, string> = {
   applied: '📝',
   reviewing: '🔍',
   approved: '✓',
@@ -74,7 +73,7 @@ const ClaimFlowPage: React.FC = () => {
     const inProgress = myClaimFlows.filter(f =>
       f.currentStep !== 'confirmed' && f.currentStep !== 'published'
     ).length;
-    const totalAmount = myClaimFlows.reduce((sum, f) => sum + f.amount, 0);
+    const totalAmount = myClaimFlows.reduce((sum, f) => sum + (f.amount || 0), 0);
     return { total, confirmed, inProgress, totalAmount };
   }, [myClaimFlows]);
 
@@ -169,7 +168,7 @@ const ClaimFlowPage: React.FC = () => {
                       <Text className={styles.recipientOrg}>{flow.organizationName}</Text>
                     </View>
                   </View>
-                  <Text className={styles.flowAmount}>{formatMoney(flow.amount)}</Text>
+                  <Text className={styles.flowAmount}>{formatMoney(flow.amount || 0)}</Text>
                 </View>
 
                 {/* 进度条 */}
@@ -197,7 +196,7 @@ const ClaimFlowPage: React.FC = () => {
                     申请于 {formatDateTime(flow.createdAt)}
                   </Text>
                   <Text className={styles.timeText}>
-                    更新于 {formatDateTime(flow.updatedAt)}
+                    更新于 {formatDateTime(flow.updatedAt || '')}
                   </Text>
                 </View>
 
@@ -296,7 +295,7 @@ const ClaimFlowPage: React.FC = () => {
                 <View className={styles.overviewRow}>
                   <Text className={styles.overviewLabel}>领取金额</Text>
                   <Text className={styles.overviewValueHighlight}>
-                    {formatMoney(selectedFlow.amount)}
+                    {formatMoney(selectedFlow.amount || 0)}
                   </Text>
                 </View>
                 <View className={styles.overviewRow}>

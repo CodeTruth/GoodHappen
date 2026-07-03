@@ -1,9 +1,49 @@
 import { create } from 'zustand';
 import Taro from '@tarojs/taro';
 import { UserInfo, PrivacySettings, VisibilityScope } from '@/types/user';
+import { DbUser } from '@/services/db/schema';
+import { isSupabaseAvailable } from '@/services/supabase';
+import { userApi } from '@/services/db';
 
 const STORAGE_KEY = 'haoshi_user_store';
 const PRIVACY_KEY = 'haoshi_privacy_settings';
+
+/** 将前端 UserInfo 转换为数据库 DbUser */
+const toDbUser = (u: UserInfo): Omit<DbUser, 'created_at'> => ({
+  id: u.id,
+  name: u.name,
+  avatar: u.avatar,
+  bio: u.bio,
+  gender: u.gender,
+  birth_year: u.birthYear ?? undefined,
+  region: u.region,
+  phone: u.phone,
+  blessing_value: u.blessingValue,
+  kindness_count: u.kindnessCount,
+  witness_count: u.witnessCount,
+  badges: u.badges,
+  circles: u.circles,
+  emergency_contacts: u.emergencyContacts,
+});
+
+/** 将数据库 DbUser 转换为前端 UserInfo */
+const fromDbUser = (d: DbUser): UserInfo => ({
+  id: d.id,
+  name: d.name,
+  avatar: d.avatar,
+  bio: d.bio,
+  gender: d.gender,
+  birthYear: d.birth_year ?? null,
+  region: d.region || '',
+  phone: d.phone,
+  blessingValue: d.blessing_value,
+  kindnessCount: d.kindness_count,
+  witnessCount: d.witness_count,
+  badges: d.badges,
+  circles: d.circles,
+  createdAt: (d as any).created_at || new Date().toISOString(),
+  emergencyContacts: d.emergency_contacts,
+});
 
 // 默认隐私设置（默认仅自己！）
 const defaultPrivacySettings: PrivacySettings = {
@@ -48,7 +88,7 @@ interface UserState {
   needsStrictReview: () => boolean;
 
   // 持久化
-  loadFromStorage: () => void;
+  loadFromStorage: () => Promise<void>;
   saveToStorage: () => void;
 }
 
@@ -75,6 +115,12 @@ export const useUserStore = create<UserState>((set, get) => ({
       }));
     }
     get().saveToStorage();
+    // 同步用户资料到后端
+    if (isSupabaseAvailable()) {
+      userApi.createUserProfile(toDbUser(userInfo)).catch((e) => {
+        console.warn('[UserStore] Failed to sync user profile to backend:', e);
+      });
+    }
     console.log('[UserStore] Login success, isMinor:', minor);
   },
 
@@ -126,6 +172,28 @@ export const useUserStore = create<UserState>((set, get) => ({
       }
     }
     get().saveToStorage();
+    // 同步更新到后端
+    if (isSupabaseAvailable() && userInfo.id) {
+      const dbUpdate: any = {};
+      if (info.name !== undefined) dbUpdate.name = info.name;
+      if (info.avatar !== undefined) dbUpdate.avatar = info.avatar;
+      if (info.bio !== undefined) dbUpdate.bio = info.bio;
+      if (info.gender !== undefined) dbUpdate.gender = info.gender;
+      if (info.birthYear !== undefined) dbUpdate.birth_year = info.birthYear ?? undefined;
+      if (info.region !== undefined) dbUpdate.region = info.region;
+      if (info.phone !== undefined) dbUpdate.phone = info.phone;
+      if (info.blessingValue !== undefined) dbUpdate.blessing_value = info.blessingValue;
+      if (info.kindnessCount !== undefined) dbUpdate.kindness_count = info.kindnessCount;
+      if (info.witnessCount !== undefined) dbUpdate.witness_count = info.witnessCount;
+      if (info.badges !== undefined) dbUpdate.badges = info.badges;
+      if (info.circles !== undefined) dbUpdate.circles = info.circles;
+      if (info.emergencyContacts !== undefined) dbUpdate.emergency_contacts = info.emergencyContacts;
+      if (Object.keys(dbUpdate).length > 0) {
+        userApi.updateUserProfile(userInfo.id, dbUpdate).catch((e) => {
+          console.warn('[UserStore] Failed to sync user info update to backend:', e);
+        });
+      }
+    }
     console.log('[UserStore] UserInfo updated');
   },
 
@@ -189,7 +257,7 @@ export const useUserStore = create<UserState>((set, get) => ({
     return checkIsMinor(get().userInfo?.birthYear);
   },
 
-  loadFromStorage: () => {
+  loadFromStorage: async () => {
     try {
       const data = Taro.getStorageSync(STORAGE_KEY);
       if (data) {
@@ -206,6 +274,21 @@ export const useUserStore = create<UserState>((set, get) => ({
       }
     } catch (e) {
       console.error('[UserStore] Load from storage failed:', e);
+    }
+    // 如果Supabase可用且用户已登录，从后端同步最新资料
+    if (isSupabaseAvailable()) {
+      const { userInfo } = get();
+      if (userInfo?.id) {
+        try {
+          const remoteProfile = await userApi.getUserProfile(userInfo.id);
+          if (remoteProfile) {
+            set({ userInfo: fromDbUser(remoteProfile) });
+            get().saveToStorage();
+          }
+        } catch (e) {
+          console.warn('[UserStore] Failed to sync user profile from backend:', e);
+        }
+      }
     }
   },
 

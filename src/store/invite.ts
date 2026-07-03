@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import Taro from '@tarojs/taro';
 import { useFortuneStore } from '@/store/fortune';
+import { SEED_USERS } from '@/data/seed-data';
 
 const STORAGE_KEY = 'haoshi_invite_store';
 
@@ -22,6 +23,27 @@ export interface InviteRecord {
   status: 'pending' | 'completed'; // 状态：待完成/已完成
 }
 
+// ============================================
+// 任务2：邀请奖励阶梯升级
+// ============================================
+
+// 里程碑定义
+export interface InviteMilestone {
+  invitesNeeded: number;    // 需要邀请人数
+  reward: number;           // 福气奖励
+  label: string;            // 里程碑名称
+  type: 'fortune' | 'title'; // 奖励类型：福气/称号
+  titleName?: string;       // 称号名称（type=title时）
+  achieved: boolean;        // 是否已达成
+  achievedAt?: string;      // 达成时间
+}
+
+const MILESTONE_DEFS = [
+  { invitesNeeded: 1, reward: 20, label: '邀请1人', type: 'fortune' as const },
+  { invitesNeeded: 3, reward: 50, label: '邀请3人', type: 'fortune' as const },
+  { invitesNeeded: 10, reward: 0, label: '邀请10人', type: 'title' as const, titleName: '善行大使' },
+];
+
 interface InviteState {
   // 用户唯一邀请码
   inviteCode: string;
@@ -31,6 +53,8 @@ interface InviteState {
   totalInvited: number;
   // 累计获得的邀请奖励
   totalReward: number;
+  // 已达成的里程碑（记录达成状态，防止重复发放）
+  achievedMilestones: number[]; // 存储已达成里程碑的 invitesNeeded 值
 
   // 生成邀请码（首次进入时）
   generateInviteCode: () => string;
@@ -42,6 +66,12 @@ interface InviteState {
   copyInviteCode: () => void;
   // 生成邀请海报文案
   generateInviteText: () => string;
+  // 获取邀请里程碑列表及当前进度
+  getInviteMilestones: () => InviteMilestone[];
+  // 获取下一个未达成的里程碑
+  getNextMilestone: () => InviteMilestone | null;
+  // 检查里程碑（内部方法）
+  checkMilestones: (total: number) => void;
   // 持久化
   loadFromStorage: () => void;
   saveToStorage: () => void;
@@ -57,20 +87,14 @@ const generateCode = (): string => {
   return code;
 };
 
-// Mock 被邀请人数据
-const mockInvitees = [
-  { id: 'invitee_1', name: '温暖传递者', avatar: 'https://picsum.photos/id/64/200/200' },
-  { id: 'invitee_2', name: '善心人士', avatar: 'https://picsum.photos/id/91/200/200' },
-  { id: 'invitee_3', name: '小确幸', avatar: 'https://picsum.photos/id/177/200/200' },
-  { id: 'invitee_4', name: '阳光少年', avatar: 'https://picsum.photos/id/338/200/200' },
-  { id: 'invitee_5', name: '暖心人', avatar: 'https://picsum.photos/id/1027/200/200' },
-];
+
 
 export const useInviteStore = create<InviteState>((set, get) => ({
   inviteCode: '',
   inviteRecords: [],
   totalInvited: 0,
   totalReward: 0,
+  achievedMilestones: [],
 
   // 生成邀请码
   generateInviteCode: () => {
@@ -82,20 +106,20 @@ export const useInviteStore = create<InviteState>((set, get) => ({
     return code;
   },
 
-  // 模拟好友通过邀请码注册
+  // 模拟好友通过邀请码注册（从种子数据中选取未使用的用户）
   simulateInviteRegister: (code) => {
     const state = get();
-    // 验证邀请码格式（mock：任意8位字符都视为有效）
+    // 验证邀请码格式（任意8位字符都视为有效）
     if (!code || code.length !== 8) {
       Taro.showToast({ title: '邀请码格式错误', icon: 'none' });
       return false;
     }
 
-    // 随机选一个 mock 被邀请人
+    // 从种子数据中选取一个未邀请过的用户
     const usedIds = state.inviteRecords.map(r => r.inviteeId);
-    const available = mockInvitees.filter(m => !usedIds.includes(m.id));
+    const available = SEED_USERS.filter(u => !usedIds.includes(u.id));
     if (available.length === 0) {
-      Taro.showToast({ title: '暂无更多模拟好友', icon: 'none' });
+      Taro.showToast({ title: '暂无更多可邀请用户', icon: 'none' });
       return false;
     }
     const invitee = available[Math.floor(Math.random() * available.length)];
@@ -110,19 +134,55 @@ export const useInviteStore = create<InviteState>((set, get) => ({
       status: 'completed',
     };
 
+    const newTotalInvited = state.totalInvited + 1;
+    const newTotalReward = state.totalReward + INVITE_REWARD;
+
     set({
       inviteRecords: [newRecord, ...state.inviteRecords],
-      totalInvited: state.totalInvited + 1,
-      totalReward: state.totalReward + INVITE_REWARD,
+      totalInvited: newTotalInvited,
+      totalReward: newTotalReward,
     });
 
     // 双方各获得福气奖励
     const fortuneStore = useFortuneStore.getState();
     fortuneStore.addFortune(INVITE_REWARD, `邀请好友奖励：${invitee.name}`);
 
+    // 给被邀请人发放奖励
+    fortuneStore.addFortune(INVITE_REWARD, '受邀注册奖励', 'invite_received');
+
+    // 检查里程碑达成
+    get().checkMilestones(newTotalInvited);
+
     get().saveToStorage();
     Taro.showToast({ title: `+${INVITE_REWARD}福气`, icon: 'success' });
     return true;
+  },
+
+  // 检查并发放里程碑奖励
+  checkMilestones: (totalInvited: number) => {
+    const { achievedMilestones } = get();
+    const fortuneStore = useFortuneStore.getState();
+
+    MILESTONE_DEFS.forEach(milestone => {
+      // 已达到邀请人数门槛且尚未领取
+      if (totalInvited >= milestone.invitesNeeded && !achievedMilestones.includes(milestone.invitesNeeded)) {
+        // 记录已达成
+        set({ achievedMilestones: [...achievedMilestones, milestone.invitesNeeded] });
+
+        if (milestone.type === 'fortune') {
+          // 发放福气奖励
+          fortuneStore.addFortune(milestone.reward, `邀请里程碑：${milestone.label}`);
+          Taro.showToast({ title: `里程碑达成！+${milestone.reward}福气`, icon: 'success' });
+        } else if (milestone.type === 'title') {
+          // 解锁称号
+          Taro.showModal({
+            title: '🏆 称号解锁！',
+            content: `恭喜你邀请达到 ${milestone.invitesNeeded} 人，解锁专属称号「${milestone.titleName}」！`,
+            showCancel: false,
+          });
+        }
+      }
+    });
   },
 
   // 获取邀请统计
@@ -132,6 +192,28 @@ export const useInviteStore = create<InviteState>((set, get) => ({
       total: inviteRecords.length,
       completed: inviteRecords.filter(r => r.status === 'completed').length,
       reward: totalReward,
+    };
+  },
+
+  // 获取邀请里程碑列表
+  getInviteMilestones: () => {
+    const { achievedMilestones } = get();
+    return MILESTONE_DEFS.map(m => ({
+      ...m,
+      achieved: achievedMilestones.includes(m.invitesNeeded),
+      achievedAt: undefined,
+    }));
+  },
+
+  // 获取下一个未达成的里程碑
+  getNextMilestone: () => {
+    const { achievedMilestones } = get();
+    const next = MILESTONE_DEFS.find(m => !achievedMilestones.includes(m.invitesNeeded));
+    if (!next) return null;
+    return {
+      ...next,
+      achieved: false,
+      achievedAt: undefined,
     };
   },
 
@@ -163,6 +245,7 @@ export const useInviteStore = create<InviteState>((set, get) => ({
           inviteRecords: parsed.inviteRecords || [],
           totalInvited: parsed.totalInvited || 0,
           totalReward: parsed.totalReward || 0,
+          achievedMilestones: parsed.achievedMilestones || [],
         });
       }
       // 如果没有邀请码，自动生成
@@ -182,6 +265,7 @@ export const useInviteStore = create<InviteState>((set, get) => ({
         inviteRecords: state.inviteRecords,
         totalInvited: state.totalInvited,
         totalReward: state.totalReward,
+        achievedMilestones: state.achievedMilestones,
       };
       Taro.setStorageSync(STORAGE_KEY, JSON.stringify(data));
     } catch (e) {

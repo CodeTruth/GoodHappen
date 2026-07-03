@@ -1,5 +1,7 @@
 import { create } from 'zustand';
 import Taro from '@tarojs/taro';
+import { isSupabaseAvailable } from '@/services/supabase';
+import { checkinApi } from '@/services/db';
 
 const STORAGE_KEY = 'haoshi_checkin_store';
 const TASKS_KEY = 'haoshi_checkin_tasks';
@@ -75,108 +77,7 @@ export interface CheckinTask {
   participantCount: number; // 参与人数
 }
 
-// Mock 打卡任务
-const mockTasks: CheckinTask[] = [
-  {
-    id: 'task1',
-    circleId: 'circle1',
-    title: '每日阅读30分钟',
-    description: '坚持每天阅读，让心灵成长',
-    category: 'growth',
-    subcategory: '阅读打卡',
-    frequency: 'daily',
-    startDate: '2026-06-01',
-    isActive: true,
-    createdBy: 'currentUser',
-    createdAt: '2026-06-01T00:00:00Z',
-    totalCompletions: 128,
-    participantCount: 32,
-  },
-  {
-    id: 'task2',
-    circleId: 'circle1',
-    title: '每日运动打卡',
-    description: '运动让生活更美好',
-    category: 'positive',
-    subcategory: '运动',
-    frequency: 'daily',
-    startDate: '2026-06-01',
-    isActive: true,
-    createdBy: 'currentUser',
-    createdAt: '2026-06-01T00:00:00Z',
-    totalCompletions: 96,
-    participantCount: 28,
-  },
-  {
-    id: 'task3',
-    circleId: 'circle1',
-    title: '每周家务劳动',
-    description: '帮助家人做力所能及的家务',
-    category: 'warm',
-    subcategory: '家务劳动',
-    frequency: 'weekly',
-    startDate: '2026-06-01',
-    isActive: true,
-    createdBy: 'currentUser',
-    createdAt: '2026-06-01T00:00:00Z',
-    totalCompletions: 45,
-    participantCount: 35,
-  },
-];
-
-// Mock 打卡记录
-const mockRecords: CheckinRecord[] = [
-  {
-    id: 'ck1',
-    userId: 'currentUser',
-    userName: '温暖小太阳',
-    userAvatar: 'https://picsum.photos/id/64/200/200',
-    circleId: 'circle1',
-    category: 'growth',
-    subcategory: '阅读打卡',
-    contentType: 'text',
-    content: '今天阅读了《小王子》第三章，感受到了爱与责任的真谛',
-    visibility: 'circle',
-    streakDays: 7,
-    createdAt: '2026-06-22T08:00:00Z',
-    date: '2026-06-22',
-  },
-  {
-    id: 'ck2',
-    userId: 'u2',
-    userName: '小明',
-    userAvatar: 'https://picsum.photos/id/65/200/200',
-    circleId: 'circle1',
-    category: 'warm',
-    subcategory: '家务劳动',
-    contentType: 'image',
-    content: '今天帮妈妈洗碗，妈妈很开心',
-    images: ['https://picsum.photos/id/100/400/300'],
-    aiSummary: '图中显示一位少年正在厨房洗碗，水龙头流水，碗碟整齐摆放',
-    visibility: 'circle',
-    streakDays: 3,
-    createdAt: '2026-06-22T07:30:00Z',
-    date: '2026-06-22',
-  },
-  {
-    id: 'ck3',
-    userId: 'u3',
-    userName: '小红',
-    userAvatar: 'https://picsum.photos/id/66/200/200',
-    circleId: 'circle1',
-    category: 'positive',
-    subcategory: '运动',
-    contentType: 'video',
-    content: '今天跑了3公里，坚持就是胜利',
-    video: 'https://example.com/video.mp4',
-    videoThumb: 'https://picsum.photos/id/101/400/300',
-    aiSummary: '视频中显示在公园晨跑，环境优美，跑步姿势标准',
-    visibility: 'circle',
-    streakDays: 5,
-    createdAt: '2026-06-21T18:00:00Z',
-    date: '2026-06-21',
-  },
-];
+// 初始为空，种子数据由 seed-data.ts 在首次启动时注入
 
 interface CheckinState {
   records: CheckinRecord[];
@@ -201,7 +102,7 @@ interface CheckinState {
   getTaskCompletionRate: (taskId: string) => number;
 
   // 持久化
-  loadFromStorage: () => void;
+  loadFromStorage: () => Promise<void>;
   saveToStorage: () => void;
 }
 
@@ -255,8 +156,8 @@ const calculateStreak = (
 };
 
 export const useCheckinStore = create<CheckinState>((set, get) => ({
-  records: mockRecords,
-  tasks: mockTasks,
+  records: [],
+  tasks: [],
 
   addCheckin: (record) => {
     const id = `ck_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
@@ -298,6 +199,12 @@ export const useCheckinStore = create<CheckinState>((set, get) => ({
     }
 
     get().saveToStorage();
+    // 同步到后端
+    if (isSupabaseAvailable()) {
+      checkinApi.addCheckin(newRecord).catch((e) => {
+        console.warn('[CheckinStore] Failed to sync checkin to backend:', e);
+      });
+    }
     return id;
   },
 
@@ -405,7 +312,7 @@ export const useCheckinStore = create<CheckinState>((set, get) => ({
     return Math.min(100, Math.round((task.totalCompletions / task.participantCount) * 100));
   },
 
-  loadFromStorage: () => {
+  loadFromStorage: async () => {
     try {
       const data = Taro.getStorageSync(STORAGE_KEY);
       if (data) {
@@ -424,6 +331,27 @@ export const useCheckinStore = create<CheckinState>((set, get) => ({
     } catch (e) {
       console.error('[CheckinStore] Load from storage failed:', e);
     }
+    // 如果Supabase可用，从后端同步最新数据
+    if (isSupabaseAvailable()) {
+      try {
+        const [remoteRecords, remoteTasks] = await Promise.all([
+          checkinApi.getCheckins(),
+          checkinApi.getTasks(),
+        ]);
+        if (remoteRecords && remoteRecords.length > 0) {
+          set({ records: remoteRecords });
+        }
+        if (remoteTasks && remoteTasks.length > 0) {
+          set({ tasks: remoteTasks });
+        }
+        if ((remoteRecords && remoteRecords.length > 0) ||
+            (remoteTasks && remoteTasks.length > 0)) {
+          get().saveToStorage();
+        }
+      } catch (e) {
+        console.warn('[CheckinStore] Failed to sync checkin data from backend:', e);
+      }
+    }
   },
 
   saveToStorage: () => {
@@ -433,6 +361,15 @@ export const useCheckinStore = create<CheckinState>((set, get) => ({
       Taro.setStorageSync(TASKS_KEY, JSON.stringify({ tasks }));
     } catch (e) {
       console.error('[CheckinStore] Save to storage failed:', e);
+    }
+    // 同步任务到后端
+    if (isSupabaseAvailable()) {
+      const { tasks } = get();
+      if (tasks.length > 0) {
+        checkinApi.saveTasks(tasks).catch((e) => {
+          console.warn('[CheckinStore] Failed to sync tasks to backend:', e);
+        });
+      }
     }
   },
 }));

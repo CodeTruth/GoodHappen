@@ -1,6 +1,5 @@
 import { create } from 'zustand';
 import Taro from '@tarojs/taro';
-import { mockNotifications } from '@/data/notifications';
 
 const STORAGE_KEY = 'haoshi_notification_store';
 
@@ -461,11 +460,7 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
   },
 
   loadMockData: () => {
-    const state = get();
-    if (state.notifications.length === 0) {
-      set({ notifications: [...mockNotifications] });
-      get().saveToStorage();
-    }
+    // 不再加载 mock 数据，种子数据由 App 启动时注入
   },
 
   cleanupExpired: () => {

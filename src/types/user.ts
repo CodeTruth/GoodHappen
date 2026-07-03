@@ -10,6 +10,14 @@ export type Gender = 'male' | 'female' | 'unknown';
 // followers: 互相关注可见（兼容旧逻辑）
 export type VisibilityScope = 'public' | 'followers' | 'private' | 'circle';
 
+// 紧急联系人
+export interface EmergencyContactInfo {
+  id: string;
+  name: string;
+  phone: string;
+  relation: string;  // 家人/朋友/同事
+}
+
 // 用户信息（登录后存储的完整资料）
 export interface UserInfo {
   id: string;
@@ -26,6 +34,7 @@ export interface UserInfo {
   badges: string[];          // 徽章
   circles: string[];         // 所属善行圈
   createdAt: string;         // 注册时间
+  emergencyContacts?: EmergencyContactInfo[]; // 紧急联系人（用于保护模式）
 }
 
 // 隐私设置

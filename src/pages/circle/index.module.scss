@@ -15,6 +15,129 @@
   margin-bottom: $spacing-lg;
 }
 
+// ===== 本周善行之星排行榜 =====
+.rankingCard {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  margin-bottom: $spacing-lg;
+  box-shadow: $shadow-card;
+  border: 2rpx solid rgba($color-primary, 0.15);
+}
+
+.rankingHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: $spacing-md;
+  padding-bottom: $spacing-md;
+  border-bottom: 2rpx solid rgba($color-primary, 0.1);
+}
+
+.rankingTitle {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
+.rankingSubtitle {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.rankingItem {
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+  padding: $spacing-md 0;
+  border-bottom: 1rpx solid $color-divider;
+  transition: all $transition-base;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &:active {
+    opacity: 0.8;
+  }
+
+  &.rankingItemTop {
+    background: linear-gradient(135deg, #FFF9F0 0%, #FFF3E0 100%);
+    margin: 0 -#{$spacing-lg};
+    padding: $spacing-md $spacing-lg;
+    border-bottom-color: transparent;
+    border-radius: $radius-sm;
+  }
+}
+
+.rankingPos {
+  width: 48rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.rankingMedal {
+  font-size: 40rpx;
+}
+
+.rankingNum {
+  font-size: $font-size-md;
+  font-weight: $font-weight-bold;
+  color: $color-text-tertiary;
+}
+
+.rankingAvatar {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: $radius-round;
+  flex-shrink: 0;
+  object-fit: cover;
+}
+
+.rankingInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.rankingNameRow {
+  display: flex;
+  align-items: center;
+  gap: $spacing-xs;
+  margin-bottom: 2rpx;
+}
+
+.rankingName {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+}
+
+.rankingBadge {
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  border-radius: $radius-sm;
+  padding: 2rpx $spacing-xs;
+}
+
+.rankingBadgeText {
+  font-size: 18rpx;
+  color: #FFFFFF;
+  font-weight: $font-weight-medium;
+}
+
+.rankingRegion {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.rankingCount {
+  font-size: $font-size-sm;
+  color: $color-primary;
+  font-weight: $font-weight-bold;
+  white-space: nowrap;
+}
+
 .title {
   font-size: $font-size-xxl;
   font-weight: $font-weight-semibold;

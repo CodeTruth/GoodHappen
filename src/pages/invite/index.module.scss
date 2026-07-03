@@ -150,35 +150,130 @@
   color: $color-text-tertiary;
 }
 
-// 邀请排行榜（不排名，只显示数量）
-.rankCard {
+// ===== 邀请里程碑卡片 =====
+.milestoneCard {
   background: $color-bg-card;
   border-radius: $radius-lg;
   padding: $spacing-lg;
   margin-bottom: $spacing-lg;
   box-shadow: $shadow-card;
-  text-align: center;
+  border: 2rpx solid rgba($color-primary, 0.15);
 }
 
-.rankTitle {
+.milestoneTitle {
   font-size: $font-size-md;
   font-weight: $font-weight-semibold;
   color: $color-text-primary;
   display: block;
-  margin-bottom: $spacing-sm;
+  margin-bottom: $spacing-md;
 }
 
-.rankText {
-  font-size: $font-size-lg;
+.milestoneProgress {
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+  margin-bottom: $spacing-lg;
+}
+
+.milestoneBar {
+  flex: 1;
+  height: 16rpx;
+  background: $color-bg-hover;
+  border-radius: $radius-round;
+  overflow: hidden;
+}
+
+.milestoneBarFill {
+  height: 100%;
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  border-radius: $radius-round;
+  transition: width 0.6s ease;
+}
+
+.milestoneCount {
+  font-size: $font-size-sm;
   color: $color-primary;
   font-weight: $font-weight-medium;
-  display: block;
+  white-space: nowrap;
+}
+
+.milestoneNodes {
+  display: flex;
+  justify-content: space-around;
+  margin-bottom: $spacing-lg;
+  gap: $spacing-sm;
+}
+
+.milestoneNode {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 160rpx;
+  padding: $spacing-md $spacing-sm;
+  background: $color-bg-page;
+  border-radius: $radius-md;
+  border: 2rpx solid $color-border;
+  transition: all $transition-base;
+
+  &.milestoneNodeReached {
+    border-color: rgba($color-primary, 0.4);
+    background: linear-gradient(135deg, #FFF9F0 0%, #FFF3E0 100%);
+  }
+
+  &.milestoneNodeAchieved {
+    border-color: $color-success;
+    background: linear-gradient(135deg, #F6FFED 0%, #F0FFE0 100%);
+  }
+}
+
+.milestoneNodeIcon {
+  font-size: 40rpx;
   margin-bottom: $spacing-xs;
 }
 
-.rankSub {
+.milestoneNodeLabel {
   font-size: $font-size-xs;
-  color: $color-text-tertiary;
+  color: $color-text-secondary;
+  font-weight: $font-weight-medium;
+  display: block;
+  margin-bottom: 4rpx;
+}
+
+.milestoneNodeStatus {
+  font-size: $font-size-xs;
+  color: $color-success;
+  font-weight: $font-weight-medium;
+}
+
+.milestoneNodeReward {
+  font-size: $font-size-xs;
+  color: $color-primary;
+  font-weight: $font-weight-medium;
+}
+
+.milestoneNodeAchieved .milestoneNodeReward {
+  color: $color-success;
+}
+
+.nextMilestone {
+  background: linear-gradient(135deg, #FFF9F0 0%, #FFF3E0 100%);
+  border-radius: $radius-md;
+  padding: $spacing-md;
+  text-align: center;
+  border-left: 4rpx solid $color-primary;
+}
+
+.nextMilestoneLabel {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  display: block;
+  margin-bottom: 4rpx;
+}
+
+.nextMilestoneText {
+  font-size: $font-size-sm;
+  color: $color-primary;
+  font-weight: $font-weight-medium;
   display: block;
 }
 

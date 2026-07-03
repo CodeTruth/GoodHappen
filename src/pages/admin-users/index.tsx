@@ -3,7 +3,7 @@ import { View, Text, Input, ScrollView, Image } from '@tarojs/components';
 import Taro from '@tarojs/taro';
 import classnames from 'classnames';
 import { useAdminStore } from '@/store/admin';
-import type { AdminUser, AccountStatus, UserMarkType } from '@/data/admin';
+import type { AdminUser, AccountStatus, UserMarkType } from '@/store/admin';
 import styles from './index.module.scss';
 
 // 筛选标签

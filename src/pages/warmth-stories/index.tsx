@@ -1,8 +1,26 @@
 import React, { useState, useMemo } from 'react';
 import { View, Text, Image, ScrollView } from '@tarojs/components';
 import classnames from 'classnames';
-import { getWarmStories, WarmStory } from '@/data/stories';
 import styles from './index.module.scss';
+
+// 本地定义（原 @/data/stories 已移除）
+interface WarmStory {
+  id: string;
+  title: string;
+  content: string;
+  summary?: string;
+  image?: string;
+  province: string;
+  period: string;
+  participantCount: number;
+  kindnessType?: string;
+  aiPersonaName?: string;
+  aiQuote?: string;
+  publisher?: string;
+  warmthValue?: number;
+}
+
+const getWarmStories = (): WarmStory[] => [];
 
 // 周期筛选类型
 type Period = 'Q1' | 'Q2' | 'Q3' | 'Q4' | 'yearly';
@@ -66,7 +84,7 @@ const WarmthStoriesPage: React.FC = () => {
             <View key={story.id} className={styles.storyCard}>
               {/* 故事配图 */}
               <Image
-                src={story.image}
+                src={story.image || ''}
                 className={styles.storyImage}
                 mode="aspectFill"
               />
@@ -98,7 +116,7 @@ const WarmthStoriesPage: React.FC = () => {
                   <Text className={styles.publisherIcon}>📍</Text>
                   <Text className={styles.publisherText}>{story.publisher}</Text>
                   <Text className={styles.storyWarmth}>
-                    温暖值 {formatWarmth(story.warmthValue)}
+                    温暖值 {formatWarmth(story.warmthValue || 0)}
                   </Text>
                 </View>
               </View>

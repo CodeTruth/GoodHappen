@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, Button } from '@tarojs/components';
 import Taro from '@tarojs/taro';
 import { useFortuneStore } from '@/store/fortune';
+import { useKindnessStore } from '@/store/kindness';
 import { mockKindnessList } from '@/data/kindness';
 import { getLevelByFortune } from '@/utils/fortune';
 import { FORTUNE_LEVELS } from '@/data/fortune-levels';
@@ -58,7 +59,7 @@ interface AnnualReportData {
 }
 
 // 生成 Mock 年度报告数据
-const generateReportData = (totalFortune: number): AnnualReportData => {
+const generateReportData = (totalFortune: number, userKindnessList: Array<{ id: string; content: string; createdAt: string; likes: number; aiResponse?: { content: string } }> = []): AnnualReportData => {
   const year = new Date().getFullYear();
   // 善行类型分布
   const typeData = [
@@ -78,10 +79,15 @@ const generateReportData = (totalFortune: number): AnnualReportData => {
   // 月度趋势（12个月）
   const monthlyTrend = [3, 5, 8, 6, 10, 12, 9, 11, 7, 8, 5, 3];
 
-  // 最温暖记录（取 mock 数据中点赞最多的）
-  const warmest = mockKindnessList.reduce((max, item) =>
-    item.likes > max.likes ? item : max
-  );
+  // 最温暖记录（优先使用用户的真实善行记录，兜底用 mock 数据）
+  const warmestSource = userKindnessList.length > 0
+    ? userKindnessList.reduce((max, item) =>
+        item.likes > (max.likes || 0) ? item : max
+      )
+    : mockKindnessList.reduce((max, item) =>
+        item.likes > max.likes ? item : max
+      );
+  const warmest = warmestSource;
 
   // 年度称号（基于福气值）
   const currentLevel = getLevelByFortune(totalFortune);
@@ -108,24 +114,33 @@ const generateReportData = (totalFortune: number): AnnualReportData => {
 
 const AnnualReportPage: React.FC = () => {
   const { totalFortune, loadFromStorage } = useFortuneStore();
+  const { publishedList, loadFromStorage: loadKindness } = useKindnessStore();
   const [reportData, setReportData] = useState<AnnualReportData | null>(null);
   const [animationStart, setAnimationStart] = useState(false);
   const [showSharePoster, setShowSharePoster] = useState(false);
 
   useEffect(() => {
     loadFromStorage();
+    loadKindness();
   }, []);
 
+  // 判断是否有真实数据：福气值 > 0 或用户已发布善行
+  const hasRealData = totalFortune > 0 || publishedList.length > 0;
+
   useEffect(() => {
-    if (totalFortune >= 0) {
-      // 使用更大的 mock 福气值用于年度报告展示
-      const mockFortune = Math.max(totalFortune, 580);
-      setReportData(generateReportData(mockFortune));
+    if (totalFortune >= 0 && hasRealData) {
+      // 使用真实数据，移除 Math.max(totalFortune, 580) 的 mock 回退
+      setReportData(generateReportData(totalFortune, publishedList));
       // 延迟启动动画
       const timer = setTimeout(() => setAnimationStart(true), 200);
       return () => clearTimeout(timer);
     }
-  }, [totalFortune]);
+  }, [totalFortune, hasRealData, publishedList]);
+
+  // 引导页：发布第一件善行
+  const handlePublishFirstKindness = () => {
+    Taro.navigateTo({ url: '/pages/record/index' });
+  };
 
   // 数字滚动动画
   const animatedRecords = useCountUp(reportData?.totalRecords || 0, 1500, animationStart);
@@ -155,6 +170,29 @@ const AnnualReportPage: React.FC = () => {
       },
     });
   };
+
+  // 引导页：当福气值为 0 且用户善行列表为空时展示
+  if (!hasRealData && totalFortune === 0) {
+    return (
+      <View className={styles.container}>
+        <View className={styles.guideContainer}>
+          <View className={styles.guideIcon}>🌱</View>
+          <Text className={styles.guideTitle}>你的第一年</Text>
+          <Text className={styles.guideDesc}>
+            这一年，你还没有记录善行。{'\n'}
+            每一件善事都像一颗种子，{'\n'}
+            播下温暖，收获福气。
+          </Text>
+          <View className={styles.guideBtn} onClick={handlePublishFirstKindness}>
+            <Text className={styles.guideBtnText}>发布第一件善行，开启你的温暖记录</Text>
+          </View>
+          <Text className={styles.guideFooter}>
+            你的年度报告将基于真实善行数据生成
+          </Text>
+        </View>
+      </View>
+    );
+  }
 
   if (!reportData) {
     return (

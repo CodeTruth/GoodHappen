@@ -47,7 +47,10 @@ export default defineAppConfig({
     'pages/ai-chat/index',
     'pages/circle-moral-tasks/index',
     'pages/circle-dashboard/index',
-    'pages/student-profile/index'
+    'pages/student-profile/index',
+    'pages/feedback/index',
+    'pages/school-pricing/index',
+    'pages/brand-sponsorship/index'
   ],
   window: {
     backgroundTextStyle: 'light',

@@ -1,0 +1,198 @@
+@use '@/styles/variables.scss' as *;
+
+.pageWrapper {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #FFFCF8 0%, #F8F4EE 100%);
+}
+
+.container {
+  min-height: 100vh;
+  padding: $spacing-xl $page-padding 80rpx;
+}
+
+// 页面头部
+.headerSection {
+  text-align: center;
+  margin-bottom: $spacing-xl;
+}
+
+.pageTitle {
+  font-size: 44rpx;
+  font-weight: 700;
+  color: #5D4E37;
+  margin-bottom: $spacing-sm;
+}
+
+.pageSubtitle {
+  font-size: $font-size-md;
+  color: $color-text-secondary;
+  line-height: 1.6;
+}
+
+.highlight {
+  color: $color-primary;
+  font-weight: 600;
+}
+
+// 套餐卡片容器
+.pricingGrid {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-lg;
+}
+
+// 单个套餐卡片
+.pricingCard {
+  background: #FFFCF8;
+  border-radius: 24rpx;
+  padding: $spacing-xl $spacing-lg;
+  box-shadow: 0 4rpx 24rpx rgba(196, 149, 106, 0.12);
+  border: 2rpx solid rgba(196, 149, 106, 0.15);
+  position: relative;
+  overflow: hidden;
+  transition: all $transition-base;
+
+  &:active {
+    transform: scale(0.99);
+    box-shadow: 0 2rpx 12rpx rgba(196, 149, 106, 0.15);
+  }
+}
+
+// 推荐标签
+.recommendBadge {
+  position: absolute;
+  top: 24rpx;
+  right: -32rpx;
+  background: linear-gradient(135deg, #C4956A, #D4A76A);
+  color: #FFF;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+  padding: 6rpx 48rpx;
+  transform: rotate(45deg);
+  box-shadow: 0 2rpx 8rpx rgba(196, 149, 106, 0.3);
+}
+
+// 旗舰版特殊背景
+.pricingCardPremium {
+  border-color: #C4956A;
+  background: linear-gradient(135deg, #FFFCF8 0%, #FFF9F0 100%);
+  box-shadow: 0 6rpx 32rpx rgba(196, 149, 106, 0.2);
+}
+
+// 套餐名称
+.planName {
+  font-size: $font-size-xl;
+  font-weight: $font-weight-semibold;
+  color: #5D4E37;
+  margin-bottom: $spacing-sm;
+}
+
+// 价格区域
+.planPrice {
+  display: flex;
+  align-items: baseline;
+  gap: $spacing-xs;
+  margin-bottom: $spacing-lg;
+  padding-bottom: $spacing-lg;
+  border-bottom: 1rpx solid rgba(196, 149, 106, 0.15);
+}
+
+.priceSymbol {
+  font-size: $font-size-md;
+  color: $color-primary;
+  font-weight: $font-weight-medium;
+}
+
+.priceAmount {
+  font-size: 52rpx;
+  font-weight: $font-weight-bold;
+  color: #C4956A;
+  font-variant-numeric: tabular-nums;
+}
+
+.priceUnit {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+}
+
+.priceFree {
+  font-size: 48rpx;
+  font-weight: $font-weight-bold;
+  color: #7B9E87;
+}
+
+// 功能列表
+.featureList {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+  margin-bottom: $spacing-xl;
+  min-height: 320rpx;
+}
+
+.featureItem {
+  display: flex;
+  align-items: flex-start;
+  gap: $spacing-sm;
+}
+
+.featureIcon {
+  font-size: 28rpx;
+  flex-shrink: 0;
+  margin-top: 2rpx;
+}
+
+.featureText {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  line-height: 1.5;
+  flex: 1;
+}
+
+.featureHighlight {
+  color: #C4956A;
+  font-weight: 500;
+}
+
+// 底部按钮
+.contactBtn {
+  width: 100%;
+  height: 88rpx;
+  background: linear-gradient(135deg, #C4956A 0%, #D4A76A 100%);
+  border-radius: $radius-button;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: #FFF;
+  box-shadow: 0 4rpx 16rpx rgba(196, 149, 106, 0.3);
+  transition: all $transition-base;
+
+  &:active {
+    opacity: 0.9;
+    transform: scale(0.98);
+  }
+}
+
+.contactBtnSecondary {
+  background: #FFFCF8;
+  color: $color-primary;
+  border: 2rpx solid $color-primary;
+  box-shadow: none;
+}
+
+.contactBtnFree {
+  background: linear-gradient(135deg, #7B9E87 0%, #8FB89E 100%);
+  box-shadow: 0 4rpx 16rpx rgba(123, 158, 135, 0.3);
+}
+
+// 底部说明
+.footerNote {
+  text-align: center;
+  margin-top: $spacing-xl;
+  padding: $spacing-lg 0;
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  line-height: 1.6;
+}

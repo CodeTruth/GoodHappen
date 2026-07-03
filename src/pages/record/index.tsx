@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { View, Text, Textarea, Image } from '@tarojs/components';
-import Taro, { RecorderManager } from '@tarojs/taro';
+import Taro, { RecorderManager, useRouter } from '@tarojs/taro';
 import { generateMultiAIResponseStream, moderateContent, evaluateCredibility } from '@/services/kindness';
 import type { AIResponse as AIResponseType } from '@/services/kindness';
 import { calculateFortune } from '@/utils/fortune';
@@ -12,11 +12,15 @@ import { useMilestoneStore } from '@/store/milestone';
 import { useCircleStore } from '@/store/circle';
 import { useRitualStore } from '@/store/ritual';
 import { useMoralTaskStore } from '@/store/moral-task';
+import { useProtectionStore } from '@/store/protection';
+import { getCurrentGPS, MediaAsset } from '@/services/evidence';
 import { CircleType, getCircleTypeConfig } from '@/config/circle-types';
 // import { PERSONAS } from '@/services/ai'; // 不再需要直接引用人设列表
 import { Kindness } from '@/types/kindness';
 import { detectRisk, RiskScenario } from '@/services/risk-detection';
 import MilestonePopup from '@/components/MilestonePopup';
+import SharePoster from '@/components/SharePoster';
+import { WITNESS_TEMPLATES } from '@/data/witness-templates';
 import styles from './index.module.scss';
 
 // 先贤语录库
@@ -88,7 +92,7 @@ const TaskSelectorContent: React.FC<{
             <View className={styles.taskOptionInfo}>
               <Text className={styles.taskOptionTitle}>{task.title}</Text>
               <Text className={styles.taskOptionMeta}>
-                {catConfig?.name || '其他'} · {task.requireVideo ? '需视频' : '文字即可'} · 截止{task.weekRange.end.slice(5)}
+                {catConfig?.name || '其他'} · {task.requireVideo ? '需视频' : '文字即可'} · 截止{task.weekRange?.end.slice(5) || ''}
               </Text>
             </View>
             <Text className={styles.taskOptionCheck}>{selectedTaskId === task.id ? '✓' : ''}</Text>
@@ -122,6 +126,15 @@ const RecordPage: React.FC = () => {
     } catch { /* H5 环境不支持 getTabBar */ }
   }, []);
 
+  // 从详情页「我要见证」按钮跳转时，自动切换到见证模式
+  const router = useRouter();
+  useEffect(() => {
+    if (router.params.mode === 'witness') {
+      setRecordType('witness');
+      setVisibleScope('public');
+    }
+  }, []);
+
   const [recordType, setRecordType] = useState<'self' | 'witness'>('self');
   const [content, setContent] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
@@ -134,6 +147,10 @@ const RecordPage: React.FC = () => {
   const [showTaskSelector, setShowTaskSelector] = useState(false);
   // 匿名行善
   const [isAnonymous, setIsAnonymous] = useState(false);
+  // 首次善行匿名提示
+  const [showAnonymousTip, setShowAnonymousTip] = useState(false);
+  // 完成发布后是否显示分享按钮
+  const [showSharePoster, setShowSharePoster] = useState(false);
   // 风险检测
   const [riskScenario, setRiskScenario] = useState<RiskScenario | null>(null);
   const [phase, setPhase] = useState<FeedbackPhase>('input');
@@ -234,6 +251,17 @@ const RecordPage: React.FC = () => {
       setVisibleScope('private');
     }
   }, [isMinor, visibleScope]);
+
+  // 首次善行默认开启匿名模式
+  useEffect(() => {
+    if (publishedList.length === 0 && !isAnonymous) {
+      setIsAnonymous(true);
+      setShowAnonymousTip(true);
+      // 3秒后自动隐藏提示
+      const t = setTimeout(() => setShowAnonymousTip(false), 3000);
+      return () => clearTimeout(t);
+    }
+  }, [publishedList]);
 
   // 从URL参数读取外部上下文（AI顾问 / 保护模式）
   const [fromSource, setFromSource] = useState('');
@@ -699,6 +727,34 @@ const RecordPage: React.FC = () => {
       };
       addPublishedKindness(newKindness);
 
+      // 创建善行存证（确保后续 SOS 触发时能找到存证）
+      try {
+        const protectionStore = useProtectionStore.getState();
+        const gps = await getCurrentGPS();
+        const mediaAssets: MediaAsset[] = images.map((url) => ({
+          type: 'image',
+          url,
+          createdAt: new Date().toISOString(),
+        }));
+        if (videoPath) {
+          mediaAssets.push({
+            type: 'video' as const,
+            url: videoPath,
+            createdAt: new Date().toISOString(),
+          });
+        }
+        if (voicePath) {
+          mediaAssets.push({
+            type: 'audio' as const,
+            url: voicePath,
+            createdAt: new Date().toISOString(),
+          });
+        }
+        protectionStore.createEvidence(newKindness.id, content || voiceText || '', gps, mediaAssets);
+      } catch (evidenceErr) {
+        console.warn('[Record] Failed to create evidence:', evidenceErr);
+      }
+
       // 如果关联了德育任务，同时创建任务提交记录
       if (selectedTaskId && selectedCircleId) {
         const { addSubmission } = useMoralTaskStore.getState();
@@ -860,6 +916,17 @@ const RecordPage: React.FC = () => {
     <View className={styles.container}>
       {/* 任务4：里程碑弹窗 */}
       <MilestonePopup />
+      {/* 任务1：分享海报组件 */}
+      <SharePoster
+        visible={showSharePoster}
+        content={content || voiceText || ''}
+        aiQuote={aiPersonaName ? `${aiPersonaName}：「${aiContent.slice(0, 60)}」` : (aiResponses[0]?.content?.slice(0, 60) ? `「${aiResponses[0].content.slice(0, 60)}」` : '温暖如你，世界因你而美好 ✨')}
+        authorName={userInfo?.name || '善行使者'}
+        kindnessId={`kindness_${Date.now()}`}
+        tag={selectedTags[0] || ''}
+        fortuneValue={fortune}
+        onClose={() => setShowSharePoster(false)}
+      />
 
       {phase === 'input' && (
         <>
@@ -876,6 +943,14 @@ const RecordPage: React.FC = () => {
             </View>
           )}
 
+          {recordType === 'witness' && (
+            <View className={styles.streakInfo}>
+              <Text className={styles.streakText}>
+                💡 你不需要亲自行善，见证他人善行同样值得记录
+              </Text>
+            </View>
+          )}
+
           <View className={styles.typeSelector}>
             <View
               className={`${styles.typeOption} ${recordType === 'self' ? styles.active : ''}`}
@@ -887,7 +962,7 @@ const RecordPage: React.FC = () => {
             </View>
             <View
               className={`${styles.typeOption} ${recordType === 'witness' ? styles.active : ''}`}
-              onClick={() => setRecordType('witness')}
+              onClick={() => { setRecordType('witness'); setVisibleScope('public'); }}
             >
               <Text className={styles.typeIcon}>👀</Text>
               <Text className={styles.typeName}>我看到的好事</Text>
@@ -924,6 +999,26 @@ const RecordPage: React.FC = () => {
               </View>
               <Text className={styles.mediaHint}>支持文字+图片+视频组合发布</Text>
             </View>
+
+            {/* 任务2：一键见证模板选择（仅在"我看到的好事"模式下显示） */}
+            {recordType === 'witness' && (
+              <View className={styles.formItem}>
+                <Text className={styles.label}>快速选择见证场景</Text>
+                <Text className={styles.mediaHint}>点击模板快速记录你看到的善意</Text>
+                <View className={styles.witnessTemplates}>
+                  {WITNESS_TEMPLATES.map((tmpl) => (
+                    <View
+                      key={tmpl.id}
+                      className={`${styles.witnessTemplate} ${content === tmpl.desc ? styles.witnessTemplateActive : ''}`}
+                      onClick={() => setContent(tmpl.desc)}
+                    >
+                      <Text className={styles.witnessTemplateIcon}>{tmpl.icon}</Text>
+                      <Text className={styles.witnessTemplateTitle}>{tmpl.title}</Text>
+                    </View>
+                  ))}
+                </View>
+              </View>
+            )}
 
             {/* 文字输入（始终可用，语音/视频时可作为补充） */}
             <View className={styles.formItem}>
@@ -1232,6 +1327,13 @@ const RecordPage: React.FC = () => {
                     <View className={styles.anonymousSwitchThumb} />
                   </View>
                 </View>
+                {showAnonymousTip && (
+                  <View className={styles.anonymousFirstTip}>
+                    <Text className={styles.anonymousFirstTipText}>
+                      💡 首次善行已为您开启匿名模式，消除被熟人看到的顾虑
+                    </Text>
+                  </View>
+                )}
 
                 {/* 关联德育任务（仅在选择了班级圈时显示） */}
                 {visibleScope === 'circle' && selectedCircleId && (
@@ -1326,7 +1428,7 @@ const RecordPage: React.FC = () => {
               <Text className={styles.fortuneText}>
                 {recordType === 'self'
                   ? `福气 +${fortuneDisplay}`
-                  : '温暖已记录'}
+                  : '见证善意，传递温暖'}
               </Text>
               {/* 飘字动画：从下往上飘并淡出 */}
               {floatVisible && (
@@ -1408,6 +1510,9 @@ const RecordPage: React.FC = () => {
           {/* Step 5: 完整展示后显示操作按钮 */}
           {feedbackStep === 'done' && (
             <View className={styles.feedbackActions}>
+              <View className={styles.actionBtn} onClick={() => setShowSharePoster(true)}>
+                <Text className={styles.actionText}>分享海报</Text>
+              </View>
               <View className={styles.actionBtn} onClick={handleShareToCircle}>
                 <Text className={styles.actionText}>分享到广场</Text>
               </View>

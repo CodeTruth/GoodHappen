@@ -4,11 +4,10 @@ import Taro, { useRouter } from '@tarojs/taro';
 import { useCircleStore } from '@/store/circle';
 import { useUserStore } from '@/store/user';
 import { useMoralTaskStore } from '@/store/moral-task';
-import { getRanking, getWeeklyReport, getExampleWall, getUnsubmittedStudents } from '@/services/moral-dashboard';
+import { getRanking, getWeeklyReport, getExampleWall, getUnsubmittedStudents, mockWeeklyReports } from '@/services/moral-dashboard';
 import { StudentRankingItem, WeeklyReportData, ExampleWallItem } from '@/services/moral-dashboard';
 import { generateWeeklySummary } from '@/services/ai-circle';
 import { getCircleTypeConfig, CircleType } from '@/config/circle-types';
-import { mockWeeklyReports } from '@/data/mock-moral-tasks';
 import styles from './index.module.scss';
 
 type TabType = 'ranking' | 'report' | 'examples';

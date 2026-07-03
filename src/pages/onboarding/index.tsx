@@ -1,63 +1,61 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { View, Text } from '@tarojs/components';
 import Taro from '@tarojs/taro';
+import { onboardingDailyTasks, DailyTask } from '@/data/onboarding-tasks';
 import { useOnboardingStore } from '@/store/onboarding';
 import styles from './index.module.scss';
 
+// 3天任务ID到 store 任务ID 的映射（统一数据模型）
+const DAILY_TASK_ID_MAP: Record<string, string> = {
+  day1: 'first_kindness',
+  day2: 'choose_persona',
+  day3: 'complete_profile',
+};
+
 const OnboardingPage: React.FC = () => {
-  const {
-    tasks,
-    allCompleted,
-    completeTask,
-    getProgress,
-    dismissOnboarding,
-    loadFromStorage,
-  } = useOnboardingStore();
+  const { tasks: storeTasks, loadFromStorage } = useOnboardingStore();
 
   useEffect(() => {
     loadFromStorage();
-  }, []);
+  }, [loadFromStorage]);
 
-  const progress = getProgress();
-  const progressPercent = progress.total > 0 ? (progress.completed / progress.total) * 100 : 0;
+  // 以 onboarding-tasks.ts 的3天任务为准，合并 store 中的完成状态
+  const tasks: DailyTask[] = useMemo(() => {
+    return onboardingDailyTasks.map(dailyTask => {
+      const storeTaskId = DAILY_TASK_ID_MAP[dailyTask.id];
+      const storeTask = storeTaskId ? storeTasks.find(t => t.id === storeTaskId) : null;
+      return {
+        ...dailyTask,
+        isCompleted: storeTask?.completed || false,
+      };
+    });
+  }, [storeTasks]);
+
+  const completedCount = tasks.filter(t => t.isCompleted).length;
+  const totalDays = 3;
+  const progressPercent = (completedCount / totalDays) * 100;
+  const allCompleted = completedCount === totalDays;
 
   // 点击任务卡片
-  const handleTaskClick = (_taskId: string, completed: boolean, targetPath: string) => {
-    if (completed) {
-      Taro.showToast({ title: '任务已完成', icon: 'success' });
+  const handleTaskClick = (task: DailyTask) => {
+    if (task.isCompleted) {
+      Taro.showToast({ title: '今日任务已完成', icon: 'success' });
       return;
     }
-    // 跳转到对应页面
+    // 跳转到记录页，携带任务信息
     Taro.navigateTo({
-      url: targetPath,
-      fail: () => {
-        // tabBar 页面需要用 switchTab
-        Taro.switchTab({ url: targetPath }).catch(() => {
-          Taro.showToast({ title: '页面跳转失败', icon: 'none' });
-        });
-      },
+      url: `/pages/record/index?onboardingTaskId=${task.id}&onboardingDay=${task.day}&onboardingDesc=${encodeURIComponent(task.description)}`,
     });
-  };
-
-  // 关闭新手引导
-  const handleDismiss = () => {
-    dismissOnboarding();
-    Taro.navigateBack({ fail: () => Taro.switchTab({ url: '/pages/home/index' }) });
-  };
-
-  // 体验一下（标记第一个任务为完成 - 仅用于演示，实际应由各业务页面触发）
-  const handleTryDemo = (taskId: 'first_kindness' | 'choose_persona' | 'complete_profile' | 'like_square' | 'first_charity') => {
-    completeTask(taskId);
   };
 
   return (
     <View className={styles.container}>
-      {/* 欢迎卡片 */}
+      {/* 头部卡片 */}
       <View className={styles.welcomeCard}>
         <Text className={styles.welcomeIcon}>🌱</Text>
-        <Text className={styles.welcomeTitle}>欢迎来到好事发生</Text>
+        <Text className={styles.welcomeTitle}>新手行善任务</Text>
         <Text className={styles.welcomeDesc}>
-          完成新手任务，快速上手温暖记录{'\n'}每完成一项都有福气奖励
+          3天引导，开启你的善行之旅{'\n'}每天一个小任务，温暖从今天开始
         </Text>
       </View>
 
@@ -66,15 +64,15 @@ const OnboardingPage: React.FC = () => {
         <View className={styles.progressHeader}>
           <Text className={styles.progressTitle}>任务进度</Text>
           <Text className={styles.progressReward}>
-            已获得 {progress.reward} 福气
+            已完成 {completedCount}/{totalDays} 天
           </Text>
         </View>
         <View className={styles.progressBar}>
           <View className={styles.progressFill} style={{ width: `${progressPercent}%` }} />
         </View>
         <View className={styles.progressMeta}>
-          <Text>{progress.completed}/{progress.total} 已完成</Text>
-          <Text>全部完成额外获 50 福气</Text>
+          <Text>第{Math.min(completedCount + 1, totalDays)}天/共{totalDays}天</Text>
+          <Text>全部完成可获得 160 福气</Text>
         </View>
       </View>
 
@@ -82,33 +80,37 @@ const OnboardingPage: React.FC = () => {
       {allCompleted && (
         <View className={styles.allCompletedCard}>
           <Text className={styles.allCompletedIcon}>🎉</Text>
-          <Text className={styles.allCompletedTitle}>恭喜！你已完成全部新手任务</Text>
+          <Text className={styles.allCompletedTitle}>恭喜完成全部新手行善任务！</Text>
           <Text className={styles.allCompletedDesc}>
-            额外获得 50 福气奖励，继续记录温暖吧
+            你已完成3天行善引导，继续在好事发生记录温暖吧
           </Text>
         </View>
       )}
 
-      {/* 任务列表 */}
+      {/* 3天任务列表 */}
       <View className={styles.taskList}>
         {tasks.map(task => (
           <View
             key={task.id}
-            className={`${styles.taskCard} ${task.completed ? styles.completed : ''}`}
-            onClick={() => handleTaskClick(task.id, task.completed, task.targetPath)}
+            className={`${styles.taskCard} ${task.isCompleted ? styles.completed : ''}`}
+            onClick={() => handleTaskClick(task)}
           >
-            <View className={styles.taskIcon}>
-              <Text>{task.icon}</Text>
+            <View className={styles.taskIconWrap}>
+              <Text className={styles.taskIcon}>{task.icon}</Text>
             </View>
             <View className={styles.taskInfo}>
+              <Text className={styles.taskDay}>第{task.day}天</Text>
               <Text className={styles.taskTitle}>{task.title}</Text>
               <Text className={styles.taskDesc}>{task.description}</Text>
               <Text className={styles.taskReward}>
-                {task.completed ? '✓ 已完成' : `奖励 ${task.reward} 福气`}
+                {task.isCompleted
+                  ? '✓ 已完成'
+                  : `奖励 ${task.rewardFortune} 福气`
+                }
               </Text>
             </View>
             <View className={styles.taskAction}>
-              {task.completed ? (
+              {task.isCompleted ? (
                 <View className={styles.taskCheck}>
                   <Text className={styles.taskCheckIcon}>✓</Text>
                 </View>
@@ -120,29 +122,10 @@ const OnboardingPage: React.FC = () => {
         ))}
       </View>
 
-      {/* 演示按钮：用于快速体验任务完成效果 */}
-      {!allCompleted && (
-        <View
-          className={styles.footerBtn}
-          style={{ background: '#fff', border: '2rpx solid #FF6B6B' }}
-          onClick={() => {
-            // 找到第一个未完成的任务并标记完成（演示用）
-            const firstUncompleted = tasks.find(t => !t.completed);
-            if (firstUncompleted) {
-              handleTryDemo(firstUncompleted.id);
-            }
-          }}
-        >
-          <Text className={styles.footerBtnText} style={{ color: '#FF6B6B' }}>
-            演示：标记下一任务完成
-          </Text>
-        </View>
-      )}
-
-      {/* 关闭按钮 */}
-      <View className={styles.footerBtn} onClick={handleDismiss}>
-        <Text className={styles.footerBtnText}>
-          {allCompleted ? '完成引导' : '稍后再说'}
+      {/* 底部提示 */}
+      <View className={styles.footerTip}>
+        <Text className={styles.footerTipText}>
+          每天完成小任务，积累福气值，温暖自己也温暖他人
         </Text>
       </View>
     </View>

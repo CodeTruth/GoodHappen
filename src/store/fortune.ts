@@ -2,6 +2,9 @@ import { create } from 'zustand';
 import Taro from '@tarojs/taro';
 import { getLevelByFortune } from '@/utils/fortune';
 import type { FortuneLevel } from '@/data/fortune-levels';
+import { isSupabaseAvailable } from '@/services/supabase';
+import { fortuneApi } from '@/services/db';
+import { useUserStore } from '@/store/user';
 
 const STORAGE_KEY = 'haoshi_fortune_store';
 
@@ -45,7 +48,7 @@ interface FortuneState {
   canEarnToday: () => boolean;
   getDailyRemaining: () => number;
   resetIfNeeded: () => void;
-  loadFromStorage: () => void;
+  loadFromStorage: () => Promise<void>;
   saveToStorage: () => void;
   // 公益悬赏相关：冻结/解冻/划转/获得奖励
   freezeFortune: (amount: number, description: string, relatedId?: string) => boolean;
@@ -92,7 +95,7 @@ export const useFortuneStore = create<FortuneState>((set, get) => ({
   highestTitle: getLevelByFortune(0),
   currentTitle: getLevelByFortune(0),
 
-  loadFromStorage: () => {
+  loadFromStorage: async () => {
     try {
       const data = Taro.getStorageSync(STORAGE_KEY);
       if (data) {
@@ -124,6 +127,46 @@ export const useFortuneStore = create<FortuneState>((set, get) => ({
     } catch (e) {
       console.error('[FortuneStore] Load from storage failed:', e);
     }
+    // 如果Supabase可用且用户已登录，从后端同步最新数据
+    if (isSupabaseAvailable()) {
+      const userInfo = useUserStore.getState().userInfo;
+      if (userInfo?.id) {
+        try {
+          const remoteRecords = await fortuneApi.getFortuneRecords(userInfo.id);
+          if (remoteRecords && remoteRecords.data.length > 0) {
+            const today = getToday();
+            const records = remoteRecords.data;
+            const total = records.reduce((sum, r) => sum + r.amount, 0);
+            const highest = Math.max(...records.map((r) => r.balance_after), 0);
+            const dailyToday = records
+              .filter((r) => r.created_at?.startsWith(today))
+              .reduce((sum, r) => sum + r.amount, 0);
+            set({
+              totalFortune: total,
+              highestFortune: highest,
+              availableFortune: total,
+              frozenFortune: 0,
+              transactions: records.map((r) => ({
+                id: r.id || String(Date.now()),
+                type: r.type,
+                amount: r.amount,
+                description: r.description,
+                relatedId: r.related_id || '',
+                balanceAfter: r.balance_after,
+                createdAt: r.created_at || new Date().toISOString(),
+              })),
+              dailyStats: { date: today, count: records.filter((r) => r.created_at?.startsWith(today)).length, fortune: dailyToday },
+              streak: get().streak,
+              highestTitle: getLevelByFortune(highest),
+              currentTitle: getLevelByFortune(total),
+            });
+            get().saveToStorage();
+          }
+        } catch (e) {
+          console.warn('[FortuneStore] Failed to sync fortune from backend:', e);
+        }
+      }
+    }
   },
 
   saveToStorage: () => {
@@ -141,6 +184,29 @@ export const useFortuneStore = create<FortuneState>((set, get) => ({
       Taro.setStorageSync(STORAGE_KEY, JSON.stringify(data));
     } catch (e) {
       console.error('[FortuneStore] Save to storage failed:', e);
+    }
+    // 同步到后端
+    if (isSupabaseAvailable()) {
+      const userInfo = useUserStore.getState().userInfo;
+      if (userInfo?.id) {
+        const state = get();
+        // 同步未记录的福气值交易到后端
+        const txs = state.transactions.slice(-20);
+        Promise.all(
+          txs.map((tx) =>
+            fortuneApi.addFortuneRecord({
+              user_id: userInfo.id,
+              type: tx.type,
+              amount: tx.amount,
+              description: tx.description,
+              related_id: tx.relatedId || undefined,
+              balance_after: state.totalFortune,
+            })
+          )
+        ).catch((e) => {
+          console.warn('[FortuneStore] Failed to sync fortune to backend:', e);
+        });
+      }
     }
   },
 

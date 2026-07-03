@@ -37,7 +37,7 @@
 }
 
 .statusActive {
-  background: linear-gradient(135deg, #FFF5F5 0%, #FFE8E8 100%);
+  background: linear-gradient(135deg, #FFF8F0 0%, #FFEFD5 100%);
   border-left: 4rpx solid $color-primary;
 }
 
@@ -150,7 +150,7 @@
 
 .coverageItem {
   flex: 1;
-  background: linear-gradient(135deg, #FFF5F5 0%, #FFE8E8 100%);
+  background: linear-gradient(135deg, #FFF8F0 0%, #FFEFD5 100%);
   border-radius: $radius-md;
   padding: $spacing-md;
   text-align: center;
@@ -277,7 +277,7 @@
   font-size: $font-size-md;
   font-weight: $font-weight-semibold;
   border-radius: $radius-button;
-  box-shadow: 0 4rpx 16rpx rgba(255, 107, 107, 0.3);
+  box-shadow: 0 4rpx 16rpx rgba(196, 149, 106, 0.3);
   margin-top: $spacing-sm;
 }
 
@@ -285,6 +285,106 @@
   background: $color-bg-hover;
   color: $color-text-tertiary;
   box-shadow: none;
+}
+
+/* SOS见证证据信息 */
+.witnessInfo {
+  padding: $spacing-sm $spacing-md;
+  background: linear-gradient(135deg, #FFF8F0 0%, #FFEFD5 100%);
+  border-radius: $radius-md;
+  margin-bottom: $spacing-sm;
+  border: 1rpx solid rgba(196, 149, 106, 0.2);
+}
+
+.witnessInfoText {
+  font-size: $font-size-xs;
+  color: $color-primary;
+  font-weight: $font-weight-medium;
+}
+
+/* 理赔提示 */
+.claimHint {
+  font-size: $font-size-xs;
+  color: $color-warning;
+  margin-top: $spacing-sm;
+  display: block;
+  text-align: center;
+}
+
+/* 理赔进度卡片 */
+.progressCard {
+  margin: 0 $page-padding $spacing-md;
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  box-shadow: $shadow-card;
+}
+
+.progressCardTitle {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin-bottom: $spacing-md;
+  display: block;
+}
+
+.progressSteps {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 $spacing-sm;
+}
+
+.progressStep {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8rpx;
+}
+
+.progressDot {
+  width: 20rpx;
+  height: 20rpx;
+  border-radius: 50%;
+  background: $color-bg-hover;
+  transition: all $transition-base;
+}
+
+.progressDotActive {
+  background: $color-primary;
+  box-shadow: 0 2rpx 8rpx rgba(196, 149, 106, 0.4);
+}
+
+.progressStepText {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.progressStepTextActive {
+  color: $color-primary;
+  font-weight: $font-weight-medium;
+}
+
+.progressLine {
+  flex: 1;
+  height: 2rpx;
+  background: $color-divider;
+  margin: 0 $spacing-xs;
+  margin-bottom: 32rpx;
+  transition: background $transition-base;
+}
+
+.progressLineActive {
+  background: $color-primary;
+}
+
+.progressStatusText {
+  font-size: $font-size-sm;
+  color: $color-primary;
+  font-weight: $font-weight-medium;
+  text-align: center;
+  display: block;
+  margin-top: $spacing-md;
 }
 
 /* 理赔记录 */
@@ -321,7 +421,7 @@
 
 .claimStatusReview {
   color: $color-info;
-  background: rgba(22, 93, 255, 0.1);
+  background: rgba(123, 158, 135, 0.1);
 }
 
 .claimStatusApproved {

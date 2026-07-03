@@ -233,7 +233,7 @@
   background: $color-bg-card;
   border-radius: $radius-md;
   padding: $spacing-md;
-  box-shadow: $shadow-card-small;
+  box-shadow: $shadow-card;
   border: 2rpx solid transparent;
 }
 
@@ -432,7 +432,7 @@
 
 .trendBarFill {
   width: 100%;
-  background: linear-gradient(180deg, $color-primary 0%, lighten($color-primary, 20%) 100%);
+  background: linear-gradient(180deg, $color-primary 0%, #E8C08E 100%);
   border-radius: $radius-sm;
   transition: height 0.3s ease;
 }
@@ -480,7 +480,7 @@
 }
 
 .calendarDayActive {
-  background: linear-gradient(135deg, $color-primary 0%, lighten($color-primary, 15%) 100%);
+  background: linear-gradient(135deg, $color-primary 0%, #E0B482 100%);
 }
 
 .calendarDayActive .calendarDayText {

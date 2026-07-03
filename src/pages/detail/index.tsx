@@ -3,8 +3,18 @@ import { View, Text, Image, Input } from '@tarojs/components';
 import Taro, { useRouter } from '@tarojs/taro';
 import { Kindness } from '@/types/kindness';
 import { getKindnessById } from '@/data/kindness';
-import { getMockComments, MockComment } from '@/data/mockComments';
 import { useKindnessStore } from '@/store/kindness';
+
+// 本地定义（原 @/data/mockComments 已移除）
+interface MockComment {
+  id: string;
+  userId: string;
+  userName: string;
+  userAvatar: string;
+  content: string;
+  createdAt: string;
+}
+const getMockComments = (_kindnessId: string): MockComment[] => [];
 import { useInteractionStore } from '@/store/interaction';
 import { useNotificationStore } from '@/store/notification';
 import { useProtectionStore } from '@/store/protection';
@@ -31,6 +41,11 @@ const DetailPage: React.FC = () => {
   const [commentText, setCommentText] = useState('');
   const [sosLoading, setSosLoading] = useState(false);
   const [sosActive, setSosActive] = useState(false);
+  const [aiMatchResults, setAiMatchResults] = useState<{
+    count: number;
+    avgConfidence: number;
+    summary: string;
+  } | null>(null);
   const [witnessStatus, setWitnessStatus] = useState<{
     matchCount: number;
     evidenceChainFormed: boolean;
@@ -47,6 +62,7 @@ const DetailPage: React.FC = () => {
     sosRecords,
     getWitnessMatchBySos,
     triggerSOS: storeTriggerSOS,
+    getAIMatchResults,
   } = useProtectionStore();
 
   useEffect(() => {
@@ -80,6 +96,16 @@ const DetailPage: React.FC = () => {
           evidenceChainFormed: match.evidenceChainFormed,
         });
       }
+      // 获取 AI 匹配结果
+      const aiResults = getAIMatchResults(existingSos.id);
+      if (aiResults && aiResults.length > 0) {
+        const avgConfidence = aiResults.reduce((sum, r) => sum + r.overallConfidence, 0) / aiResults.length;
+        setAiMatchResults({
+          count: aiResults.length,
+          avgConfidence: Math.round(avgConfidence * 100),
+          summary: aiResults[0]?.aiSummary || 'AI见证匹配完成',
+        });
+      }
     }
   }, [kindness?.id, sosRecords]);
 
@@ -98,7 +124,7 @@ const DetailPage: React.FC = () => {
     return getMockComments(kindness.id);
   }, [kindness]);
 
-  // 合并 mock 评论和用户提交的评论
+  // 合并评论：真实评论优先，Mock 评论作为兜底
   const allComments = useMemo(() => {
     const userComments = getCommentList(kindness?.id || '').map(c => ({
       id: c.id,
@@ -108,10 +134,11 @@ const DetailPage: React.FC = () => {
       content: c.content,
       createdAt: c.createdAt,
     }));
-    // 去重：以 id 为准
-    const existingIds = new Set(mockComments.map(c => c.id));
-    const uniqueUserComments = userComments.filter(c => !existingIds.has(c.id));
-    return [...mockComments, ...uniqueUserComments];
+    // 如果有用户提交的真实评论，优先展示真实的；仅当真实评论为空时才展示Mock
+    if (userComments.length > 0) {
+      return userComments;
+    }
+    return mockComments;
   }, [mockComments, kindness?.id, getCommentList]);
 
   // 格式化时间
@@ -435,45 +462,124 @@ const DetailPage: React.FC = () => {
         </View>
       )}
 
-      {/* ===== 善行保障中心 ===== */}
+      {/* ===== 我要见证（非本人善行，一键见证） ===== */}
+      {kindness.type !== 'self' && (
+        <View className={styles.witnessTriggerSection}>
+          <View className={styles.witnessTriggerCard}>
+            <View className={styles.witnessTriggerContent}>
+              <Text className={styles.witnessTriggerIcon}>👁️</Text>
+              <View className={styles.witnessTriggerTextWrapper}>
+                <Text className={styles.witnessTriggerTitle}>我要见证</Text>
+                <Text className={styles.witnessTriggerDesc}>
+                  你亲眼目睹了这件事？立即记录见证，为善行留下真实证据
+                </Text>
+              </View>
+            </View>
+            <View
+              className={styles.witnessTriggerBtn}
+              onClick={() => Taro.navigateTo({
+                url: `/pages/record/index?mode=witness&refKindnessId=${kindness.id}`
+              })}
+            >
+              <Text className={styles.witnessTriggerBtnText}>📷 立即见证</Text>
+            </View>
+          </View>
+        </View>
+      )}
+
+      {/* ===== 善行保障中心 - 流程可视化 ===== */}
       {kindness.type === 'self' && (
         <View className={styles.safetyCenterCard}>
           <View className={styles.safetyCenterHeader}>
             <Text className={styles.safetyCenterTitle}>🛡️ 善行保障中心</Text>
             <Text className={styles.safetyCenterSub}>行善无忧，系统兜底</Text>
           </View>
-          <View className={styles.safetyCenterGrid}>
-            <View
-              className={styles.safetyCenterItem}
-              onClick={() => Taro.navigateTo({ url: '/pages/insurance/index' })}
-            >
-              <Text className={styles.safetyCenterItemIcon}>🏥</Text>
-              <Text className={styles.safetyCenterItemName}>善行保险</Text>
-              <Text className={styles.safetyCenterItemDesc}>理赔申请</Text>
+
+          {/* 流程进度条 */}
+          <View className={styles.safetyFlow}>
+            {/* 步骤1: SOS */}
+            <View className={styles.safetyFlowStep}>
+              <View className={`${styles.safetyFlowDot} ${sosActive ? styles.safetyFlowDotDone : styles.safetyFlowDotActive}`}>
+                <Text className={styles.safetyFlowDotInner}>{sosActive ? '✅' : '🆘'}</Text>
+              </View>
+              <View className={styles.safetyFlowContent}>
+                <Text className={styles.safetyFlowStepTitle}>SOS 紧急求助</Text>
+                <Text className={styles.safetyFlowStepDesc}>
+                  {sosActive ? '已发起求助，正在扫描见证网络' : '被误解或遭遇不公时一键发起'}
+                </Text>
+                {sosActive && witnessStatus && (
+                  <View className={styles.safetyFlowData}>
+                    <Text className={styles.safetyFlowDataItem}>
+                      见证记录: <Text className={styles.safetyFlowDataValue}>{witnessStatus.matchCount}条</Text>
+                    </Text>
+                    <Text className={styles.safetyFlowDataItem}>
+                      证据链: <Text className={styles.safetyFlowDataValue}>{witnessStatus.evidenceChainFormed ? '已形成' : '收集中'}</Text>
+                    </Text>
+                  </View>
+                )}
+              </View>
             </View>
-            <View
-              className={styles.safetyCenterItem}
-              onClick={() => Taro.navigateTo({ url: '/pages/legal-aid/index' })}
-            >
-              <Text className={styles.safetyCenterItemIcon}>⚖️</Text>
-              <Text className={styles.safetyCenterItemName}>法律援助</Text>
-              <Text className={styles.safetyCenterItemDesc}>绿色通道</Text>
+
+            {/* 步骤2: 证据锁定 */}
+             <View className={styles.safetyFlowStep}>
+               <View className={`${styles.safetyFlowDot} ${styles.safetyFlowDotPending}`}>
+                 <Text className={styles.safetyFlowDotInner}>🔒</Text>
+               </View>
+               <View className={styles.safetyFlowContent}>
+                 <Text className={styles.safetyFlowStepTitle}>证据锁定</Text>
+                 <Text className={styles.safetyFlowStepDesc}>自动锁定善行时段±30分钟、半径100米内见证数据</Text>
+                 <View className={styles.safetyFlowData}>
+                   <Text className={styles.safetyFlowDataItem}>
+                     见证网络: <Text className={styles.safetyFlowDataValue}>{witnessStatus ? `${witnessStatus.matchCount}条记录` : '待触发'}</Text>
+                   </Text>
+                 </View>
+                 {aiMatchResults && (
+                   <View className={styles.safetyFlowData}>
+                     <Text className={styles.safetyFlowDataItem}>
+                       AI见证匹配: <Text className={styles.safetyFlowDataValue}>{aiMatchResults.count}条结果 · 置信度{aiMatchResults.avgConfidence}%</Text>
+                     </Text>
+                     {aiMatchResults.summary && (
+                       <Text className={styles.safetyFlowDataItem}>
+                         {aiMatchResults.summary}
+                       </Text>
+                     )}
+                   </View>
+                 )}
+               </View>
+             </View>
+
+            {/* 步骤3: 律师匹配 */}
+            <View className={styles.safetyFlowStep}>
+              <View className={`${styles.safetyFlowDot} ${styles.safetyFlowDotPending}`}>
+                <Text className={styles.safetyFlowDotInner}>⚖️</Text>
+              </View>
+              <View className={styles.safetyFlowContent}>
+                <Text className={styles.safetyFlowStepTitle}>法律援助</Text>
+                <Text className={styles.safetyFlowStepDesc}>专业律师团队提供绿色通道</Text>
+                <View
+                  className={styles.safetyFlowAction}
+                  onClick={() => Taro.navigateTo({ url: '/pages/legal-aid/index' })}
+                >
+                  <Text className={styles.safetyFlowActionText}>前往法律援助 →</Text>
+                </View>
+              </View>
             </View>
-            <View
-              className={styles.safetyCenterItem}
-              onClick={() => Taro.navigateTo({ url: '/pages/witness-network/index' })}
-            >
-              <Text className={styles.safetyCenterItemIcon}>📸</Text>
-              <Text className={styles.safetyCenterItemName}>网络见证</Text>
-              <Text className={styles.safetyCenterItemDesc}>独立证据</Text>
-            </View>
-            <View
-              className={styles.safetyCenterItem}
-              onClick={() => Taro.navigateTo({ url: '/pages/protection-mode/index' })}
-            >
-              <Text className={styles.safetyCenterItemIcon}>🛡️</Text>
-              <Text className={styles.safetyCenterItemName}>保护模式</Text>
-              <Text className={styles.safetyCenterItemDesc}>事前存证</Text>
+
+            {/* 步骤4: 保险理赔 */}
+            <View className={styles.safetyFlowStep}>
+              <View className={`${styles.safetyFlowDot} ${styles.safetyFlowDotPending}`}>
+                <Text className={styles.safetyFlowDotInner}>🏥</Text>
+              </View>
+              <View className={styles.safetyFlowContent}>
+                <Text className={styles.safetyFlowStepTitle}>保险理赔</Text>
+                <Text className={styles.safetyFlowStepDesc}>行善过程中受损，可申请保障理赔</Text>
+                <View
+                  className={styles.safetyFlowAction}
+                  onClick={() => Taro.navigateTo({ url: '/pages/insurance/index' })}
+                >
+                  <Text className={styles.safetyFlowActionText}>申请理赔 →</Text>
+                </View>
+              </View>
             </View>
           </View>
         </View>

@@ -1,12 +1,27 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useMemo } from 'react';
 import { View, Text, Image } from '@tarojs/components';
 import Taro from '@tarojs/taro';
-import { getCurrentUser } from '@/data/users';
 import { useFortuneStore } from '@/store/fortune';
+import { useKindnessStore } from '@/store/kindness';
 import { useUserStore, checkIsMinor } from '@/store/user';
 
-import { getLevelProgress } from '@/data/fortune-levels';
+import AnimatedNumber from '@/components/AnimatedNumber';
 import styles from './index.module.scss';
+
+// 本地定义（原 @/data/users、@/data/fortune-levels 已移除）
+const getCurrentUser = () => ({
+  name: '访客',
+  avatar: '',
+  region: '',
+  bio: '',
+  badges: [] as string[],
+});
+const getLevelProgress = (_totalFortune: number) => ({
+  current: { level: 0, name: '新手', min: 0, icon: '⭐', description: '初入善行之路' },
+  next: { level: 1, name: '初学者', min: 100, icon: '⭐' },
+  progress: 0,
+  remaining: 100,
+});
 
 const MinePage: React.FC = () => {
   // 更新自定义 tabBar 选中状态（H5环境中用useEffect替代useDidShow）
@@ -33,6 +48,19 @@ const MinePage: React.FC = () => {
     resetIfNeeded,
   } = useFortuneStore();
 
+  // 善行数据
+  const { publishedList, loadFromStorage: loadKindnessFromStorage } = useKindnessStore();
+
+  // 善行影响力统计
+  const impactStats = useMemo(() => {
+    const totalKindness = publishedList.length;
+    // 估算：每次善行平均帮助 2 人
+    const peopleHelped = totalKindness * 2;
+    // 估算：每次善行减少约 0.5kg 碳排放
+    const carbonReduction = Math.round(totalKindness * 0.5 * 10) / 10;
+    return { totalKindness, peopleHelped, carbonReduction };
+  }, [publishedList]);
+
   // 用户体系（Phase 5）
   const { isLoggedIn, userInfo, logout, loadFromStorage: loadUserFromStorage } = useUserStore();
 
@@ -42,6 +70,7 @@ const MinePage: React.FC = () => {
     loadFromStorage();
     resetIfNeeded();
     loadUserFromStorage();
+    loadKindnessFromStorage();
   }, []);
 
   useEffect(() => {
@@ -237,6 +266,29 @@ const MinePage: React.FC = () => {
             </Text>
           </View>
         )}
+      </View>
+
+      {/* 善行影响力 */}
+      <View className={styles.impactSection}>
+        <Text className={styles.impactTitle}>善行影响力</Text>
+        <View className={styles.impactGrid}>
+          <View className={styles.impactItem}>
+            <AnimatedNumber value={impactStats.totalKindness} suffix=" 次" className={styles.impactValue} />
+            <Text className={styles.impactLabel}>总善行</Text>
+          </View>
+          <View className={styles.impactItem}>
+            <AnimatedNumber value={impactStats.peopleHelped} suffix=" 人" className={styles.impactValue} />
+            <Text className={styles.impactLabel}>帮助了</Text>
+          </View>
+          <View className={styles.impactItem}>
+            <AnimatedNumber value={impactStats.carbonReduction} suffix=" kg" className={styles.impactValue} formatter={(v) => v.toFixed(1)} />
+            <Text className={styles.impactLabel}>减少碳排放</Text>
+          </View>
+          <View className={styles.impactItem}>
+            <AnimatedNumber value={totalFortune} suffix="" className={styles.impactValue} />
+            <Text className={styles.impactLabel}>累计福气</Text>
+          </View>
+        </View>
       </View>
 
       {/* 连续记录信息 */}

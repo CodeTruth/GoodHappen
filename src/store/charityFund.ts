@@ -2,33 +2,146 @@ import { create } from 'zustand';
 import Taro from '@tarojs/taro';
 import { useFortuneStore } from '@/store/fortune';
 import { useUserStore } from '@/store/user';
-import {
-  mockOrganizations,
-  mockRecipients,
-  mockFundFlows,
-  mockDonations,
-  mockCharityReports,
-  mockCharityTasks,
-  mockClaimFlows,
-  FORTUNE_TO_MONEY_RATE,
-  CharityOrganization,
-  Recipient,
-  FundFlow,
-  DonationRecord,
-  CharityQuarterlyReport,
-  CharityTask,
-  ClaimFlow,
-  TaskLevel,
-  TaskStatus,
-  TaskSource,
-  ClaimStep,
-  ClaimStepInfo,
-} from '@/data/charityFund';
-
-// ClaimStepInfo 仅用于类型导出，避免未使用告警
-export type { ClaimStepInfo };
 
 const STORAGE_KEY = 'haoshi_charity_fund_store';
+
+// ============================================
+// 本地类型定义（原 @/data/charityFund 已移除）
+// ============================================
+
+export const FORTUNE_TO_MONEY_RATE = 1;
+
+export interface CharityOrganization {
+  id: string;
+  name: string;
+  shortName: string;
+  license: string;
+  description: string;
+  isVerified: boolean;
+  totalReceived: number;
+  totalBeneficiaries: number;
+}
+
+export type RecipientType = 'student' | 'elderly' | 'patient' | 'disabled' | 'family' | 'emergency';
+
+export interface Recipient {
+  id: string;
+  alias: string;
+  avatar?: string;
+  type: RecipientType | 'individual' | 'family' | 'group';
+  status: 'active' | 'paused' | 'archived' | 'completed';
+  ageGroup?: string;
+  region?: string;
+  story?: string;
+  neededHelp?: string;
+  feedback?: string;
+  requiredAmount: number;
+  receivedAmount: number;
+  organizationId: string;
+}
+
+export const RECIPIENT_TYPE_MAP: Record<RecipientType, { label: string; icon: string; color: string }> = {
+  student: { label: '困境学生', icon: '📚', color: '#FF6B6B' },
+  elderly: { label: '独居老人', icon: '👴', color: '#FAAD14' },
+  patient: { label: '重病患者', icon: '❤️', color: '#FF4D4F' },
+  disabled: { label: '残障人士', icon: '♿', color: '#1890FF' },
+  family: { label: '困难家庭', icon: '🏠', color: '#52C41A' },
+  emergency: { label: '突发困难', icon: '🚨', color: '#FF4D4F' },
+};
+
+export interface FundFlow {
+  id: string;
+  amount: number;
+  source: string;
+  sourceDescription: string;
+  organizationId: string;
+  organizationName: string;
+  recipientId: string;
+  recipientAlias: string;
+  flowNodes: {
+    type: 'source' | 'organization' | 'recipient';
+    name: string;
+    description: string;
+    amount?: number;
+    timestamp: string;
+  }[];
+  status: 'in_transit' | 'delivered' | 'confirmed';
+  createdAt: string;
+}
+
+export interface DonationRecord {
+  id: string;
+  userId: string;
+  fortuneAmount: number;
+  moneyAmount: number;
+  flowId: string;
+  recipientId: string;
+  organizationId: string;
+  createdAt: string;
+}
+
+export interface CharityQuarterlyReport {
+  quarter: string;
+  title: string;
+  publishedAt: string;
+  totalDonation: number;
+  totalBeneficiaries: number;
+  totalFlow: number;
+  highlights: string[];
+  organizations: string[];
+}
+
+export type TaskLevel = 'L1' | 'L2' | 'L3';
+export type TaskStatus = 'pending' | 'in_progress' | 'completed' | 'verified';
+export type TaskSource = 'system' | 'organization' | 'user_proposal';
+
+export interface CharityTask {
+  id: string;
+  title: string;
+  description: string;
+  level: TaskLevel;
+  fortuneReward: number;
+  source: TaskSource;
+  category: string;
+  status: TaskStatus;
+  proofRequired: boolean;
+  estimatedTime: string;
+  participants: number;
+  examples?: string[];
+  createdAt: string;
+  startedAt?: string;
+  completedAt?: string;
+  verifiedAt?: string;
+  proofImages?: string[];
+  aiReviewResult?: string;
+  manualReviewResult?: string;
+  reviewComment?: string;
+}
+
+export type ClaimStepKey = 'applied' | 'reviewing' | 'approved' | 'distributing' | 'delivered' | 'confirmed' | 'published';
+
+export interface ClaimStepInfo {
+  step: ClaimStepKey;
+  label: string;
+  desc: string;
+  status?: 'done' | 'current' | 'pending';
+  operator?: string;
+  note?: string;
+  timestamp?: string;
+}
+
+export interface ClaimFlow {
+  id: string;
+  recipientId: string;
+  recipientAlias?: string;
+  organizationName?: string;
+  applicantType?: 'organization' | 'individual';
+  amount?: number;
+  steps: ClaimStepInfo[];
+  currentStep: ClaimStepKey;
+  createdAt: string;
+  updatedAt?: string;
+}
 
 // 操作结果
 interface ActionResult {
@@ -60,7 +173,7 @@ export const TASK_LEVEL_MAP: Record<TaskLevel, { label: string; desc: string; co
 };
 
 // 领取流程步骤顺序
-export const CLAIM_STEP_ORDER: ClaimStep[] = [
+export const CLAIM_STEP_ORDER: ClaimStepKey[] = [
   'applied',
   'reviewing',
   'approved',
@@ -71,7 +184,7 @@ export const CLAIM_STEP_ORDER: ClaimStep[] = [
 ];
 
 // 领取流程步骤映射
-export const CLAIM_STEP_MAP: Record<ClaimStep, { label: string; desc: string }> = {
+export const CLAIM_STEP_MAP: Record<ClaimStepKey, { label: string; desc: string }> = {
   applied: { label: '申请领取', desc: '受助人或公益组织代为申请' },
   reviewing: { label: '资格审核', desc: '公益组织审核 + 平台复核' },
   approved: { label: '审核通过', desc: '善款发放审批完成' },
@@ -130,13 +243,13 @@ const isValidTaskTransition = (from: TaskStatus, to: TaskStatus): boolean => {
 };
 
 export const useCharityFundStore = create<CharityFundState>((set, get) => ({
-  organizations: [...mockOrganizations],
-  recipients: [...mockRecipients],
-  fundFlows: [...mockFundFlows],
-  donations: [...mockDonations],
-  reports: [...mockCharityReports],
-  tasks: [...mockCharityTasks],
-  claimFlows: [...mockClaimFlows],
+  organizations: [],
+  recipients: [],
+  fundFlows: [],
+  donations: [],
+  reports: [],
+  tasks: [],
+  claimFlows: [],
 
   // 福气兑换善款
   donateFortune: (fortuneAmount, recipientId, organizationId) => {
@@ -452,29 +565,14 @@ export const useCharityFundStore = create<CharityFundState>((set, get) => ({
       const data = Taro.getStorageSync(STORAGE_KEY);
       if (data) {
         const parsed = JSON.parse(data);
-        // 合并 mock 数据与本地存储（本地存储优先）
-        const mockTaskIds = new Set(mockCharityTasks.map(t => t.id));
-        const localTasks = (parsed.tasks || []).filter((t: CharityTask) => !mockTaskIds.has(t.id));
-        const overriddenMockTasks = mockCharityTasks.map(mockTask => {
-          const local = (parsed.tasks || []).find((t: CharityTask) => t.id === mockTask.id);
-          return local || mockTask;
-        });
-
-        const mockFlowIds = new Set(mockFundFlows.map(f => f.id));
-        const localFlows = (parsed.fundFlows || []).filter((f: FundFlow) => !mockFlowIds.has(f.id));
-        const overriddenMockFlows = mockFundFlows.map(mockFlow => {
-          const local = (parsed.fundFlows || []).find((f: FundFlow) => f.id === mockFlow.id);
-          return local || mockFlow;
-        });
-
         set({
-          organizations: parsed.organizations || mockOrganizations,
-          recipients: parsed.recipients || mockRecipients,
-          fundFlows: [...overriddenMockFlows, ...localFlows],
-          donations: parsed.donations || mockDonations,
-          reports: parsed.reports || mockCharityReports,
-          tasks: [...overriddenMockTasks, ...localTasks],
-          claimFlows: parsed.claimFlows || mockClaimFlows,
+          organizations: parsed.organizations || [],
+          recipients: parsed.recipients || [],
+          fundFlows: parsed.fundFlows || [],
+          donations: parsed.donations || [],
+          reports: parsed.reports || [],
+          tasks: parsed.tasks || [],
+          claimFlows: parsed.claimFlows || [],
         });
       }
     } catch (e) {

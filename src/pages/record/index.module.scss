@@ -1348,3 +1348,77 @@
   font-weight: $font-weight-medium;
   text-decoration: underline;
 }
+
+// ============================================
+// 任务2：一键见证模板选择器
+// ============================================
+.witnessTemplates {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-sm;
+}
+
+.witnessTemplate {
+  display: flex;
+  align-items: center;
+  gap: $spacing-xs;
+  background: $color-bg-page;
+  border-radius: $radius-button;
+  padding: 12rpx $spacing-md;
+  border: 2rpx solid transparent;
+  transition: all $transition-base;
+  cursor: pointer;
+
+  &:active {
+    transform: scale(0.96);
+  }
+}
+
+.witnessTemplateActive {
+  border-color: $color-primary;
+  background: linear-gradient(135deg, #FFF5F5 0%, #FFE8E8 100%);
+}
+
+.witnessTemplateIcon {
+  font-size: 32rpx;
+}
+
+.witnessTemplateTitle {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  white-space: nowrap;
+}
+
+.witnessTemplateActive .witnessTemplateTitle {
+  color: $color-primary;
+  font-weight: $font-weight-medium;
+}
+
+// ============================================
+// 任务3：首次匿名行善提示
+// ============================================
+.anonymousFirstTip {
+  margin-top: $spacing-sm;
+  padding: $spacing-sm $spacing-md;
+  background: linear-gradient(135deg, #FFF8EE 0%, #FFF3E0 100%);
+  border-radius: $radius-md;
+  border-left: 4rpx solid $color-primary;
+  animation: fadeInTip 0.4s ease-out;
+}
+
+.anonymousFirstTipText {
+  font-size: $font-size-xs;
+  color: $color-primary-dark;
+  line-height: 1.5;
+}
+
+@keyframes fadeInTip {
+  from {
+    opacity: 0;
+    transform: translateY(-10rpx);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

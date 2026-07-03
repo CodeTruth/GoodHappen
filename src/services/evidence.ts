@@ -285,6 +285,20 @@ export const getCurrentGPS = async (): Promise<GPSInfo> => {
  * 创建善行证据包（事前存证）
  * 在善行记录创建时同步调用，确保时间戳由系统生成不可篡改
  * 自动从媒体资产提取 EXIF 元数据（事件真实时间/GPS）
+ *
+ * 证据包包含以下核心要素：
+ * - 系统生成的时间戳（不可篡改）
+ * - GPS 定位信息（发布时实时获取）
+ * - 原始内容文本
+ * - 媒体资源（录音/拍照等）
+ * - 哈希值（基于记录ID+时间戳+内容+GPS生成，用于完整性校验）
+ * - preExisting 标记为 true（表示争议发生前已存入，非事后捏造）
+ *
+ * @param recordId - 关联的善行记录 ID
+ * @param content - 善行记录的原始文本内容
+ * @param gps - 记录发布时的 GPS 定位信息（经纬度、地址、精度）
+ * @param mediaAssets - 可选的媒体资源列表（录音、拍照、视频等），用于提取 EXIF 元数据
+ * @returns 完整的善行证据包（EvidencePackage），包含所有存证信息和哈希值
  */
 export const createEvidencePackage = (
   recordId: string,
@@ -320,6 +334,18 @@ export const createEvidencePackage = (
  * 一键求助："我被讹了"
  * 系统自动锁定善行记录时间线 + GPS 轨迹 + 原始内容
  * 生成不可篡改的"善行证据包"
+ *
+ * 触发流程：
+ * 1. 设置 evidencePackage 的 sealedAt 时间戳，标记为已锁定状态
+ * 2. 基于原始哈希 + sealed 标记 + 锁定时间重新生成哈希，确保证据包不可篡改
+ * 3. 创建 SOS 求助记录，初始状态为 evidence_locked
+ *
+ * @param evidencePackage - 已创建的善行证据包（由 createEvidencePackage 生成）
+ * @param currentLocation - 求助触发时的当前 GPS 位置（用于记录求助地点）
+ * @param description - 求助描述文本（用户对纠纷情况的简要说明）
+ * @returns 包含两个对象：
+ *   - sosRecord: 求助记录（SOSRecord），记录求助的详细信息
+ *   - sealedPackage: 锁定后的证据包（EvidencePackage），哈希已更新为锁定状态
  */
 export const triggerSOS = (
   evidencePackage: EvidencePackage,
@@ -373,6 +399,16 @@ export const verifyEvidenceIntegrity = (pkg: EvidencePackage): boolean => {
  * 分布式目击扫描（支持延迟发布检测）
  * 善行者点击"我被讹了" → 系统自动扫描事发时间±30分钟、地点半径100m内所有独立用户的见证记录
  * 核心改进：优先使用 eventTimestamp/eventGps（事件真实时间/地点），解决"拍完照隔很久才发帖"的问题
+ *
+ * 匹配规则：
+ * 1. 时间窗口：事发时间 ±30 分钟（若存在延迟发布则放宽至 ±60 分钟）
+ * 2. 地点半径：100 米内（Haversine 公式计算球面距离）
+ * 3. 排除自身记录，确保见证者与善行者为不同用户
+ *
+ * @param _sosRecord - 求助记录（SOSRecord），包含求助触发信息
+ * @param primaryEvidence - 主善行的证据包（EvidencePackage），包含事发时间和地点
+ * @param allWitnessRecords - 所有候选见证记录列表（WitnessRecord[]），系统将从中筛选匹配项
+ * @returns 匹配到的见证记录列表（WitnessRecord[]），已排除自身记录并完成时间和地点校验
  */
 export const scanWitnessNetwork = (
   _sosRecord: SOSRecord,

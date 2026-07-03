@@ -1,7 +1,34 @@
 import React from 'react';
 import { View, Text, Image } from '@tarojs/components';
-import { Brand, getSlotById } from '@/data/brands';
 import styles from './index.module.scss';
+
+// 本地定义（原 @/data/brands 已移除）
+interface Slot {
+  id: string;
+  name: string;
+  icon: string;
+}
+
+interface Brand {
+  id: string;
+  name: string;
+  logo: string;
+  focusArea: string;
+  description: string;
+  slots: string[];
+  totalSponsorship: number;
+}
+
+const SLOTS: Slot[] = [
+  { id: 'square', name: '广场', icon: '🏛️' },
+  { id: 'blessing', name: '祈福', icon: '🙏' },
+  { id: 'challenge', name: '挑战', icon: '🎯' },
+  { id: 'charity', name: '公益', icon: '💚' },
+];
+
+const getSlotById = (id: string): Slot | undefined => {
+  return SLOTS.find((s) => s.id === id);
+};
 
 interface BrandCardProps {
   brand: Brand;

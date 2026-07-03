@@ -10,17 +10,21 @@ declare const SUPABASE_ANON_KEY: string;
 const supabaseUrl = (typeof SUPABASE_URL !== 'undefined' && SUPABASE_URL) ? SUPABASE_URL : '';
 const supabaseKey = (typeof SUPABASE_ANON_KEY !== 'undefined' && SUPABASE_ANON_KEY) ? SUPABASE_ANON_KEY : '';
 
-if (!supabaseUrl || !supabaseKey) {
+let supabaseInstance: ReturnType<typeof createClient> | null = null;
+
+if (supabaseUrl && supabaseKey) {
+  supabaseInstance = createClient(supabaseUrl, supabaseKey, {
+    auth: {
+      autoRefreshToken: true,
+      persistSession: true,
+      detectSessionInUrl: false,
+    },
+  });
+} else {
   console.warn('[Supabase] 环境变量未配置，Supabase 功能将不可用。请在 .env 或 Taro defineConstants 中配置 SUPABASE_URL 和 SUPABASE_ANON_KEY');
 }
 
-export const supabase = createClient(supabaseUrl, supabaseKey, {
-  auth: {
-    autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: false,
-  },
-});
+export const supabase = supabaseInstance!;
 
 export const isSupabaseAvailable = (): boolean => {
   return !!supabaseUrl && !!supabaseKey;

@@ -1,8 +1,16 @@
 import React from 'react';
 import { View, Text, Image } from '@tarojs/components';
 import Taro from '@tarojs/taro';
-import { WarmPartnerCard } from '@/data/social';
 import styles from './index.module.scss';
+
+// 本地定义（原 @/data/social 已移除）
+interface WarmPartnerCard {
+  brandLogo: string;
+  brandName: string;
+  title: string;
+  content: string;
+  link?: string;
+}
 
 interface WarmPartnerCardProps {
   data: WarmPartnerCard;

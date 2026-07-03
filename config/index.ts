@@ -27,6 +27,8 @@ export default defineConfig<'webpack5'>(async (merge, { command, mode }) => {
       ARK_API_KEY: JSON.stringify(process.env.ARK_API_KEY || ''),
       ARK_BASE_URL: JSON.stringify(process.env.ARK_BASE_URL || ''),
       ARK_MODEL: JSON.stringify(process.env.ARK_MODEL || ''),
+      SUPABASE_URL: JSON.stringify(process.env.SUPABASE_URL || ''),
+      SUPABASE_ANON_KEY: JSON.stringify(process.env.SUPABASE_ANON_KEY || ''),
     },
     copy: {
       patterns: [],

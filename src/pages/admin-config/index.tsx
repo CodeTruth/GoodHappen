@@ -3,7 +3,7 @@ import { View, Text, Input, ScrollView, Textarea } from '@tarojs/components';
 import Taro from '@tarojs/taro';
 import classnames from 'classnames';
 import { useAdminStore } from '@/store/admin';
-import type { ConfigCategory, ConfigItem } from '@/data/admin';
+import type { ConfigCategory, ConfigItem } from '@/store/admin';
 import styles from './index.module.scss';
 
 // 配置分类

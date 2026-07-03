@@ -50,6 +50,23 @@ interface ChatResponse {
   }[];
 }
 
+/**
+ * 调用 DeepSeek / 火山方舟大模型进行非流式对话
+ *
+ * 根据运行时环境变量自动选择后端：
+ * - 配置了 ARK_API_KEY + ARK_BASE_URL + ARK_MODEL 时使用火山方舟（豆包大模型）
+ * - 否则回退到 DeepSeek API
+ *
+ * @param messages - 对话消息列表，包含 system（系统指令）、user（用户输入）、assistant（AI回复）角色
+ * @returns AI 模型生成的文本回复内容
+ * @throws 当 API Key 未配置、网络请求失败、或 AI 返回空内容时抛出异常
+ *
+ * @example
+ * const reply = await deepseekChat([
+ *   { role: 'system', content: '你是一位温暖的善行鼓励者' },
+ *   { role: 'user', content: '今天帮助了一位老奶奶过马路' },
+ * ]);
+ */
 export const deepseekChat = async (messages: ChatMessage[]): Promise<string> => {
   try {
     const response = await Taro.request<ChatResponse>({
@@ -605,6 +622,7 @@ export interface ImageAnalysisResult {
  *
  * @param imageBase64OrUrl 图片 base64 字符串（含 data:image/jpeg;base64, 前缀）或图片 URL
  * @param prompt 分析指令，如"描述这张图片中的场景和人物动作"
+ * @returns 图片分析结果，包含描述、识别到的物体、场景类型和置信度
  */
 export const analyzeImage = async (
   imageBase64OrUrl: string,

@@ -1,13 +1,21 @@
 import React, { useState, useMemo } from 'react';
 import { View, Text, ScrollView } from '@tarojs/components';
 import classnames from 'classnames';
-import {
-  getNationalStats,
-  getRegionalStats,
-  getTopicStats,
-  formatParticipantCount,
-} from '@/data/warmthStats';
 import styles from './index.module.scss';
+
+// 本地定义（原 @/data/warmthStats 已移除）
+const getNationalStats = () => ({
+  totalCount: 0,
+  participantCount: 0,
+  provinceCount: 0,
+  todayParticipants: 0,
+  todayKindnessCount: 0,
+  weeklyFortune: 0,
+  monthlyFortune: 0,
+});
+const getRegionalStats = () => [] as any[];
+const getTopicStats = () => [] as any[];
+const formatParticipantCount = (count: number): string => `${count}人`;
 
 const WarmthStatsPage: React.FC = () => {
   // 全国统计

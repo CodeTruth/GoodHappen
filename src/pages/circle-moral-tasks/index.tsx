@@ -5,7 +5,6 @@ import { useMoralTaskStore } from '@/store/moral-task';
 import { useCircleStore } from '@/store/circle';
 import { useUserStore } from '@/store/user';
 import { getCircleTypeConfig, CircleType } from '@/config/circle-types';
-import { MoralCategory } from '@/data/mock-moral-tasks';
 import { generateImprovementSuggestion } from '@/services/ai-circle';
 import styles from './index.module.scss';
 
@@ -116,7 +115,7 @@ const CircleMoralTasksPage: React.FC = () => {
       circleId,
       title: formTitle.trim(),
       description: formDesc.trim(),
-      category: formCategory as MoralCategory,
+      category: formCategory as string,
       requireVideo: formRequireVideo,
       weekRange: {
         start: now.toISOString().split('T')[0],

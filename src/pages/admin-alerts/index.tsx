@@ -35,16 +35,51 @@ const AdminAlertsPage: React.FC = () => {
   const [alerts, setAlerts] = useState<AlertRecord[]>([]);
   const [filterLevel, setFilterLevel] = useState<FilterLevel>('all');
   const [filterStatus, setFilterStatus] = useState<FilterStatus>('unresolved');
+  const [useMock, setUseMock] = useState<boolean>(true);
 
   // 加载告警数据
   const refreshAlerts = useCallback(() => {
+    if (!useMock) {
+      runAllChecks();
+    }
     setAlerts(loadAlerts());
-  }, []);
+  }, [useMock]);
 
   // 初始化
   useEffect(() => {
-    loadMockAlerts();
+    if (useMock) {
+      loadMockAlerts();
+    }
     refreshAlerts();
+  }, []);
+
+  // 当 useMock 变化时重新加载
+  useEffect(() => {
+    if (!useMock) {
+      runAllChecks();
+      setAlerts(loadAlerts());
+    }
+  }, [useMock]);
+
+  // 切换到真实监控
+  const handleSwitchToReal = useCallback(() => {
+    Taro.showModal({
+      title: '切换到真实监控',
+      content: '将执行真实监控检查，是否继续？',
+      success: (res) => {
+        if (res.confirm) {
+          setUseMock(false);
+        }
+      },
+    });
+  }, []);
+
+  // 切换到模拟数据
+  const handleSwitchToMock = useCallback(() => {
+    loadMockAlerts();
+    setUseMock(true);
+    setAlerts(loadAlerts());
+    Taro.showToast({ title: '已切换到模拟数据', icon: 'success' });
   }, []);
 
   // 统计信息
@@ -120,6 +155,24 @@ const AdminAlertsPage: React.FC = () => {
 
   return (
     <View className={styles.container}>
+      {/* 模式状态标签 */}
+      <View className={styles.modeBanner}>
+        <View className={`${styles.modeTag} ${useMock ? styles.modeTagMock : styles.modeTagReal}`}>
+          <Text className={styles.modeTagText}>
+            {useMock ? '当前模式：模拟数据' : '当前模式：真实监控'}
+          </Text>
+        </View>
+        {useMock ? (
+          <Text className={styles.modeSwitchBtn} onClick={handleSwitchToReal}>
+            切换到真实监控
+          </Text>
+        ) : (
+          <Text className={styles.modeSwitchBtn} onClick={handleSwitchToMock}>
+            切换到模拟数据
+          </Text>
+        )}
+      </View>
+
       {/* 统计概览 */}
       <View className={styles.statsGrid}>
         <View className={styles.statCard}>

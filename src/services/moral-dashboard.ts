@@ -1,6 +1,51 @@
 import { useMoralTaskStore } from '@/store/moral-task';
 import { useCircleStore } from '@/store/circle';
-import { MoralCategory, CATEGORY_CONFIG, mockWeeklyReports, mockSemesterProfiles, WeeklyReport, SemesterProfile } from '@/data/mock-moral-tasks';
+
+// ============================================
+// 本地类型定义（原 @/data/mock-moral-tasks 已移除）
+// ============================================
+
+export type MoralCategory = string;
+
+export const CATEGORY_CONFIG: Record<string, { name: string; icon: string; color: string }> = {
+  custom: { name: '自由记录', icon: '✨', color: '#C4956A' },
+  housework: { name: '家务劳动', icon: '🏠', color: '#FF6B6B' },
+  help_others: { name: '帮助他人', icon: '🤝', color: '#52C41A' },
+  environmental: { name: '环保行动', icon: '🌱', color: '#165DFF' },
+  reading: { name: '阅读分享', icon: '📚', color: '#FFA07A' },
+  charity: { name: '公益服务', icon: '💚', color: '#52C41A' },
+  team: { name: '团队协作', icon: '👥', color: '#FAAD14' },
+  volunteer: { name: '志愿服务', icon: '❤️', color: '#FF6B6B' },
+  elderly: { name: '关爱老人', icon: '👴', color: '#722ED1' },
+  neighbor: { name: '邻里互助', icon: '🏘️', color: '#13C2C2' },
+  safety: { name: '安全巡查', icon: '🔍', color: '#FAAD14' },
+  help: { name: '互助', icon: '🤲', color: '#52C41A' },
+  accompany: { name: '陪伴', icon: '💕', color: '#FF6B6B' },
+  share: { name: '分享', icon: '🎁', color: '#FAAD14' },
+};
+
+export interface WeeklyReport {
+  circleId: string;
+  weekIndex: number;
+  weekRange: { start: string; end: string };
+  totalCount: number;
+  participationRate: number;
+  exampleCount: number;
+  categoryDistribution: Record<string, number>;
+}
+
+export interface SemesterProfile {
+  semester: string;
+  yearLabel?: string;
+  totalCount: number;
+  exampleCount: number;
+  taskCompletionRate: number;
+  streakDays: number;
+  categoryDistribution: Record<string, number>;
+}
+
+export const mockWeeklyReports: WeeklyReport[] = [];
+export const mockSemesterProfiles: Record<string, SemesterProfile[]> = {};
 
 // ========== 学生排行项 ==========
 export interface StudentRankingItem {

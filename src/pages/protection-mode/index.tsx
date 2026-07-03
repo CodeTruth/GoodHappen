@@ -1,10 +1,7 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { View, Text } from '@tarojs/components';
 import Taro from '@tarojs/taro';
 import {
-  ProtectionSession,
-  EmergencyContact,
-  PROTECTION_MODE_CONFIG,
   createSession,
   pauseSession,
   resumeSession,
@@ -14,6 +11,9 @@ import {
   takeProtectionPhoto,
   onSessionChange,
   formatDuration,
+  type ProtectionSession,
+  type EmergencyContact,
+  PROTECTION_MODE_CONFIG,
 } from '@/services/protection-mode';
 import {
   SOS_CONFIG,
@@ -21,14 +21,8 @@ import {
   type SOSSceneContext,
   type SOSProtectionEvidence,
 } from '@/services/sos-guard';
+import { useUserStore } from '@/store/user';
 import styles from './index.module.scss';
-
-// 模拟紧急联系人数据
-const MOCK_CONTACTS: EmergencyContact[] = [
-  { id: '1', name: '张妈妈', phone: '138****1234', relation: '家人', notified: false },
-  { id: '2', name: '李朋友', phone: '139****5678', relation: '朋友', notified: false },
-  { id: '3', name: '王同事', phone: '137****9012', relation: '同事', notified: false },
-];
 
 /** starting 阶段初始化进度项 */
 interface InitStep {
@@ -46,6 +40,21 @@ export default function ProtectionModePage() {
   ]);
   const [sosCountdown, setSosCountdown] = useState(0);
 
+  // 从 userStore 读取紧急联系人
+  const { userInfo } = useUserStore();
+  const emergencyContacts: EmergencyContact[] = useMemo(() => {
+    if (userInfo?.emergencyContacts && userInfo.emergencyContacts.length > 0) {
+      return userInfo.emergencyContacts.map(c => ({
+        id: c.id,
+        name: c.name,
+        phone: c.phone,
+        relation: c.relation,
+        notified: false,
+      }));
+    }
+    return [];
+  }, [userInfo]);
+
   // 来源信息：从AI顾问等页面跳转过来时携带的上下文
   const [sourceFrom, setSourceFrom] = useState('');
   const [sourceScene, setSourceScene] = useState('');
@@ -53,13 +62,18 @@ export default function ProtectionModePage() {
   const [advisorDangerScore, setAdvisorDangerScore] = useState(0);
   const [advisorActions, setAdvisorActions] = useState<string[]>([]);
 
-  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // 演示模式状态
+  const [isDemo, setIsDemo] = useState(false);
 
-  // 读取跳转来源
+  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const demoEndTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // 读取跳转来源和演示模式参数
   useEffect(() => {
     const params = Taro.getCurrentInstance().router?.params;
     if (params?.from) setSourceFrom(params.from);
     if (params?.scene) setSourceScene(decodeURIComponent(params.scene));
+    if (params?.demo === 'true') setIsDemo(true);
     // 读取AI顾问评估结果
     if (params?.adv) {
       try {
@@ -79,8 +93,42 @@ export default function ProtectionModePage() {
         clearTimeout(closeTimerRef.current);
         closeTimerRef.current = null;
       }
+      if (demoEndTimerRef.current) {
+        clearTimeout(demoEndTimerRef.current);
+        demoEndTimerRef.current = null;
+      }
     };
   }, []);
+
+  // 演示模式：自动开始初始化（跳过确认弹窗）
+  useEffect(() => {
+    if (!isDemo) return;
+    if (session?.status !== 'idle') return;
+
+    // 模拟存在紧急联系人
+    const timer = setTimeout(() => {
+      handleStartDemo();
+    }, 600);
+    return () => clearTimeout(timer);
+  }, [isDemo, session?.status]);
+
+  // 演示模式：3分钟后自动结束
+  useEffect(() => {
+    if (!isDemo) return;
+    if (session?.status !== 'active') return;
+
+    demoEndTimerRef.current = setTimeout(() => {
+      closeSession();
+      Taro.showToast({ title: '演示结束（3分钟）', icon: 'none' });
+    }, 3 * 60 * 1000);
+
+    return () => {
+      if (demoEndTimerRef.current) {
+        clearTimeout(demoEndTimerRef.current);
+        demoEndTimerRef.current = null;
+      }
+    };
+  }, [isDemo, session?.status]);
 
   // 监听会话变化
   useEffect(() => {
@@ -139,8 +187,26 @@ export default function ProtectionModePage() {
 
   // === 操作回调 ===
 
+  /** 演示模式：自动开启保护（跳过确认弹窗） */
+  const handleStartDemo = useCallback(() => {
+    // 为演示模式创建模拟紧急联系人
+    const demoContacts = [
+      { id: 'demo_1', name: '演示联系人（家长）', phone: '138****8888', relation: '家人', notified: false },
+      { id: 'demo_2', name: '演示联系人（朋友）', phone: '139****9999', relation: '朋友', notified: false },
+    ];
+    createSession('phone', demoContacts);
+  }, []);
+
   /** 开启保护 */
   const handleStart = useCallback(() => {
+    if (isDemo) {
+      handleStartDemo();
+      return;
+    }
+    if (emergencyContacts.length === 0) {
+      Taro.showToast({ title: '请先设置紧急联系人', icon: 'none' });
+      return;
+    }
     Taro.showModal({
       title: '善行保护模式',
       content: '启动后将自动录像、录音、GPS追踪，全程存证。确认开启？',
@@ -148,11 +214,11 @@ export default function ProtectionModePage() {
       confirmColor: '#4CAF50',
       success: (res) => {
         if (res.confirm) {
-          createSession('phone', MOCK_CONTACTS);
+          createSession('phone', emergencyContacts);
         }
       },
     });
-  }, []);
+  }, [emergencyContacts, isDemo, handleStartDemo]);
 
   /** 拍照取证 */
   const handlePhoto = useCallback(() => {
@@ -196,11 +262,22 @@ export default function ProtectionModePage() {
           } : undefined;
 
           // 从URL来源构建场景上下文（AI顾问评估结果 + 场景描述）
+          // 智能推断 subjectCount：根据 advisorActions 或 sourceScene 判断涉及人数
+          const inferSubjectCount = (): number => {
+            const actionsText = advisorActions.join(' ');
+            const sceneText = sourceScene;
+            const combinedText = `${actionsText} ${sceneText}`;
+            if (/上前|靠近|接触|搀扶|扶|拉|抱|推/.test(combinedText)) {
+              return 2; // 有直接接触行为，涉及至少2人
+            }
+            return 1; // 默认：避让/远离/绕行或其他场景，保持1
+          };
+
           const sceneContext: SOSSceneContext | undefined = sourceScene ? {
             adviceLevel: advisorLevel || undefined,
             dangerScore: advisorDangerScore || undefined,
             sceneDescription: sourceScene,
-            subjectCount: 1,
+            subjectCount: inferSubjectCount(),
             actionType: sourceScene.includes('老人') ? 'elder_help' : sourceScene.includes('车') ? 'traffic' : 'general',
             recommendedActions: advisorActions.length > 0 ? advisorActions : undefined,
             assessedAt: new Date(session?.startedAt || Date.now()).toISOString(),
@@ -218,7 +295,7 @@ export default function ProtectionModePage() {
                   address: session.currentGps.address,
                 }
               : undefined,
-            MOCK_CONTACTS.map(c => ({ id: c.id, name: c.name })),
+            emergencyContacts.map(c => ({ id: c.id, name: c.name })),
             [],
             sceneContext,
             protectionEvidence
@@ -277,6 +354,12 @@ export default function ProtectionModePage() {
   // ============================================
   const renderIdle = () => (
     <View className={styles.idleSection}>
+      {isDemo && (
+        <View className={styles.demoBadge}>
+          <Text className={styles.demoBadgeIcon}>🎮</Text>
+          <Text className={styles.demoBadgeText}>演示模式 - 自动演示保护流程</Text>
+        </View>
+      )}
       <Text className={styles.shieldIcon}>{'\u{1F6E1}\uFE0F'}</Text>
       <Text className={styles.mainTitle}>善行保护模式</Text>
       <Text className={styles.subtitle}>做任何事前先保护好自己</Text>
@@ -290,28 +373,51 @@ export default function ProtectionModePage() {
 
       <View className={styles.descCard}>
         <Text className={styles.descText}>
-          启动后系统将自动<Text className={styles.descHighlight}>录像、录音、GPS追踪</Text>，全程存证
+          {isDemo
+            ? '演示模式下将模拟完整的保护流程：初始化 → 保护中 → 自动结束'
+            : '启动后系统将自动录像、录音、GPS追踪，全程存证'
+          }
         </Text>
       </View>
+
+      {/* 紧急联系人提示 - 演示模式下隐藏 */}
+      {!isDemo && emergencyContacts.length === 0 && (
+        <View className={styles.contactHint} onClick={() => Taro.navigateTo({ url: '/pages/profile-edit/index' })}>
+          <Text className={styles.contactHintIcon}>⚠️</Text>
+          <View className={styles.contactHintText}>
+            <Text className={styles.contactHintTitle}>请设置紧急联系人</Text>
+            <Text className={styles.contactHintDesc}>保护模式需要至少一位紧急联系人才能启动 →</Text>
+          </View>
+        </View>
+      )}
 
       <View className={styles.circleBtnWrap}>
         <View className={styles.circleBtnIdle} onClick={handleStart}>
           <Text className={styles.circleBtnIdleIcon}>{'\u{1F6E1}\uFE0F'}</Text>
-          <Text className={styles.circleBtnIdleText}>{sourceFrom === 'advisor' ? '确认开启保护' : '一键开启保护'}</Text>
+          <Text className={styles.circleBtnIdleText}>
+            {isDemo ? '自动开启演示中...' : sourceFrom === 'advisor' ? '确认开启保护' : '一键开启保护'}
+          </Text>
         </View>
       </View>
 
-      <Text className={styles.btnHint}>{sourceFrom === 'advisor' ? 'AI顾问建议：此场景需先保护再行善' : '点击即开始全程录像+录音+GPS定位'}</Text>
+      <Text className={styles.btnHint}>
+        {isDemo
+          ? '演示模式自动进行中，请稍候...'
+          : sourceFrom === 'advisor' ? 'AI顾问建议：此场景需先保护再行善' : '点击即开始全程录像+录音+GPS定位'
+        }
+      </Text>
 
-      {/* 定时安全确认入口 */}
-      <View className={styles.safetyCheckEntry} onClick={() => Taro.navigateTo({ url: '/pages/safety-check/index' })}>
-        <Text className={styles.safetyCheckIcon}>⏱️</Text>
-        <View className={styles.safetyCheckText}>
-          <Text className={styles.safetyCheckTitle}>定时安全确认</Text>
-          <Text className={styles.safetyCheckDesc}>设置预计完成时间，超时自动SOS</Text>
+      {/* 定时安全确认入口 - 演示模式下隐藏 */}
+      {!isDemo && (
+        <View className={styles.safetyCheckEntry} onClick={() => Taro.navigateTo({ url: '/pages/safety-check/index' })}>
+          <Text className={styles.safetyCheckIcon}>⏱️</Text>
+          <View className={styles.safetyCheckText}>
+            <Text className={styles.safetyCheckTitle}>定时安全确认</Text>
+            <Text className={styles.safetyCheckDesc}>设置预计完成时间，超时自动SOS</Text>
+          </View>
+          <Text className={styles.safetyCheckArrow}>→</Text>
         </View>
-        <Text className={styles.safetyCheckArrow}>→</Text>
-      </View>
+      )}
     </View>
   );
 
@@ -347,6 +453,12 @@ export default function ProtectionModePage() {
     if (!session) return null;
     return (
       <View className={styles.idleSection}>
+        {isDemo && (
+          <View className={styles.demoBadge}>
+            <Text className={styles.demoBadgeIcon}>🎮</Text>
+            <Text className={styles.demoBadgeText}>演示模式 - 保护中（3分钟后自动结束）</Text>
+          </View>
+        )}
         <View className={styles.circleBtnWrap}>
           <View className={styles.circleBtnActive}>
             <Text className={styles.activeTimer}>{formatDuration(session.duration)}</Text>
@@ -391,6 +503,10 @@ export default function ProtectionModePage() {
             <Text className={styles.actionBtnText}>紧急求助</Text>
           </View>
         </View>
+
+        {isDemo && (
+          <Text className={styles.demoHint}>演示模式：所有功能可正常点击体验，但不会实际调用设备</Text>
+        )}
       </View>
     );
   };
@@ -468,12 +584,30 @@ export default function ProtectionModePage() {
     if (!session) return null;
     return (
       <View className={styles.closedSection}>
+        {isDemo && (
+          <View className={styles.demoBadge}>
+            <Text className={styles.demoBadgeIcon}>{'\u{1F3AE}'}</Text>
+            <Text className={styles.demoBadgeText}>演示模式 - 流程已结束</Text>
+          </View>
+        )}
         <Text className={styles.closedIcon}>{'\u2705'}</Text>
-        <Text className={styles.closedTitle}>保护已结束</Text>
+        <Text className={styles.closedTitle}>
+          {isDemo ? '演示结束' : '保护已结束'}
+        </Text>
         <View className={styles.closedSaved}>
           <Text>{'\u{1F512}'}</Text>
-          <Text>证据已自动保存</Text>
+          <Text>{isDemo ? '演示流程已完整展示' : '证据已自动保存'}</Text>
         </View>
+
+        {isDemo && (
+          <View className={styles.demoSummary}>
+            <Text className={styles.demoSummaryText}>
+              演示模式已为您完整展示了保护模式的全流程：
+              {'\n'}初始化 → GPS定位 → 录像/录音 → 数据监控 → 自动结束
+              {'\n\n'}现在去记录一条善行，体验完整闭环吧！
+            </Text>
+          </View>
+        )}
 
         <View className={styles.evidenceSummary}>
           <View className={styles.evidenceRow}>
@@ -505,7 +639,7 @@ export default function ProtectionModePage() {
 
         <View className={styles.closedBar}>
           <View className={`${styles.closedBtn} ${styles.closedBtnRecord}`} onClick={handleGoRecord}>
-            <Text>{'\u{1F4DD}'} 记录善行</Text>
+            <Text>{'\u{1F4DD}'} {isDemo ? '去记录善行' : '记录善行'}</Text>
           </View>
           <View className={`${styles.closedBtn} ${styles.closedBtnDetail}`} onClick={handleGoWitness}>
             <Text>查看保护详情</Text>
