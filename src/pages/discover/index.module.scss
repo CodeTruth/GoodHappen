@@ -425,3 +425,29 @@
   border-radius: 2rpx;
   background: linear-gradient(90deg, $color-primary, $color-primary-light);
 }
+
+// 中间大+号发布按钮
+.publishBtn {
+  width: 96rpx;
+  height: 96rpx;
+  border-radius: 50%;
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: -24rpx;
+  box-shadow: 0 6rpx 24rpx rgba(196, 149, 106, 0.5);
+  cursor: pointer;
+  transition: transform 0.15s;
+
+  &:active {
+    transform: scale(0.92);
+  }
+}
+
+.publishBtnIcon {
+  font-size: 56rpx;
+  color: #fff;
+  font-weight: 300;
+  line-height: 1;
+}

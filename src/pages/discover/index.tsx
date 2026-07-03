@@ -16,7 +16,7 @@ import styles from './index.module.scss';
 
 // 更新自定义 tabBar 选中状态
 type SquareTab = 'kindness' | 'circle' | 'mine';
-const TABS: { key: SquareTab; label: string }[] = [
+const CONTENT_TABS: { key: SquareTab; label: string }[] = [
   { key: 'kindness', label: '善行' },
   { key: 'circle', label: '善行圈' },
   { key: 'mine', label: '我的' },
@@ -282,16 +282,40 @@ const DiscoverPage: React.FC = () => {
 
       {/* 底部固定分类Tab */}
       <View className={styles.bottomTabs}>
-        {TABS.map(tab => (
-          <View
-            key={tab.key}
-            className={`${styles.bottomTabItem} ${activeTab === tab.key ? styles.bottomTabActive : ''}`}
-            onClick={() => { setActiveTab(tab.key); setSelectedTag(''); setSelectedRegion(''); setOnlyFollowing(false); }}
-          >
-            <Text className={styles.bottomTabText}>{tab.label}</Text>
-            {activeTab === tab.key && <View className={styles.bottomTabLine} />}
-          </View>
-        ))}
+        {/* 左侧Tab：善行 */}
+        <View
+          className={`${styles.bottomTabItem} ${activeTab === 'kindness' ? styles.bottomTabActive : ''}`}
+          onClick={() => { setActiveTab('kindness'); setSelectedTag(''); setSelectedRegion(''); setOnlyFollowing(false); }}
+        >
+          <Text className={styles.bottomTabText}>善行</Text>
+          {activeTab === 'kindness' && <View className={styles.bottomTabLine} />}
+        </View>
+
+        {/* 左侧Tab：善行圈 */}
+        <View
+          className={`${styles.bottomTabItem} ${activeTab === 'circle' ? styles.bottomTabActive : ''}`}
+          onClick={() => { setActiveTab('circle'); setSelectedTag(''); setSelectedRegion(''); setOnlyFollowing(false); }}
+        >
+          <Text className={styles.bottomTabText}>善行圈</Text>
+          {activeTab === 'circle' && <View className={styles.bottomTabLine} />}
+        </View>
+
+        {/* 中间大+号：发布记录 */}
+        <View
+          className={styles.publishBtn}
+          onClick={() => Taro.navigateTo({ url: '/pages/record/index' })}
+        >
+          <Text className={styles.publishBtnIcon}>+</Text>
+        </View>
+
+        {/* 右侧Tab：我的 */}
+        <View
+          className={`${styles.bottomTabItem} ${activeTab === 'mine' ? styles.bottomTabActive : ''}`}
+          onClick={() => { setActiveTab('mine'); setSelectedTag(''); setSelectedRegion(''); setOnlyFollowing(false); }}
+        >
+          <Text className={styles.bottomTabText}>我的</Text>
+          {activeTab === 'mine' && <View className={styles.bottomTabLine} />}
+        </View>
       </View>
     </View>
   );
