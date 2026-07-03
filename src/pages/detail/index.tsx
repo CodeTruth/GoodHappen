@@ -144,6 +144,7 @@ const DetailPage: React.FC = () => {
   // 格式化时间
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return dateStr; // 无效日期直接返回原字符串
     const now = new Date();
     const diff = now.getTime() - date.getTime();
     const minutes = Math.floor(diff / (1000 * 60));
@@ -384,6 +385,35 @@ const DetailPage: React.FC = () => {
         </View>
       )}
 
+      {/* ===== 事前学习：从他人善行中学习风险防护 ===== */}
+      {learnInfo && (
+        <View className={styles.learnCard}>
+          <View className={styles.learnHeader}>
+            <Text className={styles.learnIcon}>📚</Text>
+            <Text className={styles.learnTitle}>事前学习</Text>
+            <View className={styles.learnTag} style={{ background: learnInfo.scenario.color }}>
+              <Text className={styles.learnTagText}>{learnInfo.scenario.icon} {learnInfo.scenario.category}</Text>
+            </View>
+          </View>
+          <View className={styles.learnReason}>
+            <Text className={styles.learnReasonIcon}>💡</Text>
+            <Text className={styles.learnReasonText}>{learnInfo.reason}</Text>
+          </View>
+          <Text className={styles.learnDesc}>{learnInfo.summary}</Text>
+          <View className={styles.learnAdviceList}>
+            {learnInfo.scenario.advice.map((advice, index) => (
+              <View key={index} className={styles.learnAdviceItem}>
+                <Text className={styles.learnAdviceNum}>{index + 1}</Text>
+                <Text className={styles.learnAdviceText}>{advice}</Text>
+              </View>
+            ))}
+          </View>
+          <View className={styles.learnAction} onClick={() => Taro.navigateTo({ url: '/pages/record/index' })}>
+            <Text className={styles.learnActionText}>🛡️ 我也要做这件事 → 先开启保护</Text>
+          </View>
+        </View>
+      )}
+
       {/* ===== 互动数据概览 ===== */}
       <View className={styles.statsBar}>
         <View className={styles.statItem}>
@@ -581,35 +611,6 @@ const DetailPage: React.FC = () => {
                 </View>
               </View>
             </View>
-          </View>
-        </View>
-      )}
-
-      {/* ===== 事前学习：从他人善行中学习风险防护 ===== */}
-      {learnInfo && (
-        <View className={styles.learnCard}>
-          <View className={styles.learnHeader}>
-            <Text className={styles.learnIcon}>📚</Text>
-            <Text className={styles.learnTitle}>事前学习</Text>
-            <View className={styles.learnTag} style={{ background: learnInfo.scenario.color }}>
-              <Text className={styles.learnTagText}>{learnInfo.scenario.icon} {learnInfo.scenario.category}</Text>
-            </View>
-          </View>
-          <View className={styles.learnReason}>
-            <Text className={styles.learnReasonIcon}>💡</Text>
-            <Text className={styles.learnReasonText}>{learnInfo.reason}</Text>
-          </View>
-          <Text className={styles.learnDesc}>{learnInfo.summary}</Text>
-          <View className={styles.learnAdviceList}>
-            {learnInfo.scenario.advice.map((advice, index) => (
-              <View key={index} className={styles.learnAdviceItem}>
-                <Text className={styles.learnAdviceNum}>{index + 1}</Text>
-                <Text className={styles.learnAdviceText}>{advice}</Text>
-              </View>
-            ))}
-          </View>
-          <View className={styles.learnAction} onClick={() => Taro.navigateTo({ url: '/pages/record/index' })}>
-            <Text className={styles.learnActionText}>🛡️ 我也要做这件事 → 先开启保护</Text>
           </View>
         </View>
       )}

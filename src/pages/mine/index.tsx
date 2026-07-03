@@ -134,7 +134,7 @@ const MinePage: React.FC = () => {
     { icon: '🤝', text: '公益履历', action: () => requireAuthAction('/pages/charity-record/index') },
     { icon: '📢', text: '发布公益需求', action: () => requireAuthAction('/pages/charity-publish/index') },
     { icon: '💰', text: '福气流水', action: () => Taro.showToast({ title: `共${transactions.length}条记录`, icon: 'none' }) },
-    { icon: '👥', text: '我的善行圈', action: () => Taro.switchTab({ url: '/pages/circle/index' }) },
+    { icon: '👥', text: '我的善行圈', action: () => Taro.navigateTo({ url: '/pages/circle/index' }) },
     { icon: '👤', text: '编辑资料', action: () => requireAuthAction('/pages/profile-edit/index') },
     { icon: '🔒', text: '隐私设置', action: () => requireAuthAction('/pages/privacy-settings/index') },
     { icon: '🛡️', text: '账号安全', action: () => requireAuthAction('/pages/account-security/index') },

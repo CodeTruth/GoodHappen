@@ -24,10 +24,10 @@ const TAB_LIST: TabItem[] = [
     selectedIcon: '\u{270D}\u{FE0F}'
   },
   {
-    pagePath: 'pages/circle/index',
-    text: '善行圈',
-    icon: '\u{1F310}',
-    selectedIcon: '\u{1F30D}'
+    pagePath: 'pages/discover/index',
+    text: '发现',
+    icon: '\u{1F30D}',
+    selectedIcon: '\u{1F310}'
   },
   {
     pagePath: 'pages/mine/index',

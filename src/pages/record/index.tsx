@@ -887,7 +887,7 @@ const RecordPage: React.FC = () => {
   };
 
   const handleShareToCircle = () => {
-    Taro.switchTab({
+    Taro.navigateTo({
       url: '/pages/circle/index'
     });
   };

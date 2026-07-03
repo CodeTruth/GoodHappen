@@ -3,6 +3,7 @@ export default defineAppConfig({
     'pages/home/index',
     'pages/record/index',
     'pages/mine/index',
+    'pages/discover/index',
     'pages/circle/index',
     'pages/detail/index',
     'pages/circleDetail/index',
@@ -74,8 +75,8 @@ export default defineAppConfig({
         text: '记录'
       },
       {
-        pagePath: 'pages/circle/index',
-        text: '善行圈'
+        pagePath: 'pages/discover/index',
+        text: '发现'
       },
       {
         pagePath: 'pages/mine/index',
