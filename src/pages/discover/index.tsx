@@ -4,15 +4,37 @@ import Taro from '@tarojs/taro';
 import KindnessCard from '@/components/KindnessCard';
 import WarmPartnerCard from '@/components/WarmPartnerCard';
 import { getKindnessList } from '@/data/kindness';
+import { WARM_PARTNERS } from '@/data/warm-partners';
+import { RECOMMENDED_CIRCLES } from '@/data/circle-mock';
 import { useSocialStore } from '@/store/social';
 import { useUserStore } from '@/store/user';
 import { useKindnessStore } from '@/store/kindness';
-import { WARM_PARTNERS } from '@/data/warm-partners';
+import { useCircleStore } from '@/store/circle';
+import { useFortuneStore } from '@/store/fortune';
 import { Kindness } from '@/types/kindness';
 import styles from './index.module.scss';
 
-// 更新自定义 tabBar 选中状态（discover 在 tabBar 中的索引为 2）
-const useUpdateTabBar = () => {
+// 更新自定义 tabBar 选中状态
+type SquareTab = 'kindness' | 'circle' | 'mine';
+const TABS: { key: SquareTab; label: string }[] = [
+  { key: 'kindness', label: '善行' },
+  { key: 'circle', label: '善行圈' },
+  { key: 'mine', label: '我的' },
+];
+
+// ===== 快捷功能入口配置（我的Tab中使用） =====
+const MY_ENTRIES = [
+  { icon: '🏥', label: '善行保险', page: '/pages/insurance/index', color: '#E74C3C' },
+  { icon: '⚖️', label: '法律援助', page: '/pages/legal-aid/index', color: '#3498DB' },
+  { icon: '🗺️', label: '温暖地图', page: '/pages/warmth-map/index', color: '#34A853' },
+  { icon: '🏪', label: '福气商城', page: '/pages/shop/index', color: '#C4956A' },
+  { icon: '📜', label: 'AI对话', page: '/pages/ai-chat/index', color: '#D4534A' },
+  { icon: '📊', label: '年度报告', page: '/pages/annual-report/index', color: '#2ECC71' },
+  { icon: '🎁', label: '邀请好友', page: '/pages/invite/index', color: '#E67E22' },
+  { icon: '📋', label: '更多功能', page: '/pages/mine/index', color: '#95A5A6' },
+];
+
+const DiscoverPage: React.FC = () => {
   useEffect(() => {
     try {
       const page = Taro.getCurrentInstance().page;
@@ -22,45 +44,8 @@ const useUpdateTabBar = () => {
       }
     } catch { /* H5 不支持 */ }
   }, []);
-};
 
-// 温暖伙伴数据
-const getWeeklyWarmPartners = () => WARM_PARTNERS;
-
-// 广场Tab类型
-type SquareTab = 'all' | 'self' | 'witness' | 'following' | 'recommend';
-
-// 所有可用标签
-const ALL_TAGS = ['助人', '环保', '见证', '公益', '邻里互助', '孝亲', '陪伴', '关怀', '工作', '亲子'];
-// 所有可用地区（省级）
-const ALL_REGIONS = ['北京市', '上海市', '广州市', '深圳市', '杭州市', '成都市', '武汉市', '南京市', '西安市', '重庆市'];
-
-// ===== 快捷功能入口配置（去掉首页已有的，补充缺失的） =====
-const QUICK_ENTRIES = [
-  { icon: '🗺️', label: '温暖地图', page: '/pages/warmth-map/index', color: '#34A853' },
-  { icon: '🏪', label: '福气商城', page: '/pages/shop/index', color: '#C4956A' },
-  { icon: '👥', label: '善行圈', page: '/pages/circle/index', color: '#9B59B6' },
-  { icon: '🏥', label: '善行保险', page: '/pages/insurance/index', color: '#E74C3C' },
-  { icon: '⚖️', label: '法律援助', page: '/pages/legal-aid/index', color: '#3498DB' },
-  { icon: '📜', label: 'AI对话', page: '/pages/ai-chat/index', color: '#D4534A' },
-  { icon: '📊', label: '年度报告', page: '/pages/annual-report/index', color: '#2ECC71' },
-  { icon: '🎁', label: '邀请好友', page: '/pages/invite/index', color: '#E67E22' },
-];
-
-// Tab 配置
-type TabConfig = { key: SquareTab; label: string };
-const TABS: TabConfig[] = [
-  { key: 'all', label: '全部' },
-  { key: 'self', label: '善行' },
-  { key: 'witness', label: '见证' },
-  { key: 'following', label: '关注' },
-  { key: 'recommend', label: '推荐' },
-];
-
-const DiscoverPage: React.FC = () => {
-  useUpdateTabBar();
-
-  const [activeTab, setActiveTab] = useState<SquareTab>('all');
+  const [activeTab, setActiveTab] = useState<SquareTab>('kindness');
   const [selectedTag, setSelectedTag] = useState<string>('');
   const [selectedRegion, setSelectedRegion] = useState<string>('');
   const [onlyFollowing, setOnlyFollowing] = useState(false);
@@ -68,158 +53,220 @@ const DiscoverPage: React.FC = () => {
   const [refreshing, setRefreshing] = useState(false);
 
   const { followingIds, isFollowing, loadFromStorage: loadSocial } = useSocialStore();
-  const { userInfo } = useUserStore();
+  const { userInfo, totalKindness, streakDays } = useUserStore();
   const { publishedList: userKindnessList, loadFromStorage: loadKindness } = useKindnessStore();
+  const { circles, getCurrentUserCircles, loadFromStorage: loadCircle } = useCircleStore();
+  const { totalFortune } = useFortuneStore();
 
   useEffect(() => {
     loadSocial();
     loadKindness();
+    loadCircle();
   }, []);
 
   const handleRefresh = useCallback(() => {
     setRefreshing(true);
-    const timer = setTimeout(() => {
+    setTimeout(() => {
       loadSocial();
       loadKindness();
+      loadCircle();
       setRefreshing(false);
       Taro.showToast({ title: '已刷新', icon: 'success' });
     }, 800);
-    return () => clearTimeout(timer);
-  }, [loadSocial, loadKindness]);
+  }, [loadSocial, loadKindness, loadCircle]);
+
+  // ===== 善行Tab数据 =====
+  const ALL_TAGS = ['助人', '环保', '见证', '公益', '邻里互助', '孝亲', '陪伴', '关怀', '工作', '亲子'];
+  const ALL_REGIONS = ['北京市', '上海市', '广州市', '深圳市', '杭州市', '成都市', '武汉市', '南京市', '西安市', '重庆市'];
 
   const allKindness = useMemo(() => {
     const mockList = getKindnessList();
     const mockIds = new Set(mockList.map(k => k.id));
-    const uniqueUserList = userKindnessList.filter(k => !mockIds.has(k.id));
-    return [...uniqueUserList, ...mockList];
+    return [...userKindnessList.filter(k => !mockIds.has(k.id)), ...mockList];
   }, [userKindnessList]);
-
-  const warmPartners = useMemo(() => getWeeklyWarmPartners(), []);
-
-  const sortByTimeDesc = (list: Kindness[]): Kindness[] => {
-    return [...list].sort(
-      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    );
-  };
 
   const filteredKindness = useMemo(() => {
     let result = [...allKindness];
+    if (selectedTag) result = result.filter(i => i.tags.includes(selectedTag));
+    if (selectedRegion) result = result.filter(i => i.location?.includes(selectedRegion.slice(0, 2)));
+    if (onlyFollowing) result = result.filter(i => isFollowing(i.userId));
+    return result.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }, [allKindness, selectedTag, selectedRegion, onlyFollowing, isFollowing]);
 
-    if (activeTab === 'self') {
-      result = result.filter((item) => item.type === 'self');
-    } else if (activeTab === 'witness') {
-      result = result.filter((item) => item.type === 'witness');
-    } else if (activeTab === 'following') {
-      result = result.filter(
-        (item) =>
-          followingIds.includes(item.userId) &&
-          (item.visibleScope === 'public' || item.visibleScope === 'followers')
-      );
-    } else if (activeTab === 'recommend') {
-      const userRegion = userInfo?.region || '北京市';
-      const userTags = userKindnessList.flatMap(k => k.tags);
-      const tagCountMap = new Map<string, number>();
-      userTags.forEach(tag => {
-        tagCountMap.set(tag, (tagCountMap.get(tag) || 0) + 1);
-      });
-      const preferredTags = [...tagCountMap.entries()]
-        .sort((a, b) => b[1] - a[1])
-        .map(e => e[0]);
+  // ===== 善行圈Tab数据 =====
+  const myCircles = useMemo(() => {
+    const userId = userInfo?.id || 'guest';
+    return getCurrentUserCircles(userId);
+  }, [circles, userInfo, getCurrentUserCircles]);
 
-      const scored = result.map((item) => {
-        let score = 0;
-        if (userKindnessList.length === 0 && item.type === 'witness') {
-          score += 5;
-        }
-        const matchedTags = preferredTags.filter(tag => item.tags.includes(tag)).length;
-        score += matchedTags * 3;
-        const sameRegion = item.location?.includes(userRegion.slice(0, 2));
-        if (sameRegion) score += 2;
-        return { item, score };
-      });
-
-      scored.sort((a, b) => {
-        if (b.score !== a.score) return b.score - a.score;
-        return new Date(b.item.createdAt).getTime() - new Date(a.item.createdAt).getTime();
-      });
-
-      result = scored.map(s => s.item);
-    }
-
-    if (selectedTag) {
-      result = result.filter((item) => item.tags.includes(selectedTag));
-    }
-
-    if (selectedRegion) {
-      result = result.filter((item) =>
-        item.location?.includes(selectedRegion.slice(0, 2))
-      );
-    }
-
-    if (onlyFollowing) {
-      result = result.filter((item) => isFollowing(item.userId));
-    }
-
-    return sortByTimeDesc(result);
-  }, [allKindness, activeTab, selectedTag, selectedRegion, onlyFollowing, followingIds, isFollowing, userInfo, userKindnessList]);
-
-  const handleTabChange = (tab: SquareTab) => {
-    setActiveTab(tab);
-    setSelectedTag('');
-    setSelectedRegion('');
-    setOnlyFollowing(false);
-  };
-
-  const handleCardClick = (kindnessId: string) => {
-    Taro.navigateTo({ url: `/pages/detail/index?id=${kindnessId}` });
-  };
-
-  const handleTagSelect = (tag: string) => {
-    setSelectedTag(selectedTag === tag ? '' : tag);
-  };
-
-  const handleRegionSelect = (region: string) => {
-    setSelectedRegion(selectedRegion === region ? '' : region);
-    setRegionPickerOpen(false);
-  };
-
-  const showFilterBar = activeTab === 'all' || activeTab === 'recommend';
-  const showWarmPartners =
-    (activeTab === 'all' || activeTab === 'recommend') &&
-    !selectedTag && !selectedRegion && !onlyFollowing;
-
-  return (
-    <View className={styles.pageWrapper}>
-      {/* ===== 顶部区域：搜索 + 功能入口 ===== */}
-      <View className={styles.topArea}>
-        <View
-          className={styles.searchBar}
-          onClick={() => Taro.navigateTo({ url: '/pages/search/index' })}
-        >
-          <Text className={styles.searchIcon}>🔍</Text>
-          <Text className={styles.searchPlaceholder}>搜索善行、用户、话题...</Text>
+  // ===== 渲染：善行Tab =====
+  const renderKindnessTab = () => (
+    <>
+      {/* 筛选栏 */}
+      <View className={styles.filterBar}>
+        <ScrollView className={styles.tagFilter} scrollX enableFlex>
+          <View className={styles.tagFilterInner}>
+            <Text className={`${styles.filterTag} ${!selectedTag ? styles.filterTagActive : ''}`} onClick={() => setSelectedTag('')}>全部</Text>
+            {ALL_TAGS.map(tag => (
+              <Text key={tag} className={`${styles.filterTag} ${selectedTag === tag ? styles.filterTagActive : ''}`} onClick={() => setSelectedTag(selectedTag === tag ? '' : tag)}>{tag}</Text>
+            ))}
+          </View>
+        </ScrollView>
+        <View className={styles.filterActions}>
+          <View className={styles.regionPicker} onClick={() => setRegionPickerOpen(!regionPickerOpen)}>
+            <Text className={styles.regionPickerText}>{selectedRegion || '地区'}</Text>
+            <Text className={styles.regionPickerArrow}>{regionPickerOpen ? '▲' : '▼'}</Text>
+          </View>
+          <View className={styles.followToggle}>
+            <Text className={styles.followToggleText}>仅关注</Text>
+            <Switch checked={onlyFollowing} onChange={(e) => setOnlyFollowing(e.detail.value)} color="#C4956A" />
+          </View>
         </View>
+        {regionPickerOpen && (
+          <View className={styles.regionDropdown}>
+            {ALL_REGIONS.map(region => (
+              <Text key={region} className={`${styles.regionOption} ${selectedRegion === region ? styles.regionOptionActive : ''}`} onClick={() => { setSelectedRegion(selectedRegion === region ? '' : region); setRegionPickerOpen(false); }}>{region}</Text>
+            ))}
+          </View>
+        )}
+      </View>
 
-        <View className={styles.quickGrid}>
-          {QUICK_ENTRIES.map((item) => (
-            <View
-              key={item.label}
-              className={styles.quickItem}
-              onClick={() => Taro.navigateTo({ url: item.page })}
-            >
-              <View
-                className={styles.quickIconWrap}
-                style={{ background: `${item.color}15`, borderColor: `${item.color}30` }}
-              >
-                <Text className={styles.quickIcon}>{item.icon}</Text>
+      {/* 温暖伙伴 */}
+      {!selectedTag && !selectedRegion && !onlyFollowing && WARM_PARTNERS.length > 0 && (
+        <View className={styles.warmPartnerSection}>
+          <View className={styles.sectionHeader}>
+            <Text className={styles.sectionTitle}>🤝 温暖伙伴</Text>
+          </View>
+          {WARM_PARTNERS.map(p => <WarmPartnerCard key={p.brandName} data={p} />)}
+        </View>
+      )}
+
+      {/* 善行列表 */}
+      <View className={styles.kindnessList}>
+        {filteredKindness.length > 0 ? (
+          filteredKindness.map(k => (
+            <KindnessCard key={k.id} kindness={k} onClick={() => Taro.navigateTo({ url: `/pages/detail/index?id=${k.id}` })} />
+          ))
+        ) : (
+          <View className={styles.empty}>
+            <Text className={styles.emptyIcon}>🌱</Text>
+            <Text className={styles.emptyText}>暂无匹配的内容{'\n'}试试调整筛选条件</Text>
+          </View>
+        )}
+      </View>
+    </>
+  );
+
+  // ===== 渲染：善行圈Tab =====
+  const renderCircleTab = () => (
+    <>
+      {/* 我加入的圈子 */}
+      {myCircles.length > 0 && (
+        <View className={styles.circleSection}>
+          <Text className={styles.sectionTitle}>👥 我加入的圈子</Text>
+          {myCircles.map(c => (
+            <View key={c.id} className={styles.circleCard} onClick={() => Taro.navigateTo({ url: `/pages/circle/index` })}>
+              <View className={styles.circleIconWrap} style={{ background: '#C4956A20' }}>
+                <Text className={styles.circleIcon}>👥</Text>
               </View>
-              <Text className={styles.quickLabel}>{item.label}</Text>
+              <View className={styles.circleInfo}>
+                <Text className={styles.circleName}>{c.name}</Text>
+                <Text className={styles.circleMeta}>{c.members.length} 人 · {c.type === 'public' ? '公共' : c.type === 'open' ? '开放' : '封闭'}</Text>
+              </View>
+              <Text className={styles.circleArrow}>→</Text>
             </View>
           ))}
         </View>
+      )}
+
+      {/* 推荐圈子 */}
+      <View className={styles.circleSection}>
+        <Text className={styles.sectionTitle}>✨ 推荐圈子</Text>
+        {RECOMMENDED_CIRCLES.map(c => (
+          <View key={c.id} className={styles.circleCard} onClick={() => Taro.navigateTo({ url: `/pages/circle/index` })}>
+            <View className={styles.circleIconWrap} style={{ background: `${c.color}20` }}>
+              <Text className={styles.circleIcon}>{c.icon}</Text>
+            </View>
+            <View className={styles.circleInfo}>
+              <Text className={styles.circleName}>{c.name}</Text>
+              <Text className={styles.circleMeta}>{c.memberCount} 人 · {c.type}</Text>
+              <Text className={styles.circleDesc}>{c.description}</Text>
+            </View>
+            <Text className={styles.circleArrow}>→</Text>
+          </View>
+        ))}
       </View>
 
-      {/* ===== 内容滚动区域 ===== */}
+      {/* 创建圈子入口 */}
+      <View className={styles.createCircleBtn} onClick={() => Taro.navigateTo({ url: '/pages/circle/index' })}>
+        <Text className={styles.createCircleText}>+ 创建或加入更多圈子</Text>
+      </View>
+    </>
+  );
+
+  // ===== 渲染：我的Tab =====
+  const renderMineTab = () => (
+    <>
+      {/* 用户信息卡片 */}
+      <View className={styles.userCard}>
+        <View className={styles.userHeader}>
+          <View className={styles.userAvatar}>
+            <Text className={styles.userAvatarText}>{userInfo?.nickname?.[0] || '👤'}</Text>
+          </View>
+          <View className={styles.userInfo}>
+            <Text className={styles.userName}>{userInfo?.nickname || '访客'}</Text>
+            <Text className={styles.userLevel}>连续善行 {streakDays || 0} 天</Text>
+          </View>
+        </View>
+        <View className={styles.userStats}>
+          <View className={styles.statItem}>
+            <Text className={styles.statValue}>{totalFortune}</Text>
+            <Text className={styles.statLabel}>福气值</Text>
+          </View>
+          <View className={styles.statItem}>
+            <Text className={styles.statValue}>{totalKindness || userKindnessList.length}</Text>
+            <Text className={styles.statLabel}>善行数</Text>
+          </View>
+          <View className={styles.statItem}>
+            <Text className={styles.statValue}>{followingIds.length}</Text>
+            <Text className={styles.statLabel}>关注</Text>
+          </View>
+        </View>
+      </View>
+
+      {/* 功能入口 */}
+      <View className={styles.myGrid}>
+        {MY_ENTRIES.map(item => (
+          <View key={item.label} className={styles.myItem} onClick={() => Taro.navigateTo({ url: item.page })}>
+            <View className={styles.myIconWrap} style={{ background: `${item.color}15` }}>
+              <Text className={styles.myIcon}>{item.icon}</Text>
+            </View>
+            <Text className={styles.myLabel}>{item.label}</Text>
+          </View>
+        ))}
+      </View>
+
+      {/* 最近善行 */}
+      {userKindnessList.length > 0 && (
+        <View className={styles.recentSection}>
+          <Text className={styles.sectionTitle}>📝 我的最近善行</Text>
+          {userKindnessList.slice(0, 3).map(k => (
+            <KindnessCard key={k.id} kindness={k} onClick={() => Taro.navigateTo({ url: `/pages/detail/index?id=${k.id}` })} />
+          ))}
+        </View>
+      )}
+    </>
+  );
+
+  return (
+    <View className={styles.pageWrapper}>
+      {/* 搜索栏 */}
+      <View className={styles.searchBar} onClick={() => Taro.navigateTo({ url: '/pages/search/index' })}>
+        <Text className={styles.searchIcon}>🔍</Text>
+        <Text className={styles.searchPlaceholder}>搜索善行、用户、话题...</Text>
+      </View>
+
+      {/* 内容滚动区域 */}
       <ScrollView
         className={styles.contentScroll}
         scrollY
@@ -228,109 +275,18 @@ const DiscoverPage: React.FC = () => {
         refresherTriggered={refreshing}
         onRefresherRefresh={handleRefresh}
       >
-        {/* 筛选栏 */}
-        {showFilterBar && (
-          <View className={styles.filterBar}>
-            <ScrollView className={styles.tagFilter} scrollX enableFlex>
-              <View className={styles.tagFilterInner}>
-                <Text
-                  className={`${styles.filterTag} ${!selectedTag ? styles.filterTagActive : ''}`}
-                  onClick={() => setSelectedTag('')}
-                >
-                  全部
-                </Text>
-                {ALL_TAGS.map((tag) => (
-                  <Text
-                    key={tag}
-                    className={`${styles.filterTag} ${selectedTag === tag ? styles.filterTagActive : ''}`}
-                    onClick={() => handleTagSelect(tag)}
-                  >
-                    {tag}
-                  </Text>
-                ))}
-              </View>
-            </ScrollView>
-
-            <View className={styles.filterActions}>
-              <View
-                className={styles.regionPicker}
-                onClick={() => setRegionPickerOpen(!regionPickerOpen)}
-              >
-                <Text className={styles.regionPickerText}>
-                  {selectedRegion || '地区'}
-                </Text>
-                <Text className={styles.regionPickerArrow}>
-                  {regionPickerOpen ? '▲' : '▼'}
-                </Text>
-              </View>
-              <View className={styles.followToggle}>
-                <Text className={styles.followToggleText}>仅关注</Text>
-                <Switch
-                  checked={onlyFollowing}
-                  onChange={(e) => setOnlyFollowing(e.detail.value)}
-                  color="#C4956A"
-                />
-              </View>
-            </View>
-
-            {regionPickerOpen && (
-              <View className={styles.regionDropdown}>
-                {ALL_REGIONS.map((region) => (
-                  <Text
-                    key={region}
-                    className={`${styles.regionOption} ${selectedRegion === region ? styles.regionOptionActive : ''}`}
-                    onClick={() => handleRegionSelect(region)}
-                  >
-                    {region}
-                  </Text>
-                ))}
-              </View>
-            )}
-          </View>
-        )}
-
-        {/* 温暖伙伴 */}
-        {showWarmPartners && warmPartners.length > 0 && (
-          <View className={styles.warmPartnerSection}>
-            <View className={styles.sectionHeader}>
-              <Text className={styles.sectionTitle}>🤝 温暖伙伴</Text>
-            </View>
-            {warmPartners.map((partner) => (
-              <WarmPartnerCard key={partner.brandName} data={partner} />
-            ))}
-          </View>
-        )}
-
-        {/* 善行列表 */}
-        <View className={styles.kindnessList}>
-          {filteredKindness.length > 0 ? (
-            filteredKindness.map((kindness) => (
-              <KindnessCard
-                key={kindness.id}
-                kindness={kindness}
-                onClick={() => handleCardClick(kindness.id)}
-              />
-            ))
-          ) : (
-            <View className={styles.empty}>
-              <Text className={styles.emptyIcon}>🌱</Text>
-              <Text className={styles.emptyText}>
-                {activeTab === 'following'
-                  ? '还没有关注的人发布善行\n去关注更多温暖的人吧'
-                  : '暂无匹配的内容\n试试调整筛选条件'}
-              </Text>
-            </View>
-          )}
-        </View>
+        {activeTab === 'kindness' && renderKindnessTab()}
+        {activeTab === 'circle' && renderCircleTab()}
+        {activeTab === 'mine' && renderMineTab()}
       </ScrollView>
 
-      {/* ===== 底部固定分类Tab ===== */}
+      {/* 底部固定分类Tab */}
       <View className={styles.bottomTabs}>
-        {TABS.map((tab) => (
+        {TABS.map(tab => (
           <View
             key={tab.key}
             className={`${styles.bottomTabItem} ${activeTab === tab.key ? styles.bottomTabActive : ''}`}
-            onClick={() => handleTabChange(tab.key)}
+            onClick={() => { setActiveTab(tab.key); setSelectedTag(''); setSelectedRegion(''); setOnlyFollowing(false); }}
           >
             <Text className={styles.bottomTabText}>{tab.label}</Text>
             {activeTab === tab.key && <View className={styles.bottomTabLine} />}

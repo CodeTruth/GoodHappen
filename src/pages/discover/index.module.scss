@@ -8,29 +8,16 @@
   padding-bottom: 120px; // 系统 TabBar 高度
 }
 
-// ===== 顶部区域：搜索 + 功能入口 =====
-.topArea {
-  background: #fff;
-  padding: $spacing-md $spacing-lg;
-  border-bottom: 1rpx solid $color-border;
-  flex-shrink: 0;
-}
-
-// 搜索栏
+// ===== 搜索栏（顶部固定） =====
 .searchBar {
   display: flex;
   align-items: center;
   gap: $spacing-sm;
-  background: $color-bg-hover;
-  border-radius: $radius-button;
-  padding: 16rpx $spacing-md;
-  margin-bottom: $spacing-md;
+  background: #fff;
+  border-bottom: 1rpx solid $color-border;
+  padding: 20rpx $spacing-lg;
+  flex-shrink: 0;
   cursor: pointer;
-  transition: background 0.2s;
-
-  &:active {
-    background: $color-bg-muted;
-  }
 }
 
 .searchIcon {
@@ -43,54 +30,13 @@
   color: $color-text-tertiary;
 }
 
-// 快捷功能入口网格
-.quickGrid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: $spacing-md;
-}
-
-.quickItem {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8rpx;
-  cursor: pointer;
-  padding: $spacing-sm 0;
-  transition: transform 0.15s;
-
-  &:active {
-    transform: scale(0.95);
-  }
-}
-
-.quickIconWrap {
-  width: 96rpx;
-  height: 96rpx;
-  border-radius: 24rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 2rpx solid transparent;
-}
-
-.quickIcon {
-  font-size: 44rpx;
-}
-
-.quickLabel {
-  font-size: 22rpx;
-  color: $color-text-secondary;
-  font-weight: $font-weight-medium;
-}
-
 // ===== 内容滚动区域 =====
 .contentScroll {
   flex: 1;
   padding: $spacing-md $spacing-lg;
 }
 
-// 筛选栏
+// ===== 筛选栏 =====
 .filterBar {
   margin-bottom: $spacing-md;
 }
@@ -142,7 +88,6 @@
   border-radius: $radius-button;
   padding: 8rpx 16rpx;
   cursor: pointer;
-  transition: all $transition-base;
 
   &:active {
     opacity: 0.8;
@@ -152,7 +97,6 @@
 .regionPickerText {
   font-size: $font-size-xs;
   color: $color-text-secondary;
-  white-space: nowrap;
 }
 
 .regionPickerArrow {
@@ -169,7 +113,6 @@
 .followToggleText {
   font-size: $font-size-xs;
   color: $color-text-secondary;
-  white-space: nowrap;
 }
 
 .regionDropdown {
@@ -189,7 +132,6 @@
   border-radius: $radius-sm;
   padding: 6rpx 12rpx;
   white-space: nowrap;
-  transition: all $transition-base;
   cursor: pointer;
 
   &:active {
@@ -202,7 +144,7 @@
   }
 }
 
-// 温暖伙伴
+// ===== 温暖伙伴 =====
 .warmPartnerSection {
   margin-bottom: $spacing-md;
 }
@@ -215,9 +157,10 @@
   font-size: $font-size-md;
   font-weight: $font-weight-semibold;
   color: $color-text-primary;
+  margin-bottom: $spacing-sm;
 }
 
-// 善行列表
+// ===== 善行列表 =====
 .kindnessList {
   padding-bottom: $spacing-xl;
 }
@@ -241,6 +184,205 @@
   line-height: $line-height-loose;
 }
 
+// ===== 善行圈Tab =====
+.circleSection {
+  margin-bottom: $spacing-lg;
+}
+
+.circleCard {
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+  background: #fff;
+  border-radius: $radius-lg;
+  padding: $spacing-md;
+  margin-bottom: $spacing-sm;
+  border: 1rpx solid $color-border;
+  cursor: pointer;
+  transition: all $transition-base;
+
+  &:active {
+    background: $color-bg-hover;
+  }
+}
+
+.circleIconWrap {
+  width: 88rpx;
+  height: 88rpx;
+  border-radius: 20rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.circleIcon {
+  font-size: 40rpx;
+}
+
+.circleInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.circleName {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin-bottom: 4rpx;
+}
+
+.circleMeta {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin-bottom: 4rpx;
+}
+
+.circleDesc {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.circleArrow {
+  font-size: $font-size-md;
+  color: $color-text-tertiary;
+}
+
+.createCircleBtn {
+  background: #fff;
+  border-radius: $radius-lg;
+  padding: $spacing-md;
+  text-align: center;
+  border: 2rpx dashed $color-border;
+  cursor: pointer;
+  margin-top: $spacing-sm;
+
+  &:active {
+    background: $color-bg-hover;
+  }
+}
+
+.createCircleText {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+}
+
+// ===== 我的Tab =====
+.userCard {
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  margin-bottom: $spacing-lg;
+  color: #fff;
+}
+
+.userHeader {
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+  margin-bottom: $spacing-lg;
+}
+
+.userAvatar {
+  width: 96rpx;
+  height: 96rpx;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.userAvatarText {
+  font-size: 48rpx;
+}
+
+.userInfo {
+  flex: 1;
+}
+
+.userName {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-bold;
+  color: #fff;
+  margin-bottom: 4rpx;
+}
+
+.userLevel {
+  font-size: $font-size-sm;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.userStats {
+  display: flex;
+  justify-content: space-around;
+}
+
+.statItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4rpx;
+}
+
+.statValue {
+  font-size: 40rpx;
+  font-weight: $font-weight-bold;
+  color: #fff;
+}
+
+.statLabel {
+  font-size: $font-size-xs;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+// 我的功能入口
+.myGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: $spacing-md;
+  margin-bottom: $spacing-lg;
+}
+
+.myItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8rpx;
+  padding: $spacing-sm 0;
+  cursor: pointer;
+
+  &:active {
+    opacity: 0.7;
+  }
+}
+
+.myIconWrap {
+  width: 96rpx;
+  height: 96rpx;
+  border-radius: 24rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.myIcon {
+  font-size: 44rpx;
+}
+
+.myLabel {
+  font-size: 22rpx;
+  color: $color-text-secondary;
+}
+
+// 最近善行
+.recentSection {
+  margin-bottom: $spacing-lg;
+}
+
 // ===== 底部固定分类Tab =====
 .bottomTabs {
   display: flex;
@@ -258,13 +400,13 @@
   flex-direction: column;
   align-items: center;
   gap: 8rpx;
-  padding: 8rpx 24rpx;
+  padding: 8rpx 40rpx;
   cursor: pointer;
   position: relative;
 }
 
 .bottomTabText {
-  font-size: 28rpx;
+  font-size: 30rpx;
   color: $color-text-tertiary;
   font-weight: $font-weight-medium;
   transition: color 0.2s;
@@ -278,7 +420,7 @@
 }
 
 .bottomTabLine {
-  width: 32rpx;
+  width: 40rpx;
   height: 4rpx;
   border-radius: 2rpx;
   background: linear-gradient(90deg, $color-primary, $color-primary-light);
