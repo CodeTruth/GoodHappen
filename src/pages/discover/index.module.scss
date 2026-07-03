@@ -4,106 +4,159 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-}
-
-.container {
-  min-height: 100vh;
   background: $color-bg-page;
-  padding: $page-padding;
-  padding-bottom: calc(#{$page-padding} + 120px);
 }
 
-// 顶部标题
-.header {
+// ===== 顶部固定区域：搜索 + 功能入口 =====
+.topArea {
+  background: #fff;
+  padding: $spacing-md $spacing-lg;
+  border-bottom: 1rpx solid $color-border;
+  flex-shrink: 0;
+}
+
+// 搜索栏
+.searchBar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  margin-bottom: $spacing-lg;
+  gap: $spacing-sm;
+  background: $color-bg-hover;
+  border-radius: $radius-button;
+  padding: 16rpx $spacing-md;
+  margin-bottom: $spacing-md;
+  cursor: pointer;
+  transition: background 0.2s;
+
+  &:active {
+    background: $color-bg-muted;
+  }
 }
 
-.headerLeft {
-  flex: 1;
+.searchIcon {
+  font-size: $font-size-md;
+  color: $color-text-tertiary;
 }
 
-.title {
-  font-size: $font-size-xxl;
-  font-weight: $font-weight-semibold;
-  color: $color-text-primary;
-  margin-bottom: $spacing-xs;
-  display: block;
-}
-
-.subtitle {
+.searchPlaceholder {
   font-size: $font-size-sm;
   color: $color-text-tertiary;
 }
 
-// 可滚动的Tab栏
-.tabs {
-  white-space: nowrap;
-  margin-bottom: $spacing-lg;
-  padding-bottom: $spacing-sm;
+// 快捷功能入口网格
+.quickGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: $spacing-md;
+}
+
+.quickItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8rpx;
+  cursor: pointer;
+  padding: $spacing-sm 0;
+  transition: transform 0.15s;
+
+  &:active {
+    transform: scale(0.95);
+  }
+}
+
+.quickIconWrap {
+  width: 96rpx;
+  height: 96rpx;
+  border-radius: 24rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2rpx solid transparent;
+}
+
+.quickIcon {
+  font-size: 44rpx;
+}
+
+.quickLabel {
+  font-size: 22rpx;
+  color: $color-text-secondary;
+  font-weight: $font-weight-medium;
+}
+
+// ===== 分类Tab（Sticky） =====
+.tabSticky {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: #fff;
   border-bottom: 1rpx solid $color-border;
+  flex-shrink: 0;
+}
+
+.tabsScroll {
+  white-space: nowrap;
 }
 
 .tabsInner {
   display: inline-flex;
-  gap: $spacing-lg;
-  padding: $spacing-sm 0;
+  gap: $spacing-xs;
+  padding: $spacing-sm $spacing-lg;
 }
 
-.tab {
-  font-size: $font-size-md;
-  color: $color-text-tertiary;
-  padding: $spacing-sm 0;
-  position: relative;
-  white-space: nowrap;
-  transition: color $transition-base;
+.tabItem {
+  padding: 12rpx 24rpx;
+  border-radius: 32rpx;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 4rpx;
 
-  &.active {
-    color: $color-primary;
-    font-weight: $font-weight-medium;
-
-    &::after {
-      content: '';
-      position: absolute;
-      bottom: -$spacing-sm;
-      left: 0;
-      right: 0;
-      height: 4rpx;
-      background: $color-primary;
-      border-radius: 2rpx;
-    }
+  &:active {
+    opacity: 0.7;
   }
 }
 
-.witnessTabBadge {
+.tabText {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+  font-weight: $font-weight-medium;
+}
+
+.tabActive {
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+
+  .tabText {
+    color: #fff;
+  }
+}
+
+.tabBadge {
   font-size: $font-size-xs;
-  color: $color-primary;
-  background: rgba($color-primary, 0.1);
-  padding: $spacing-xs $spacing-sm;
-  border-radius: $radius-sm;
-  margin-left: -$spacing-sm;
-  align-self: center;
+  color: #fff;
+  opacity: 0.9;
+}
+
+// ===== 内容滚动区域 =====
+.contentScroll {
+  flex: 1;
+  padding: $spacing-md $spacing-lg;
+  padding-bottom: calc(#{$spacing-lg} + 120px);
 }
 
 // 筛选栏
 .filterBar {
-  margin-bottom: $spacing-lg;
-  background: $color-bg-card;
-  border-radius: $radius-md;
-  padding: $spacing-md;
-  box-shadow: $shadow-card;
+  margin-bottom: $spacing-md;
 }
 
 .tagFilter {
   white-space: nowrap;
-  margin-bottom: $spacing-md;
+  margin-bottom: $spacing-sm;
 }
 
 .tagFilterInner {
   display: inline-flex;
-  gap: $spacing-sm;
+  gap: $spacing-xs;
 }
 
 .filterTag {
@@ -112,9 +165,14 @@
   color: $color-text-secondary;
   background: $color-bg-hover;
   border-radius: $radius-button;
-  padding: 8rpx $spacing-md;
+  padding: 8rpx 16rpx;
   white-space: nowrap;
   transition: all $transition-base;
+  cursor: pointer;
+
+  &:active {
+    opacity: 0.8;
+  }
 
   &.filterTagActive {
     background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
@@ -136,7 +194,8 @@
   gap: $spacing-xs;
   background: $color-bg-hover;
   border-radius: $radius-button;
-  padding: 8rpx $spacing-md;
+  padding: 8rpx 16rpx;
+  cursor: pointer;
   transition: all $transition-base;
 
   &:active {
@@ -170,9 +229,9 @@
 .regionDropdown {
   display: flex;
   flex-wrap: wrap;
-  gap: $spacing-sm;
-  margin-top: $spacing-md;
-  padding-top: $spacing-md;
+  gap: $spacing-xs;
+  margin-top: $spacing-sm;
+  padding-top: $spacing-sm;
   border-top: 1rpx solid $color-divider;
 }
 
@@ -182,9 +241,14 @@
   color: $color-text-secondary;
   background: $color-bg-hover;
   border-radius: $radius-sm;
-  padding: 6rpx $spacing-sm;
+  padding: 6rpx 12rpx;
   white-space: nowrap;
   transition: all $transition-base;
+  cursor: pointer;
+
+  &:active {
+    opacity: 0.8;
+  }
 
   &.regionOptionActive {
     background: $color-primary;
@@ -192,11 +256,22 @@
   }
 }
 
-// 温暖伙伴区域（独立于善行列表）
+// 温暖伙伴
 .warmPartnerSection {
-  margin-bottom: $spacing-lg;
+  margin-bottom: $spacing-md;
 }
 
+.sectionHeader {
+  margin-bottom: $spacing-sm;
+}
+
+.sectionTitle {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
+// 善行列表
 .kindnessList {
   padding-bottom: $spacing-xl;
 }
@@ -218,172 +293,4 @@
   font-size: $font-size-md;
   color: $color-text-tertiary;
   line-height: $line-height-loose;
-}
-
-// ===== 本周圈子榜样推荐位 =====
-.exampleSection {
-  margin-bottom: $spacing-lg;
-}
-
-.exampleHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: $spacing-md;
-  padding: 0 $spacing-md;
-}
-
-.exampleTitle {
-  font-size: $font-size-lg;
-  font-weight: $font-weight-semibold;
-  color: $color-text-primary;
-}
-
-.exampleMore {
-  font-size: $font-size-sm;
-  color: $color-primary;
-  font-weight: $font-weight-medium;
-}
-
-.exampleScroll {
-  white-space: nowrap;
-}
-
-.exampleCard {
-  display: inline-block;
-  width: 560rpx;
-  margin-left: $spacing-md;
-  margin-right: $spacing-sm;
-  background: $color-bg-card;
-  border-radius: $radius-lg;
-  padding: $spacing-lg;
-  box-shadow: $shadow-card;
-  border-left: 6rpx solid $color-primary;
-  vertical-align: top;
-  white-space: normal;
-}
-
-.exampleCardHeader {
-  display: flex;
-  align-items: center;
-  gap: $spacing-sm;
-  margin-bottom: $spacing-sm;
-}
-
-.exampleAvatar {
-  width: 48rpx;
-  height: 48rpx;
-  border-radius: 24rpx;
-  object-fit: cover;
-}
-
-.exampleInfo {
-  flex: 1;
-  min-width: 0;
-}
-
-.exampleName {
-  font-size: $font-size-sm;
-  font-weight: $font-weight-semibold;
-  color: $color-text-primary;
-  display: block;
-}
-
-.exampleCircle {
-  font-size: $font-size-xs;
-  color: $color-text-tertiary;
-  display: block;
-}
-
-.exampleBadge {
-  font-size: $font-size-xs;
-  color: $color-primary;
-  background: rgba($color-primary, 0.1);
-  padding: $spacing-xs $spacing-sm;
-  border-radius: $radius-sm;
-  font-weight: $font-weight-medium;
-}
-
-.exampleContent {
-  font-size: $font-size-sm;
-  color: $color-text-secondary;
-  line-height: $line-height-normal;
-  margin-bottom: $spacing-sm;
-}
-
-.exampleComment {
-  font-size: $font-size-xs;
-  color: $color-text-tertiary;
-  background: $color-bg-muted;
-  padding: $spacing-sm;
-  border-radius: $radius-sm;
-}
-
-// ===== 善行保护入口 =====
-.protectionCard {
-  background: linear-gradient(135deg, #F5F8FF 0%, #FFFFFF 100%);
-  border-radius: $radius-lg;
-  padding: $spacing-lg;
-  margin-bottom: $spacing-lg;
-  border: 2rpx solid rgba(#1890FF, 0.15);
-}
-
-.protectionHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: $spacing-md;
-}
-
-.protectionTitle {
-  font-size: $font-size-md;
-  font-weight: $font-weight-semibold;
-  color: $color-text-primary;
-}
-
-.protectionMore {
-  font-size: $font-size-sm;
-  color: #1890FF;
-}
-
-.protectionItems {
-  display: flex;
-  justify-content: space-around;
-}
-
-.protectionItem {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: $spacing-md;
-  border-radius: $radius-md;
-  background: $color-bg-muted;
-  min-width: 160rpx;
-}
-
-.protectionItemActive {
-  background: linear-gradient(135deg, rgba(#1890FF, 0.1) 0%, rgba(#1890FF, 0.05) 100%);
-  border: 2rpx solid rgba(#1890FF, 0.3);
-}
-
-.protectionItemIcon {
-  font-size: 40rpx;
-  margin-bottom: $spacing-xs;
-}
-
-.protectionItemName {
-  font-size: $font-size-sm;
-  font-weight: $font-weight-medium;
-  color: $color-text-primary;
-  margin-bottom: $spacing-xs;
-}
-
-.protectionItemStatus {
-  font-size: $font-size-xs;
-  color: $color-text-tertiary;
-}
-
-.protectionItemActive .protectionItemStatus {
-  color: #1890FF;
-  font-weight: $font-weight-medium;
 }
