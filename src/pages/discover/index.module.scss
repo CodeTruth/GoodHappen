@@ -2,10 +2,11 @@
 
 .pageWrapper {
   height: 100vh;
+  height: 100dvh;
   display: flex;
   flex-direction: column;
   background: $color-bg-page;
-  padding-bottom: 120px; // 系统 TabBar 高度
+  box-sizing: border-box;
 }
 
 // ===== 搜索栏（顶部固定） =====
@@ -33,7 +34,7 @@
 // ===== 内容滚动区域 =====
 .contentScroll {
   flex: 1;
-  padding: $spacing-md $spacing-lg;
+  padding: $spacing-md $spacing-lg $spacing-xl;
 }
 
 // ===== 筛选栏 =====
@@ -435,7 +436,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-top: -24rpx;
+  margin-top: -28rpx;
   box-shadow: 0 6rpx 24rpx rgba(196, 149, 106, 0.5);
   cursor: pointer;
   transition: transform 0.15s;

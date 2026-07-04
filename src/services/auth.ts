@@ -195,32 +195,56 @@ export const logoutFromSupabase = async (): Promise<void> => {
 };
 
 /**
- * 检查登录状态
+ * 检查登录状态 - 演示阶段始终返回 true
  */
 export const checkLoginStatus = (): boolean => {
-  try {
-    const data = Taro.getStorageSync('haoshi_user_store');
-    if (data) {
-      const parsed = JSON.parse(data);
-      return !!(parsed.isLoggedIn && parsed.token);
-    }
-  } catch (e) {
-    console.error('[Auth] Check login status failed:', e);
-  }
-  return false;
+  return true;
 };
 
 /**
- * 需要登录的页面跳转守卫
- * 未登录时跳转登录页，登录后可继续访问
+ * 需要登录的页面跳转守卫 - 演示阶段始终放行
  */
-export const requireLogin = (redirectUrl?: string): boolean => {
-  if (checkLoginStatus()) {
-    return true;
-  }
-  const url = redirectUrl
-    ? `/pages/login/index?redirect=${encodeURIComponent(redirectUrl)}`
-    : '/pages/login/index';
-  Taro.navigateTo({ url });
-  return false;
+export const requireLogin = (_redirectUrl?: string): boolean => {
+  return true;
+};
+
+/**
+ * 游客自动登录（演示模式）
+ * 首次启动时自动创建游客身份，无需用户注册登录
+ */
+export const guestAutoLogin = (): LoginResult => {
+  const token = generateMockToken('guest');
+  const userInfo: UserInfo = {
+    id: `guest_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+    name: '温暖体验官',
+    avatar: DEFAULT_AVATAR,
+    bio: '好事发生，让每一件善行都被看见',
+    gender: 'unknown',
+    birthYear: null,
+    region: '北京市',
+    phone: '138****8888',
+    blessingValue: 100,
+    kindnessCount: 0,
+    witnessCount: 0,
+    badges: ['初心'],
+    circles: [],
+    createdAt: new Date().toISOString(),
+    emergencyContacts: [
+      {
+        id: 'ec_001',
+        name: '家人',
+        phone: '138****8888',
+        relation: '家人',
+      },
+      {
+        id: 'ec_002',
+        name: '朋友',
+        phone: '139****9999',
+        relation: '朋友',
+      },
+    ],
+  };
+
+  console.log('[Auth] Guest auto login, userId:', userInfo.id);
+  return { token, userInfo };
 };

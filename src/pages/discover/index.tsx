@@ -282,7 +282,6 @@ const DiscoverPage: React.FC = () => {
 
       {/* 底部固定分类Tab */}
       <View className={styles.bottomTabs}>
-        {/* 左侧Tab：善行 */}
         <View
           className={`${styles.bottomTabItem} ${activeTab === 'kindness' ? styles.bottomTabActive : ''}`}
           onClick={() => { setActiveTab('kindness'); setSelectedTag(''); setSelectedRegion(''); setOnlyFollowing(false); }}
@@ -291,7 +290,6 @@ const DiscoverPage: React.FC = () => {
           {activeTab === 'kindness' && <View className={styles.bottomTabLine} />}
         </View>
 
-        {/* 左侧Tab：善行圈 */}
         <View
           className={`${styles.bottomTabItem} ${activeTab === 'circle' ? styles.bottomTabActive : ''}`}
           onClick={() => { setActiveTab('circle'); setSelectedTag(''); setSelectedRegion(''); setOnlyFollowing(false); }}
@@ -308,7 +306,14 @@ const DiscoverPage: React.FC = () => {
           <Text className={styles.publishBtnIcon}>+</Text>
         </View>
 
-        {/* 右侧Tab：我的 */}
+        {/* 商城Tab */}
+        <View
+          className={`${styles.bottomTabItem} ${activeTab === 'shop' ? styles.bottomTabActive : ''}`}
+          onClick={() => Taro.navigateTo({ url: '/pages/shop/index' })}
+        >
+          <Text className={styles.bottomTabText}>商城</Text>
+        </View>
+
         <View
           className={`${styles.bottomTabItem} ${activeTab === 'mine' ? styles.bottomTabActive : ''}`}
           onClick={() => { setActiveTab('mine'); setSelectedTag(''); setSelectedRegion(''); setOnlyFollowing(false); }}

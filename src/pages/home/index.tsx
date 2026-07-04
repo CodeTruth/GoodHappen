@@ -12,7 +12,7 @@ const HOME_ACTIONS = [
   {
     id: 'protection',
     icon: '🛡️',
-    title: '正在行善',
+    title: '善行保护',
     subtitle: '立刻保护',
     desc: '一键启动录像+录音+GPS全程存证',
     gradient: 'linear-gradient(135deg, #1A73E8 0%, #4A90D9 100%)',
@@ -22,9 +22,9 @@ const HOME_ACTIONS = [
   {
     id: 'witness',
     icon: '👁️',
-    title: '看到温暖',
+    title: '善行见证',
     subtitle: '我要见证',
-    desc: '记录别人做的好事，让善意被看见',
+    desc: '记录别人的善行，让善意被看见',
     gradient: 'linear-gradient(135deg, #34A853 0%, #5BBF7A 100%)',
     shadow: 'rgba(52, 168, 83, 0.4)',
     page: '/pages/witness-record/index',
@@ -32,9 +32,9 @@ const HOME_ACTIONS = [
   {
     id: 'advisor',
     icon: '💬',
-    title: '犹豫不决',
-    subtitle: '问问AI',
-    desc: '先问问AI有没有危险，再放心行动',
+    title: '善行顾问',
+    subtitle: '先保护自己',
+    desc: '先让AI评估有没有危险，再放心行动',
     gradient: 'linear-gradient(135deg, #E67E22 0%, #F0A050 100%)',
     shadow: 'rgba(230, 126, 34, 0.4)',
     page: '/pages/ai-advisor/index',
