@@ -21,10 +21,10 @@
   align-items: center;
   justify-content: center;
   height: 100%;
-  padding: 60rpx 48rpx 120rpx;
+  padding: 60rpx 48rpx 140rpx;
 }
 
-// ===== Slogan 页 =====
+// ===== 第1页：Slogan =====
 .sloganIcon {
   font-size: 120rpx;
   margin-bottom: 32rpx;
@@ -33,95 +33,106 @@
 
 @keyframes pulse {
   0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.1); }
+  50% { transform: scale(1.08); }
 }
 
 .sloganHeadline {
-  font-size: 32rpx;
-  color: rgba(255, 255, 255, 0.8);
-  margin-bottom: 8rpx;
-  letter-spacing: 4rpx;
-}
-
-.sloganTitle {
-  font-size: 56rpx;
+  font-size: 64rpx;
   font-weight: 800;
   color: #fff;
-  text-align: center;
-  margin-bottom: 24rpx;
-  letter-spacing: 6rpx;
-  text-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.15);
+  letter-spacing: 8rpx;
+  margin-bottom: 32rpx;
+  text-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.15);
 }
 
-.sloganDesc {
-  font-size: 28rpx;
-  color: rgba(255, 255, 255, 0.9);
+.sloganText {
+  font-size: 36rpx;
+  font-weight: 600;
+  color: #fff;
   text-align: center;
-  line-height: 1.8;
+  line-height: 1.6;
   white-space: pre-line;
-}
-
-// ===== 功能介绍页 =====
-.stepHeadline {
-  font-size: 28rpx;
-  color: rgba(255, 255, 255, 0.85);
-  margin-bottom: 12rpx;
   letter-spacing: 2rpx;
 }
 
-.stepTitle {
-  font-size: 44rpx;
-  font-weight: 700;
-  color: #fff;
-  text-align: center;
-  line-height: 1.3;
-  margin-bottom: 16rpx;
+.sloganDivider {
+  width: 80rpx;
+  height: 4rpx;
+  border-radius: 2rpx;
+  background: rgba(255, 255, 255, 0.5);
+  margin: 32rpx 0;
 }
 
-.stepDesc {
+.sloganSub {
   font-size: 26rpx;
   color: rgba(255, 255, 255, 0.85);
   text-align: center;
-  line-height: 1.5;
+  line-height: 1.6;
+  letter-spacing: 1rpx;
+}
+
+// ===== 第2页：功能特性 =====
+.stepHeadline {
+  font-size: 40rpx;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 12rpx;
+  letter-spacing: 4rpx;
+}
+
+.stepSub {
+  font-size: 26rpx;
+  color: rgba(255, 255, 255, 0.85);
+  text-align: center;
   margin-bottom: 40rpx;
 }
 
-// ===== Feature 卡片列表 =====
-.features {
+.featureGrid {
   display: flex;
-  flex-direction: column;
-  gap: 16rpx;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 20rpx;
   width: 100%;
-  max-width: 560rpx;
 }
 
-.featureCard {
+.featureItem {
+  width: calc(33.33% - 14rpx);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(8rpx);
+  border-radius: 20rpx;
+  padding: 24rpx 12rpx;
+  border: 1rpx solid rgba(255, 255, 255, 0.1);
+}
+
+.featureIconWrap {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
   display: flex;
   align-items: center;
-  gap: 20rpx;
-  background: rgba(255, 255, 255, 0.18);
-  backdrop-filter: blur(10rpx);
-  border-radius: 16rpx;
-  padding: 24rpx 28rpx;
-  border: 2rpx solid rgba(255, 255, 255, 0.15);
-  transition: transform 0.2s;
-
-  &:active {
-    transform: scale(0.98);
-    background: rgba(255, 255, 255, 0.25);
-  }
+  justify-content: center;
+  margin-bottom: 12rpx;
 }
 
 .featureIcon {
-  font-size: 40rpx;
-  flex-shrink: 0;
+  font-size: 36rpx;
 }
 
-.featureText {
-  font-size: 28rpx;
+.featureLabel {
+  font-size: 24rpx;
   color: #fff;
-  font-weight: 500;
-  line-height: 1.4;
+  font-weight: 600;
+  margin-bottom: 4rpx;
+}
+
+.featureDesc {
+  font-size: 20rpx;
+  color: rgba(255, 255, 255, 0.7);
+  text-align: center;
 }
 
 // ===== 底部操作区 =====

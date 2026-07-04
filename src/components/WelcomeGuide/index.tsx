@@ -8,68 +8,26 @@ interface WelcomeGuideProps {
   onClose: () => void;
 }
 
-interface Feature {
-  icon: string;
-  text: string;
-}
-
-interface GuideStep {
-  headline: string;
-  title: string;
-  desc: string;
-  features: Feature[];
-  bg: string;
-}
-
-const GUIDE_STEPS: GuideStep[] = [
+const GUIDE_STEPS = [
   {
-    headline: '欢迎来到',
-    title: '好事发生',
-    desc: '让每一件善行都被看见\n用AI记录温暖，让善意被回应、被传承',
-    features: [],
-    bg: 'linear-gradient(135deg, #C4956A 0%, #D4A76A 100%)',
+    // ===== 第1页：Slogan =====
+    icon: '🌟',
+    headline: '好事发生',
+    slogan: '让每一件善行，\n被看见、被记录、被奖励。',
+    sub: '降低行善门槛，消除善行顾虑，给每一份善意正反馈。',
+    bg: 'linear-gradient(135deg, #C4956A 0%, #E8C9A0 100%)',
   },
   {
-    headline: '行善前犹豫？',
-    title: 'AI顾问帮你评估',
-    desc: '不确定安不安全？先问问AI',
+    // ===== 第2页：全方位善行保护 =====
+    headline: '全方位善行保护',
+    sub: '从行善前到行善后，每个环节都有保障',
     features: [
-      { icon: '💬', text: 'AI善行顾问分析现场风险' },
-      { icon: '📜', text: '8位历史人物给你智慧建议' },
-      { icon: '🔮', text: '确认安全再行动，不做盲目英雄' },
-    ],
-    bg: 'linear-gradient(135deg, #E67E22 0%, #F0A050 100%)',
-  },
-  {
-    headline: '行善中被讹？',
-    title: '全程保护不留隐患',
-    desc: '一键开启，全程自动存证',
-    features: [
-      { icon: '📹', text: '录像+录音+GPS自动存证' },
-      { icon: '🆘', text: '一键SOS紧急求助' },
-      { icon: '🛡️', text: '网络见证人实时围观' },
-    ],
-    bg: 'linear-gradient(135deg, #1A73E8 0%, #4A90D9 100%)',
-  },
-  {
-    headline: '万一被讹不用怕',
-    title: '法律保险全程兜底',
-    desc: '我们为你的善良保驾护航',
-    features: [
-      { icon: '⚖️', text: '专业律师团队法律援助' },
-      { icon: '📁', text: '完整证据链自动提交' },
-      { icon: '🏥', text: '善行保险赔付兜底' },
-    ],
-    bg: 'linear-gradient(135deg, #D4534A 0%, #E87B73 100%)',
-  },
-  {
-    headline: '善行有回报',
-    title: '善良成为流通货币',
-    desc: '每一份善意，都该被世界认可',
-    features: [
-      { icon: '✨', text: '记录善行积累福气值' },
-      { icon: '🎫', text: '福气兑换折扣券、公益商品' },
-      { icon: '🏆', text: '10级成长体系，可视化成就' },
+      { icon: '💬', label: 'AI善行顾问', desc: '行善前风险评估' },
+      { icon: '📹', label: '网络见证', desc: '录像录音GPS存证' },
+      { icon: '🛡️', label: '善行保护', desc: '一键SOS紧急求助' },
+      { icon: '⚖️', label: '法律援助', desc: '专业律师兜底' },
+      { icon: '🏥', label: '善行保险', desc: '赔付保障无后顾' },
+      { icon: '✨', label: '福气回报', desc: '善行兑换商品折扣' },
     ],
     bg: 'linear-gradient(135deg, #34A853 0%, #5BBF7A 100%)',
   },
@@ -82,7 +40,6 @@ const WelcomeGuide: React.FC<WelcomeGuideProps> = ({ visible, onClose }) => {
 
   const isLast = current === GUIDE_STEPS.length - 1;
   const step = GUIDE_STEPS[current];
-  const isSlogan = current === 0;
 
   const handleSkip = () => {
     Taro.setStorageSync('haoshi_welcome_shown', 'true');
@@ -108,26 +65,28 @@ const WelcomeGuide: React.FC<WelcomeGuideProps> = ({ visible, onClose }) => {
         {GUIDE_STEPS.map((s, idx) => (
           <SwiperItem key={idx}>
             <View className={styles.slide} style={{ background: s.bg }}>
-              {/* Slogan 页特殊布局 */}
               {idx === 0 ? (
+                /* ===== 第1页：Slogan ===== */
                 <>
-                  <Text className={styles.sloganIcon}>🌟</Text>
+                  <Text className={styles.sloganIcon}>{s.icon}</Text>
                   <Text className={styles.sloganHeadline}>{s.headline}</Text>
-                  <Text className={styles.sloganTitle}>{s.title}</Text>
-                  <Text className={styles.sloganDesc}>{s.desc}</Text>
+                  <Text className={styles.sloganText}>{s.slogan}</Text>
+                  <View className={styles.sloganDivider} />
+                  <Text className={styles.sloganSub}>{s.sub}</Text>
                 </>
               ) : (
+                /* ===== 第2页：功能特性 ===== */
                 <>
                   <Text className={styles.stepHeadline}>{s.headline}</Text>
-                  <Text className={styles.stepTitle}>{s.title}</Text>
-                  <Text className={styles.stepDesc}>{s.desc}</Text>
-
-                  {/* Feature 卡片 */}
-                  <View className={styles.features}>
+                  <Text className={styles.stepSub}>{s.sub}</Text>
+                  <View className={styles.featureGrid}>
                     {s.features.map((f, fidx) => (
-                      <View key={fidx} className={styles.featureCard}>
-                        <Text className={styles.featureIcon}>{f.icon}</Text>
-                        <Text className={styles.featureText}>{f.text}</Text>
+                      <View key={fidx} className={styles.featureItem}>
+                        <View className={styles.featureIconWrap}>
+                          <Text className={styles.featureIcon}>{f.icon}</Text>
+                        </View>
+                        <Text className={styles.featureLabel}>{f.label}</Text>
+                        <Text className={styles.featureDesc}>{f.desc}</Text>
                       </View>
                     ))}
                   </View>
@@ -155,7 +114,7 @@ const WelcomeGuide: React.FC<WelcomeGuideProps> = ({ visible, onClose }) => {
           )}
           <View className={styles.nextBtn} onClick={handleNext}>
             <Text className={styles.nextBtnText}>
-              {isSlogan ? '了解如何保护善行者' : isLast ? '开始善行之旅' : '下一步'}
+              {isLast ? '开始体验' : '了解更多'}
             </Text>
           </View>
         </View>
