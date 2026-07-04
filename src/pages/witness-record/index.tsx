@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+﻿import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { View, Text, Image, Textarea, Camera, ScrollView } from '@tarojs/components';
 import Taro from '@tarojs/taro';
 import { useKindnessStore } from '@/store/kindness';
@@ -68,6 +68,31 @@ export default function WitnessRecordPage() {
     };
   }, []);
 
+  // ===== 页面显示时重置状态（重新进入时清空旧数据） =====
+  useEffect(() => {
+    Taro.useDidShow(() => {
+      setPhotos([]);
+      setVideoUrl('');
+      setIsRecording(false);
+      setRecordTime(0);
+      setShowPublish(false);
+      setDescription('');
+      setCameraError('');
+      setLocation(null);
+      setLocationError('');
+      if (recordTimerRef.current) {
+        clearInterval(recordTimerRef.current);
+        recordTimerRef.current = null;
+      }
+      if (mediaRecorderRef.current) {
+        try {
+          mediaRecorderRef.current.stop();
+        } catch (_) {}
+        mediaRecorderRef.current = null;
+      }
+    });
+  }, []);
+
   // ===== 获取GPS位置 =====
   useEffect(() => {
     Taro.getLocation({
@@ -119,40 +144,77 @@ export default function WitnessRecordPage() {
     });
   }, []);
 
-  // ===== 开始/停止录像（H5） =====
+  // ===== 获取浏览器支持的最佳视频格式 =====
+  const getBestVideoFormat = () => {
+    if (!isH5 || !MediaRecorder) return 'video/webm';
+    const formats = ['video/mp4', 'video/webm', 'video/ogg'];
+    for (const format of formats) {
+      if (MediaRecorder.isTypeSupported(format)) return format;
+    }
+    return 'video/webm';
+  };
+
+// ===== 开始/停止录像（H5） =====
   const toggleRecord = useCallback(() => {
     if (!isH5) return;
 
     if (isRecording) {
       if (mediaRecorderRef.current) {
-        mediaRecorderRef.current.stop();
+        try {
+          mediaRecorderRef.current.stop();
+        } catch (err) {
+          console.warn('[WitnessRecord] Stop recording error:', err);
+        }
       }
-      clearInterval(recordTimerRef.current);
+      if (recordTimerRef.current) {
+        clearInterval(recordTimerRef.current);
+        recordTimerRef.current = null;
+      }
       setIsRecording(false);
     } else {
       const video = videoRef.current;
-      if (!video || !video.srcObject) return;
+      if (!video || !video.srcObject) {
+        Taro.showToast({ title: '摄像头未就绪', icon: 'none' });
+        return;
+      }
 
-      recordedChunksRef.current = [];
-      const mediaRecorder = new MediaRecorder(video.srcObject as MediaStream);
-      mediaRecorderRef.current = mediaRecorder;
+      try {
+        recordedChunksRef.current = [];
+        const format = getBestVideoFormat();
+        const mediaRecorder = new MediaRecorder(video.srcObject as MediaStream, { mimeType: format });
+        mediaRecorderRef.current = mediaRecorder;
 
-      mediaRecorder.ondataavailable = (e: any) => {
-        if (e.data.size > 0) recordedChunksRef.current.push(e.data);
-      };
+        mediaRecorder.ondataavailable = (e: any) => {
+          if (e.data.size > 0) recordedChunksRef.current.push(e.data);
+        };
 
-      mediaRecorder.onstop = () => {
-        const blob = new Blob(recordedChunksRef.current, { type: 'video/webm' });
-        const url = URL.createObjectURL(blob);
-        setVideoUrl(url);
-      };
+        mediaRecorder.onstop = () => {
+          if (recordedChunksRef.current.length > 0) {
+            const blob = new Blob(recordedChunksRef.current, { type: format });
+            const url = URL.createObjectURL(blob);
+            setVideoUrl(url);
+            Taro.showToast({ title: '录像已保存', icon: 'success' });
+          } else {
+            Taro.showToast({ title: '录像内容为空', icon: 'none' });
+          }
+        };
 
-      mediaRecorder.start();
-      setIsRecording(true);
-      setRecordTime(0);
-      recordTimerRef.current = setInterval(() => {
-        setRecordTime(t => t + 1);
-      }, 1000);
+        mediaRecorder.onerror = (err: any) => {
+          console.warn('[WitnessRecord] Recording error:', err);
+          Taro.showToast({ title: '录像失败', icon: 'none' });
+          setIsRecording(false);
+        };
+
+        mediaRecorder.start(1000);
+        setIsRecording(true);
+        setRecordTime(0);
+        recordTimerRef.current = setInterval(() => {
+          setRecordTime(t => t + 1);
+        }, 1000);
+      } catch (err) {
+        console.warn('[WitnessRecord] MediaRecorder not supported:', err);
+        Taro.showToast({ title: '当前浏览器不支持录像', icon: 'none' });
+      }
     }
   }, [isRecording]);
 

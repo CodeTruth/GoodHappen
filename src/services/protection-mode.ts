@@ -9,6 +9,8 @@
  * - 手表/手环端：极简模式（SOS+震动+GPS+简短录音）
  */
 
+import Taro from '@tarojs/taro';
+
 // ============================================
 // 类型定义
 // ============================================
@@ -195,29 +197,156 @@ export const createSession = (
   _currentSession = session;
   _notifyListeners();
 
-  // 模拟启动过程
-  setTimeout(() => {
-    if (_currentSession?.id === session.id && _currentSession.status === 'starting') {
-      _currentSession = {
-        ..._currentSession,
-        status: 'active',
-        isRecording: deviceType === 'phone',
-        isAudioRecording: true,
-        currentGps: {
-          latitude: 39.9045,
-          longitude: 116.4078,
-          address: '当前位置（模拟）',
-          accuracy: 10,
-          updatedAt: new Date().toISOString(),
-        },
-      };
-      _startTracking();
-      _notifyListeners();
-    }
-  }, 1500);
+  _initDeviceResources(session.id, deviceType);
 
   return session;
 };
+
+/**
+ * 初始化设备资源（GPS、麦克风）
+ */
+async function _initDeviceResources(sessionId: string, deviceType: DeviceType) {
+  try {
+    await _initGPS(sessionId);
+    await _initAudioRecording(sessionId);
+  } catch (err) {
+    console.warn('[ProtectionMode] Device init failed:', err);
+  }
+
+  if (_currentSession?.id === sessionId && _currentSession.status === 'starting') {
+    _currentSession = {
+      ..._currentSession,
+      status: 'active',
+      isRecording: deviceType === 'phone',
+      isAudioRecording: true,
+    };
+    _startTracking();
+    _notifyListeners();
+  }
+}
+
+/**
+ * 初始化GPS定位
+ */
+async function _initGPS(sessionId: string): Promise<void> {
+  return new Promise((resolve) => {
+    Taro.getLocation({
+      type: 'gcj02',
+      success: (res) => {
+        if (_currentSession?.id === sessionId) {
+          _currentSession = {
+            ..._currentSession,
+            currentGps: {
+              latitude: res.latitude,
+              longitude: res.longitude,
+              address: '当前位置',
+              accuracy: res.accuracy || 10,
+              updatedAt: new Date().toISOString(),
+            },
+            gpsTrackPoints: 1,
+            evidenceCollected: {
+              ..._currentSession.evidenceCollected,
+              gpsPoints: 1,
+            },
+          };
+          _notifyListeners();
+        }
+        resolve();
+      },
+      fail: () => {
+        if (_currentSession?.id === sessionId) {
+          _currentSession = {
+            ..._currentSession,
+            currentGps: {
+              latitude: 39.9045,
+              longitude: 116.4078,
+              address: '定位失败（使用默认位置）',
+              accuracy: 50,
+              updatedAt: new Date().toISOString(),
+            },
+            gpsTrackPoints: 1,
+            evidenceCollected: {
+              ..._currentSession.evidenceCollected,
+              gpsPoints: 1,
+            },
+          };
+          _notifyListeners();
+        }
+        resolve();
+      },
+    });
+  });
+}
+
+let _h5AudioRecorder: MediaRecorder | null = null;
+let _h5AudioChunks: Blob[] = [];
+
+/**
+ * 初始化录音
+ */
+async function _initAudioRecording(_sessionId: string): Promise<void> {
+  return new Promise((resolve) => {
+    if (typeof window !== 'undefined' && navigator.mediaDevices) {
+      _h5AudioChunks = [];
+      navigator.mediaDevices.getUserMedia({ audio: true })
+        .then(stream => {
+          try {
+            const mediaRecorder = new MediaRecorder(stream);
+            _h5AudioRecorder = mediaRecorder;
+
+            mediaRecorder.ondataavailable = (e) => {
+              if (e.data.size > 0) {
+                _h5AudioChunks.push(e.data);
+              }
+            };
+
+            mediaRecorder.onstart = () => {
+              console.log('[ProtectionMode] H5 Audio recording started');
+              resolve();
+            };
+
+            mediaRecorder.onerror = () => {
+              console.warn('[ProtectionMode] H5 Audio recording failed to start');
+              resolve();
+            };
+
+            mediaRecorder.start(1000);
+          } catch (err) {
+            console.warn('[ProtectionMode] H5 MediaRecorder not supported:', err);
+            resolve();
+          }
+        })
+        .catch(() => {
+          console.warn('[ProtectionMode] H5 Audio permission denied');
+          resolve();
+        });
+    } else {
+      const recorderManager = Taro.getRecorderManager();
+
+      recorderManager.start({
+        duration: PROTECTION_MODE_CONFIG.AUDIO_MAX_DURATION_MINUTES * 60 * 1000,
+        sampleRate: 44100,
+        numberOfChannels: 1,
+        encodeBitRate: 192000,
+        format: 'mp3',
+      });
+
+      recorderManager.onStart(() => {
+        console.log('[ProtectionMode] Audio recording started');
+        resolve();
+      });
+
+      recorderManager.onError(() => {
+        console.warn('[ProtectionMode] Audio recording failed to start');
+        resolve();
+      });
+
+      setTimeout(() => {
+        resolve();
+      }, 500);
+    }
+  });
+}
 
 /**
  * 暂停保护
@@ -275,17 +404,43 @@ export const triggerSOS = (reason?: string): ProtectionSession | null => {
 export const closeSession = (): ProtectionSession | null => {
   if (!_currentSession) return null;
   _stopTracking();
-  _currentSession = {
+  _stopAudioRecording();
+  const closed = {
     ..._currentSession,
-    status: 'closed',
+    status: 'closed' as ProtectionModeStatus,
     closedAt: new Date().toISOString(),
     isRecording: false,
     isAudioRecording: false,
   };
-  const closed = { ..._currentSession };
+  _currentSession = null;
   _notifyListeners();
   return closed;
 };
+
+/**
+ * 停止录音
+ */
+function _stopAudioRecording() {
+  if (typeof window !== 'undefined' && _h5AudioRecorder) {
+    try {
+      _h5AudioRecorder.stop();
+      const tracks = _h5AudioRecorder.stream.getTracks();
+      tracks.forEach(track => track.stop());
+      _h5AudioRecorder = null;
+      console.log('[ProtectionMode] H5 Audio recording stopped');
+    } catch (e) {
+      console.warn('[ProtectionMode] Failed to stop H5 audio recording:', e);
+    }
+  } else {
+    try {
+      const recorderManager = Taro.getRecorderManager();
+      recorderManager.stop();
+      console.log('[ProtectionMode] Audio recording stopped');
+    } catch (e) {
+      console.warn('[ProtectionMode] Failed to stop audio recording:', e);
+    }
+  }
+}
 
 /**
  * 获取当前会话
@@ -315,25 +470,53 @@ export const takeProtectionPhoto = (): ProtectionSession | null => {
 // ============================================
 
 function _startTracking() {
-  // GPS追踪
+  // GPS追踪 - 真实获取位置
   _gpsTimer = setInterval(() => {
     if (!_currentSession || _currentSession.status === 'closed') {
       _stopTracking();
       return;
     }
     if (_currentSession.status === 'active' || _currentSession.status === 'sos') {
-      _currentSession = {
-        ..._currentSession,
-        gpsTrackPoints: _currentSession.gpsTrackPoints + 1,
-        evidenceCollected: {
-          ..._currentSession.evidenceCollected,
-          gpsPoints: _currentSession.evidenceCollected.gpsPoints + 1,
+      Taro.getLocation({
+        type: 'gcj02',
+        success: (res) => {
+          if (_currentSession && (_currentSession.status === 'active' || _currentSession.status === 'sos')) {
+            _currentSession = {
+              ..._currentSession,
+              gpsTrackPoints: _currentSession.gpsTrackPoints + 1,
+              evidenceCollected: {
+                ..._currentSession.evidenceCollected,
+                gpsPoints: _currentSession.evidenceCollected.gpsPoints + 1,
+              },
+              currentGps: {
+                latitude: res.latitude,
+                longitude: res.longitude,
+                address: '当前位置',
+                accuracy: res.accuracy || 10,
+                updatedAt: new Date().toISOString(),
+              },
+            };
+            _notifyListeners();
+          }
         },
-        currentGps: _currentSession.currentGps ? {
-          ..._currentSession.currentGps,
-          updatedAt: new Date().toISOString(),
-        } : undefined,
-      };
+        fail: () => {
+          if (_currentSession && (_currentSession.status === 'active' || _currentSession.status === 'sos')) {
+            _currentSession = {
+              ..._currentSession,
+              gpsTrackPoints: _currentSession.gpsTrackPoints + 1,
+              evidenceCollected: {
+                ..._currentSession.evidenceCollected,
+                gpsPoints: _currentSession.evidenceCollected.gpsPoints + 1,
+              },
+              currentGps: _currentSession.currentGps ? {
+                ..._currentSession.currentGps,
+                updatedAt: new Date().toISOString(),
+              } : undefined,
+            };
+            _notifyListeners();
+          }
+        },
+      });
     }
   }, PROTECTION_MODE_CONFIG.GPS_TRACK_INTERVAL_MS);
 
@@ -357,10 +540,9 @@ function _startTracking() {
             : _currentSession.evidenceCollected.audioDuration,
         },
       };
+      _notifyListeners();
     }
   }, 1000);
-
-  _notifyListeners();
 }
 
 function _stopTracking() {

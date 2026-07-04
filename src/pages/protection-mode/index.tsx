@@ -1,6 +1,9 @@
-import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { View, Text } from '@tarojs/components';
+﻿import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { View, Text, Camera } from '@tarojs/components';
 import Taro from '@tarojs/taro';
+
+const isH5 = typeof window !== 'undefined';
+
 import {
   createSession,
   pauseSession,
@@ -67,6 +70,13 @@ export default function ProtectionModePage() {
 
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const demoEndTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const cameraCtxRef = useRef<Taro.CameraContext | null>(null);
+  const videoRef = useRef<any>(null);
+  const canvasRef = useRef<any>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const recordedChunksRef = useRef<Blob[]>([]);
+
+  const [cameraReady, setCameraReady] = useState(false);
 
   // 读取跳转来源和演示模式参数
   useEffect(() => {
@@ -98,6 +108,20 @@ export default function ProtectionModePage() {
         demoEndTimerRef.current = null;
       }
     };
+  }, []);
+
+  useEffect(() => {
+    Taro.useDidShow(() => {
+      const current = getCurrentSession();
+      if (!current) {
+        setSession(null);
+        setInitSteps([
+          { key: 'gps', label: 'GPS定位中', ready: false },
+          { key: 'camera', label: '摄像头就绪', ready: false },
+          { key: 'mic', label: '麦克风就绪', ready: false },
+        ]);
+      }
+    });
   }, []);
 
   // 演示模式：自动开始初始化（跳过确认弹窗）
@@ -138,32 +162,88 @@ export default function ProtectionModePage() {
     return unsubscribe;
   }, []);
 
-  // starting 状态下模拟初始化进度
+  // H5 端初始化摄像头
   useEffect(() => {
-    if (session?.status !== 'starting') {
-      // 非starting时重置
-      if (session?.status === 'idle' || session?.status === 'closed') {
-        setInitSteps([
-          { key: 'gps', label: 'GPS定位中', ready: false },
-          { key: 'camera', label: '摄像头就绪', ready: false },
-          { key: 'mic', label: '麦克风就绪', ready: false },
-        ]);
+    if (!isH5) return;
+    if (session?.status !== 'starting' && session?.status !== 'active') {
+      if (videoRef.current?.srcObject) {
+        const tracks = (videoRef.current.srcObject as MediaStream).getTracks();
+        tracks.forEach((t: any) => t.stop());
       }
       return;
     }
 
-    const timers: ReturnType<typeof setTimeout>[] = [];
-    timers.push(setTimeout(() => {
-      setInitSteps(prev => prev.map(s => s.key === 'gps' ? { ...s, ready: true, label: 'GPS已连接' } : s));
-    }, 400));
-    timers.push(setTimeout(() => {
-      setInitSteps(prev => prev.map(s => s.key === 'camera' ? { ...s, ready: true, label: '摄像头已就绪' } : s));
-    }, 800));
-    timers.push(setTimeout(() => {
-      setInitSteps(prev => prev.map(s => s.key === 'mic' ? { ...s, ready: true, label: '麦克风已就绪' } : s));
-    }, 1200));
+    const initCamera = async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: 'environment' },
+          audio: true,
+        });
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          videoRef.current.play();
+          setCameraReady(true);
+          setInitSteps(prev => prev.map(s => s.key === 'camera' ? { ...s, ready: true, label: '摄像头已就绪' } : s));
+        }
+      } catch (err) {
+        console.warn('[ProtectionMode] H5 camera init failed:', err);
+      }
+    };
 
-    return () => timers.forEach(t => clearTimeout(t));
+    initCamera();
+
+    return () => {
+      if (videoRef.current?.srcObject) {
+        const tracks = (videoRef.current.srcObject as MediaStream).getTracks();
+        tracks.forEach((t: any) => t.stop());
+      }
+    };
+  }, [session?.status]);
+
+  // 启动/停止录像
+  useEffect(() => {
+    if (!isH5) {
+      if (!cameraCtxRef.current) cameraCtxRef.current = Taro.createCameraContext();
+      if (session?.status === 'active') {
+        cameraCtxRef.current.startRecord({
+          success: () => console.log('[ProtectionMode] Video started'),
+          fail: () => console.warn('[ProtectionMode] Video start failed'),
+        });
+      } else if (session?.status === 'closed' || session?.status === 'paused') {
+        cameraCtxRef.current.stopRecord({
+          success: (res) => console.log('[ProtectionMode] Video stopped:', res.tempVideoPath),
+          fail: () => console.warn('[ProtectionMode] Video stop failed'),
+        });
+      }
+    } else {
+      if (session?.status === 'active') {
+        const video = videoRef.current;
+        if (video && video.srcObject) {
+          try {
+            recordedChunksRef.current = [];
+            const mediaRecorder = new MediaRecorder(video.srcObject as MediaStream);
+            mediaRecorderRef.current = mediaRecorder;
+            mediaRecorder.ondataavailable = (e) => {
+              if (e.data.size > 0) recordedChunksRef.current.push(e.data);
+            };
+            mediaRecorder.onstart = () => console.log('[ProtectionMode] H5 Video started');
+            mediaRecorder.onstop = () => {
+              const blob = new Blob(recordedChunksRef.current, { type: 'video/webm' });
+              console.log('[ProtectionMode] H5 Video stopped:', blob.size);
+            };
+            mediaRecorder.onerror = () => console.warn('[ProtectionMode] H5 Video error');
+            mediaRecorder.start(1000);
+          } catch (err) {
+            console.warn('[ProtectionMode] H5 MediaRecorder not supported:', err);
+          }
+        }
+      } else if (session?.status === 'closed' || session?.status === 'paused') {
+        if (mediaRecorderRef.current) {
+          try { mediaRecorderRef.current.stop(); mediaRecorderRef.current = null; }
+          catch (err) { console.warn('[ProtectionMode] H5 Video stop error:', err); }
+        }
+      }
+    }
   }, [session?.status]);
 
   // SOS 倒计时
@@ -222,9 +302,45 @@ export default function ProtectionModePage() {
 
   /** 拍照取证 */
   const handlePhoto = useCallback(() => {
-    const result = takeProtectionPhoto();
-    if (result) {
-      Taro.showToast({ title: '拍照取证成功', icon: 'success' });
+    if (isH5) {
+      const video = videoRef.current;
+      const canvas = canvasRef.current;
+      if (!video || !canvas) {
+        Taro.showToast({ title: '拍照失败', icon: 'none' });
+        return;
+      }
+
+      canvas.width = video.videoWidth || 1280;
+      canvas.height = video.videoHeight || 720;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        Taro.showToast({ title: '拍照失败', icon: 'none' });
+        return;
+      }
+
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+      console.log('[ProtectionMode] H5 photo captured:', dataUrl.length);
+      const result = takeProtectionPhoto();
+      if (result) {
+        Taro.showToast({ title: '拍照取证成功', icon: 'success' });
+      }
+    } else {
+      if (!cameraCtxRef.current) {
+        cameraCtxRef.current = Taro.createCameraContext();
+      }
+      cameraCtxRef.current.takePhoto({
+        quality: 'high',
+        success: () => {
+          const result = takeProtectionPhoto();
+          if (result) {
+            Taro.showToast({ title: '拍照取证成功', icon: 'success' });
+          }
+        },
+        fail: () => {
+          Taro.showToast({ title: '拍照失败', icon: 'none' });
+        },
+      });
     }
   }, []);
 
@@ -347,6 +463,16 @@ export default function ProtectionModePage() {
     Taro.navigateTo({ url: '/pages/witness-network/index' });
   }, []);
 
+  /** 开始新保护 */
+  const handleStartNew = useCallback(() => {
+    setSession(null);
+    setInitSteps([
+      { key: 'gps', label: 'GPS定位中', ready: false },
+      { key: 'camera', label: '摄像头就绪', ready: false },
+      { key: 'mic', label: '麦克风就绪', ready: false },
+    ]);
+  }, []);
+
   const status = session?.status || 'idle';
 
   // ============================================
@@ -426,10 +552,43 @@ export default function ProtectionModePage() {
   // ============================================
   const renderStarting = () => (
     <View className={styles.idleSection}>
-      <View className={styles.circleBtnWrap}>
-        <View className={styles.circleBtnStarting}>
-          <View className={styles.startingSpinner} />
-          <Text className={styles.startingText}>初始化中...</Text>
+      <View className={styles.cameraPreviewArea}>
+        {isH5 ? (
+          <>
+            {cameraReady ? (
+              <video
+                ref={videoRef}
+                className={styles.videoPreview}
+                autoPlay
+                playsInline
+                muted
+              />
+            ) : (
+              <View className={styles.cameraLoading}>
+                <Text className={styles.cameraLoadingIcon}>📷</Text>
+                <Text className={styles.cameraLoadingText}>正在打开摄像头...</Text>
+              </View>
+            )}
+            <canvas ref={canvasRef} style={{ display: 'none' }} />
+          </>
+        ) : (
+          <Camera
+            className={styles.cameraPreview}
+            devicePosition="back"
+            flash="auto"
+            resolution="high"
+            onReady={() => {
+              cameraCtxRef.current = Taro.createCameraContext();
+            }}
+          />
+        )}
+        <View className={styles.cameraOverlay}>
+          <View className={styles.circleBtnWrap}>
+            <View className={styles.circleBtnStarting}>
+              <View className={styles.startingSpinner} />
+              <Text className={styles.startingText}>初始化中...</Text>
+            </View>
+          </View>
         </View>
       </View>
 
@@ -459,6 +618,36 @@ export default function ProtectionModePage() {
             <Text className={styles.demoBadgeText}>演示模式 - 保护中（3分钟后自动结束）</Text>
           </View>
         )}
+
+        <View className={styles.cameraPreviewArea}>
+          {isH5 ? (
+            <video
+              ref={videoRef}
+              className={styles.videoPreview}
+              autoPlay
+              playsInline
+              muted
+            />
+          ) : (
+            <Camera
+              className={styles.cameraPreview}
+              devicePosition="back"
+              flash="auto"
+              resolution="high"
+              onReady={() => {
+                cameraCtxRef.current = Taro.createCameraContext();
+              }}
+            />
+          )}
+          <View className={styles.cameraInfoOverlay}>
+            <View className={styles.recordingIndicator}>
+              <View className={styles.recordingDot} />
+              <Text className={styles.recordingText}>REC</Text>
+            </View>
+            <Text className={styles.cameraTime}>{formatDuration(session.duration)}</Text>
+          </View>
+        </View>
+
         <View className={styles.circleBtnWrap}>
           <View className={styles.circleBtnActive}>
             <Text className={styles.activeTimer}>{formatDuration(session.duration)}</Text>
@@ -638,6 +827,9 @@ export default function ProtectionModePage() {
         </View>
 
         <View className={styles.closedBar}>
+          <View className={`${styles.closedBtn} ${styles.closedBtnNew}`} onClick={handleStartNew}>
+            <Text>{'\u{1F6E1}\uFE0F'} 开始新保护</Text>
+          </View>
           <View className={`${styles.closedBtn} ${styles.closedBtnRecord}`} onClick={handleGoRecord}>
             <Text>{'\u{1F4DD}'} {isDemo ? '去记录善行' : '记录善行'}</Text>
           </View>

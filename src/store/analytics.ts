@@ -296,6 +296,41 @@ export const useAnalyticsStore = create<AnalyticsState>((set, get) => ({
       .map((m) => ({ date: m.date, count: m.kindnessCount }));
   },
 
+  // 获取平台累计善行总数
+  getTotalKindnessCount: () => {
+    const state = get();
+    const historicalTotal = state.dailyMetrics.reduce((sum, m) => sum + m.kindnessCount, 0);
+    return historicalTotal + state.todayCounters.kindnessPublished;
+  },
+
+  // 获取今日活跃用户数（模拟）
+  getTodayActiveUsers: () => {
+    const state = get();
+    const todayMetric = state.getTodayMetric();
+    return todayMetric.dau || 3842;
+  },
+
+  // 获取已保护善行人数（模拟）
+  getProtectedUsersCount: () => {
+    const state = get();
+    const base = 2156;
+    const additional = state.dailyMetrics.reduce((sum, m) => sum + Math.floor(m.kindnessCount * 0.02), 0);
+    return base + additional;
+  },
+
+  // 获取被见证/认可次数（模拟）
+  getWitnessedCount: () => {
+    const state = get();
+    const base = 45238;
+    const additional = state.dailyMetrics.reduce((sum, m) => sum + Math.floor(m.kindnessCount * 0.35), 0);
+    return base + additional;
+  },
+
+  // 获取实时在线行善人数（模拟随机波动）
+  getRealtimeActiveCount: () => {
+    return 120 + Math.floor(Math.random() * 80);
+  },
+
   // 更新温暖指标
   updateWarmthMetrics: (metrics) => {
     set((state) => ({

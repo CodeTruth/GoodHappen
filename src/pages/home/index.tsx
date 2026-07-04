@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, Text } from '@tarojs/components';
 import Taro from '@tarojs/taro';
 import { useUserStore } from '@/store/user';
 import { useKindnessStore } from '@/store/kindness';
 import { useNotificationStore } from '@/store/notification';
+import { useAnalyticsStore } from '@/store/analytics';
 import WelcomeGuide from '@/components/WelcomeGuide';
 import styles from './index.module.scss';
 
-// ===== 三大行动卡片 =====
 const HOME_ACTIONS = [
   {
     id: 'protection',
@@ -41,6 +41,20 @@ const HOME_ACTIONS = [
   },
 ];
 
+const STATS_CONFIG = [
+  { key: 'total', icon: '📊', label: '平台累计善行', suffix: '次', growthInterval: 3000 },
+  { key: 'today', icon: '👥', label: '今日善行', suffix: '人', growthInterval: 8000, max: 12000 },
+  { key: 'protected', icon: '🛡️', label: '已保护善行', suffix: '人', growthInterval: 12000 },
+  { key: 'witnessed', icon: '❤️', label: '被见证认可', suffix: '次', growthInterval: 2000 },
+];
+
+const formatNumber = (num: number): string => {
+  if (num >= 10000) {
+    return (num / 10000).toFixed(1) + '万';
+  }
+  return num.toLocaleString('zh-CN');
+};
+
 const HomePage: React.FC = () => {
   useEffect(() => {
     try {
@@ -53,9 +67,25 @@ const HomePage: React.FC = () => {
   }, []);
 
   const [showWelcome, setShowWelcome] = useState(false);
+  const [realtimeCount, setRealtimeCount] = useState(0);
+  const [displayedStats, setDisplayedStats] = useState({
+    total: 0,
+    today: 0,
+    protected: 0,
+    witnessed: 0,
+  });
+
   const { loadFromStorage: loadUser } = useUserStore();
   const { loadFromStorage: loadKindness } = useKindnessStore();
   const { loadFromStorage: loadNotification, loadMockData: loadMockNotification, cleanupExpired } = useNotificationStore();
+  const {
+    loadFromStorage: loadAnalytics,
+    getTotalKindnessCount,
+    getTodayActiveUsers,
+    getProtectedUsersCount,
+    getWitnessedCount,
+    getRealtimeActiveCount,
+  } = useAnalyticsStore();
 
   useEffect(() => {
     loadUser();
@@ -63,9 +93,45 @@ const HomePage: React.FC = () => {
     loadNotification();
     loadMockNotification();
     cleanupExpired();
+    loadAnalytics();
 
     const welcomeShown = Taro.getStorageSync('haoshi_welcome_shown');
     if (!welcomeShown) setShowWelcome(true);
+
+    setRealtimeCount(getRealtimeActiveCount());
+
+    const initialStats = {
+      total: getTotalKindnessCount() || 128643,
+      today: getTodayActiveUsers() || 3842,
+      protected: getProtectedUsersCount() || 2156,
+      witnessed: getWitnessedCount() || 45238,
+    };
+    setDisplayedStats(initialStats);
+  }, []);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setRealtimeCount(getRealtimeActiveCount());
+    }, 10000);
+    return () => clearInterval(timer);
+  }, [getRealtimeActiveCount]);
+
+  useEffect(() => {
+    STATS_CONFIG.forEach(config => {
+      const scheduleGrowth = () => {
+        const interval = config.growthInterval + Math.random() * 3000;
+        setTimeout(() => {
+          setDisplayedStats(prev => {
+            const current = prev[config.key] || 0;
+            const increment = Math.floor(Math.random() * 3) + 1;
+            const newValue = config.max ? Math.min(current + increment, config.max) : current + increment;
+            return { ...prev, [config.key]: newValue };
+          });
+          scheduleGrowth();
+        }, interval);
+      };
+      scheduleGrowth();
+    });
   }, []);
 
   const handleAction = (action: typeof HOME_ACTIONS[0]) => {
@@ -76,13 +142,27 @@ const HomePage: React.FC = () => {
     <View className={styles.page}>
       <WelcomeGuide visible={showWelcome} onClose={() => setShowWelcome(false)} />
 
-      {/* Slogan — 极简 */}
-      <View className={styles.slogan}>
-        <Text className={styles.sloganEmoji}>✨</Text>
-        <Text className={styles.sloganText}>让每一件善行都被看见</Text>
+      <View className={styles.statsSection}>
+        <View className={styles.statsGrid}>
+          {STATS_CONFIG.map((stat, index) => (
+            <View key={stat.key} className={styles.statCard} style={{ animationDelay: `${index * 0.1}s` }}>
+              <View className={styles.statIcon}>{stat.icon}</View>
+              <View className={styles.statContent}>
+                <Text className={styles.statNumber}>{formatNumber(displayedStats[stat.key as keyof typeof displayedStats])}</Text>
+                <Text className={styles.statLabel}>{stat.label}</Text>
+              </View>
+            </View>
+          ))}
+        </View>
+
+        <View className={styles.realtimeBar}>
+          <Text className={styles.realtimeIcon}>✨</Text>
+          <Text className={styles.realtimeText}>当前有 </Text>
+          <Text className={styles.realtimeNumber}>{realtimeCount}</Text>
+          <Text className={styles.realtimeText}> 人行善中...</Text>
+        </View>
       </View>
 
-      {/* 三大行动卡片 */}
       <View className={styles.actions}>
         {HOME_ACTIONS.map((action) => (
           <View
@@ -104,7 +184,6 @@ const HomePage: React.FC = () => {
         ))}
       </View>
 
-      {/* 底部点缀 — 看一眼发现入口 */}
       <View className={styles.footer}>
         <Text className={styles.footerText}>
           看看别人做了什么好事
