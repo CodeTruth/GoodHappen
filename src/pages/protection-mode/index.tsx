@@ -111,17 +111,15 @@ export default function ProtectionModePage() {
   }, []);
 
   useEffect(() => {
-    Taro.useDidShow(() => {
-      const current = getCurrentSession();
-      if (!current) {
-        setSession(null);
-        setInitSteps([
-          { key: 'gps', label: 'GPS定位中', ready: false },
-          { key: 'camera', label: '摄像头就绪', ready: false },
-          { key: 'mic', label: '麦克风就绪', ready: false },
-        ]);
-      }
-    });
+    const current = getCurrentSession();
+    if (!current) {
+      setSession(null);
+      setInitSteps([
+        { key: 'gps', label: 'GPS定位中', ready: false },
+        { key: 'camera', label: '摄像头就绪', ready: false },
+        { key: 'mic', label: '麦克风就绪', ready: false },
+      ]);
+    }
   }, []);
 
   // 演示模式：自动开始初始化（跳过确认弹窗）
