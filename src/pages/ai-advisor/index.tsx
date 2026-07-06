@@ -2,14 +2,16 @@ import { useState, useCallback, useRef, useEffect } from 'react'
 import { View, Text, ScrollView, Textarea } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import {
-  consultAIAdvisor,
+  consultAIAdvisorFull,
   ADVICE_LEVEL_CONFIG,
   type UserProfile,
   type EnvironmentContext,
   type SubjectInfo,
   type KindnessAction,
   type AIAdvisorResult,
+  type FullAnalysisContext,
 } from '@/services/ai-kindness-advisor'
+import { useUserStore } from '@/store/user'
 import styles from './index.module.scss'
 
 // ============================================
@@ -32,6 +34,14 @@ interface PerceivedData {
   hasCCTV: boolean
 }
 
+/** 收集的环境数据 */
+interface CollectedEnvData {
+  time: string
+  location: string
+  gps: { latitude: number; longitude: number; address: string } | null
+  lightCondition: string
+}
+
 // ============================================
 // 页面组件
 // ============================================
@@ -41,22 +51,61 @@ export default function AIAdvisorPage() {
   const [result, setResult] = useState<AIAdvisorResult | null>(null)
 
   // 引导状态
-  const [countdown, setCountdown] = useState(3)
   const [guideText, setGuideText] = useState('')
   const [voiceText, setVoiceText] = useState('')
-  const [isListening, setIsListening] = useState(false)
   const [cameraReady, setCameraReady] = useState(false)
   // 用户主动输入的补充描述（用于无法实时采集的场景，如"明天见网友"）
   const [userInput, setUserInput] = useState('')
   const [showTextInput, setShowTextInput] = useState(false)
 
+  // 摄像头相关状态
+  const [cameraStream, setCameraStream] = useState<MediaStream | null>(null)
+  const [isScanning, setIsScanning] = useState(false)
+  const [scanProgress, setScanProgress] = useState(0)
+  const [collectedEnvData, setCollectedEnvData] = useState<CollectedEnvData>({
+    time: '',
+    location: '',
+    gps: null,
+    lightCondition: '',
+  })
+
+  // 录音相关状态
+  const [isRecordingAudio, setIsRecordingAudio] = useState(false)
+  const [audioChunks, setAudioChunks] = useState<Blob[]>([])
+  const [audioBlob, setAudioBlob] = useState<Blob | null>(null)
+
+  const videoRef = useRef<HTMLVideoElement | null>(null)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const scanTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null)
+
+  const userInfo = useUserStore((state) => state.userInfo)
 
   // ===== 清理所有定时器 =====
   const clearAllTimers = useCallback(() => {
     if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null }
     if (timeoutRef.current) { clearTimeout(timeoutRef.current); timeoutRef.current = null }
+    if (scanTimerRef.current) { clearInterval(scanTimerRef.current); scanTimerRef.current = null }
+  }, [])
+
+  // ===== 停止摄像头流 =====
+  const stopCameraStream = useCallback(() => {
+    if (cameraStream) {
+      cameraStream.getTracks().forEach((t) => t.stop())
+      setCameraStream(null)
+    }
+    if (videoRef.current) {
+      videoRef.current.srcObject = null
+    }
+  }, [cameraStream])
+
+  // ===== 停止录音 =====
+  const stopRecording = useCallback(() => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.stop()
+    }
+    setIsRecordingAudio(false)
   }, [])
 
   // 常用场景快捷选项
@@ -70,33 +119,159 @@ export default function AIAdvisorPage() {
   ]
 
   // ===== 开始引导流程（实时感知模式） =====
-  const handleStart = useCallback(() => {
+  const handleStart = useCallback(async () => {
     clearAllTimers()
+    stopCameraStream()
+    stopRecording()
+    setAudioBlob(null)
+    setAudioChunks([])
     setStep('guiding_camera')
-    setCountdown(3)
     setGuideText('请将摄像头对准需要帮助的现场')
     setVoiceText('')
     setCameraReady(false)
     setUserInput('')
+    setIsScanning(false)
+    setScanProgress(0)
+    setCameraStream(null)
+    setCollectedEnvData({ time: '', location: '', gps: null, lightCondition: '' })
 
-    // 模拟摄像头初始化
-    timeoutRef.current = setTimeout(() => {
-      setCameraReady(true)
-      // 开始3秒倒计时
-      let count = 3
-      timerRef.current = setInterval(() => {
-        count -= 1
-        setCountdown(count)
-        if (count <= 0) {
-          if (timerRef.current) clearInterval(timerRef.current)
-          // 摄像头阶段完成，进入语音/文字输入阶段
-          setStep('guiding_voice')
-          setGuideText('请描述现场情况')
-          setIsListening(false)
+    // 获取GPS位置
+    let gpsLocation: { latitude: number; longitude: number; address: string } | null = null
+    try {
+      const locRes = await Taro.getLocation({ type: 'gcj02' })
+      gpsLocation = {
+        latitude: locRes.latitude,
+        longitude: locRes.longitude,
+        address: `${locRes.latitude.toFixed(4)}, ${locRes.longitude.toFixed(4)}`,
+      }
+    } catch (e) {
+      console.warn('[AIAdvisor] GPS获取失败，使用默认值:', e)
+      gpsLocation = { latitude: 39.9042, longitude: 116.4074, address: '北京市' }
+    }
+
+    const now = new Date()
+    const timeStr = now.toLocaleString('zh-CN')
+    const hour = now.getHours()
+    const lightCondition = hour >= 6 && hour < 18 ? '明亮' : '昏暗'
+
+    setCollectedEnvData({
+      time: timeStr,
+      location: gpsLocation?.address || '未知位置',
+      gps: gpsLocation,
+      lightCondition,
+    })
+
+    // 初始化摄像头（H5环境）
+    const isH5 = typeof window !== 'undefined'
+    if (isH5 && navigator.mediaDevices?.getUserMedia) {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: 'environment', width: { ideal: 640 }, height: { ideal: 480 } }
+        })
+        setCameraStream(stream)
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream
+          videoRef.current.play().catch((err) => {
+            console.warn('[AIAdvisor] Video play failed:', err)
+          })
         }
-      }, 1000)
-    }, 800)
-  }, [clearAllTimers])
+        setCameraReady(true)
+        setGuideText('摄像头已就绪，请点击"开始扫描"')
+      } catch (err) {
+        console.warn('[AIAdvisor] Camera init failed:', err)
+        // 降级：显示模拟UI
+        setCameraReady(true)
+        setGuideText('无法访问摄像头，请直接描述现场情况')
+      }
+    } else {
+      setCameraReady(true)
+      setGuideText('当前环境不支持摄像头，请直接描述现场情况')
+    }
+  }, [clearAllTimers, stopCameraStream, stopRecording])
+
+  // ===== 开始扫描 =====
+  const handleStartScan = useCallback(() => {
+    setIsScanning(true)
+    setScanProgress(0)
+    setGuideText('请缓慢转动手机，扫描周围环境')
+
+    scanTimerRef.current = setInterval(() => {
+      setScanProgress((prev) => {
+        if (prev >= 100) {
+          if (scanTimerRef.current) {
+            clearInterval(scanTimerRef.current)
+            scanTimerRef.current = null
+          }
+          setGuideText('扫描完成！请点击"完成扫描"')
+          setIsScanning(false)
+          return 100
+        }
+        return prev + 1
+      })
+    }, 200)
+  }, [])
+
+  // ===== 完成扫描 =====
+  const handleFinishScan = useCallback(() => {
+    if (scanTimerRef.current) {
+      clearInterval(scanTimerRef.current)
+      scanTimerRef.current = null
+    }
+    stopCameraStream()
+    setStep('guiding_voice')
+    setGuideText('请描述现场情况，或使用语音输入')
+    setIsScanning(false)
+  }, [stopCameraStream])
+
+  // ===== 重新扫描 =====
+  const handleRescan = useCallback(() => {
+    stopRecording()
+    setAudioBlob(null)
+    setVoiceText('')
+    setUserInput('')
+    handleStart()
+  }, [handleStart, stopRecording])
+
+  // ===== 开始录音 =====
+  const handleStartRecording = useCallback(async () => {
+    const isH5 = typeof window !== 'undefined'
+    if (!isH5 || !navigator.mediaDevices?.getUserMedia) {
+      Taro.showToast({ title: '当前环境不支持录音', icon: 'none' })
+      return
+    }
+
+    try {
+      const audioStream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      const mediaRecorder = new MediaRecorder(audioStream)
+      mediaRecorderRef.current = mediaRecorder
+      const chunks: Blob[] = []
+      setAudioChunks([])
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          chunks.push(event.data)
+        }
+      }
+
+      mediaRecorder.onstop = () => {
+        setAudioChunks(chunks)
+        const blob = new Blob(chunks, { type: 'audio/webm' })
+        setAudioBlob(blob)
+        audioStream.getTracks().forEach((t) => t.stop())
+      }
+
+      mediaRecorder.start()
+      setIsRecordingAudio(true)
+    } catch (err) {
+      console.warn('[AIAdvisor] Audio recording failed:', err)
+      Taro.showToast({ title: '录音启动失败', icon: 'none' })
+    }
+  }, [])
+
+  // ===== 停止录音 =====
+  const handleStopRecording = useCallback(() => {
+    stopRecording()
+  }, [stopRecording])
 
   // ===== 选择快捷场景 =====
   const handleSelectScene = useCallback((text: string) => {
@@ -120,7 +295,15 @@ export default function AIAdvisorPage() {
     setStep('analyzing')
     setGuideText('AI正在综合评估...')
 
-    // 模拟分析延迟
+    // 构建用户个人信息
+    const userPersonalInfo = {
+      nickname: userInfo?.name || '用户',
+      age: userInfo?.birthYear ? new Date().getFullYear() - userInfo.birthYear : undefined,
+      gender: userInfo?.gender || undefined,
+      region: userInfo?.region || undefined,
+      fuqiLevel: userInfo?.blessingValue ? `福气值${userInfo.blessingValue}` : undefined,
+    }
+
     timeoutRef.current = setTimeout(() => {
       const perceived = extractFromVoice(finalVoice)
       const cameraData = inferFromCamera(finalVoice)
@@ -129,12 +312,14 @@ export default function AIAdvisorPage() {
       const userProfile: UserProfile = {
         physicalCondition: 'normal',
         experienceLevel: 'normal',
+        age: userPersonalInfo.age,
+        gender: userPersonalInfo.gender as 'male' | 'female' | undefined,
       }
 
       const env: EnvironmentContext = {
         timeOfDay: merged.timeOfDay,
         isWeekday: true,
-        location: merged.isIsolated ? '偏僻路段' : '繁华街道',
+        location: collectedEnvData.location || (merged.isIsolated ? '偏僻路段' : '繁华街道'),
         nearbyPeople: merged.nearbyPeople,
         isIsolated: merged.isIsolated,
         hasCCTV: merged.hasCCTV,
@@ -152,11 +337,26 @@ export default function AIAdvisorPage() {
         urgency: merged.urgency,
       }
 
-      const advisorResult = consultAIAdvisor(userProfile, env, subject, action)
+      // 构建完整上下文，使用增强版AI分析
+      const fullContext: FullAnalysisContext = {
+        userProfile,
+        environment: env,
+        subject,
+        action,
+        realTimeData: {
+          timestamp: collectedEnvData.time || new Date().toLocaleString('zh-CN'),
+          gpsLocation: collectedEnvData.gps,
+          lightCondition: collectedEnvData.lightCondition || '未知',
+          nearbyDescription: merged.isIsolated ? '偏僻无人' : merged.nearbyPeople > 5 ? '人群密集' : '少量人员',
+        },
+        userPersonalInfo,
+      }
+
+      const advisorResult = consultAIAdvisorFull(fullContext)
       setResult(advisorResult)
       setStep('result')
     }, 1800)
-  }, [])
+  }, [collectedEnvData, userInfo])
 
   // ===== 用户描述场景模式（用于无法实时采集的场景） =====
   const handleTextInputStart = useCallback(() => {
@@ -173,14 +373,20 @@ export default function AIAdvisorPage() {
   // ===== 重新评估 =====
   const handleReset = useCallback(() => {
     clearAllTimers()
+    stopCameraStream()
+    stopRecording()
     setStep('idle')
     setResult(null)
     setVoiceText('')
-    setCountdown(3)
     setCameraReady(false)
-    setIsListening(false)
     setUserInput('')
-  }, [clearAllTimers])
+    setIsScanning(false)
+    setScanProgress(0)
+    setCameraStream(null)
+    setAudioBlob(null)
+    setAudioChunks([])
+    setCollectedEnvData({ time: '', location: '', gps: null, lightCondition: '' })
+  }, [clearAllTimers, stopCameraStream, stopRecording])
 
   // ===== 底部按钮操作 =====
   const handleLevelAction = useCallback((level: string, scene: string) => {
@@ -235,8 +441,20 @@ export default function AIAdvisorPage() {
 
   // ===== 页面卸载时清理 =====
   useEffect(() => {
-    return () => clearAllTimers()
-  }, [clearAllTimers])
+    return () => {
+      clearAllTimers()
+      if (scanTimerRef.current) {
+        clearInterval(scanTimerRef.current)
+        scanTimerRef.current = null
+      }
+      if (cameraStream) {
+        cameraStream.getTracks().forEach((t) => t.stop())
+      }
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+        mediaRecorderRef.current.stop()
+      }
+    }
+  }, [clearAllTimers, cameraStream])
 
   // ============================================
   // 渲染
@@ -309,7 +527,48 @@ export default function AIAdvisorPage() {
 
           {/* 摄像头预览区域 */}
           <View className={styles.cameraPreview}>
-            <View className={styles.cameraOverlay}>
+            {/* 真实视频元素 */}
+            {/* @ts-ignore - H5环境下使用原生video标签 */}
+            <video
+              ref={(el: HTMLVideoElement | null) => { videoRef.current = el }}
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                display: cameraStream ? 'block' : 'none',
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                zIndex: 1,
+              }}
+              autoPlay
+              playsInline
+              muted
+            />
+
+            {/* 降级：无摄像头流时显示模拟背景 */}
+            {!cameraStream && (
+              <View
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  background: '#1a1a2e',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  zIndex: 1,
+                }}
+              >
+                <Text style={{ color: '#888', fontSize: 14 }}>
+                  {cameraReady ? '摄像头未启用' : '正在启动摄像头...'}
+                </Text>
+              </View>
+            )}
+
+            <View className={styles.cameraOverlay} style={{ zIndex: 2, position: 'relative' }}>
               {/* 取景网格 */}
               <View className={styles.cameraGrid}>
                 <View className={styles.cameraGridLineH} />
@@ -324,31 +583,101 @@ export default function AIAdvisorPage() {
               <View className={`${styles.cameraCorner} ${styles.cameraCornerBR}`} />
 
               {/* 录制中标记 */}
-              {cameraReady && (
+              {cameraReady && isScanning && (
                 <View className={styles.recordingBadge}>
                   <View className={styles.recordingDot} />
-                  <Text className={styles.recordingText}>正在感知</Text>
+                  <Text className={styles.recordingText}>正在扫描</Text>
                 </View>
               )}
 
-              {/* 倒计时 */}
-              {cameraReady && countdown > 0 && (
+              {/* 扫描完成标记 */}
+              {cameraReady && !isScanning && scanProgress >= 100 && (
+                <View className={styles.recordingBadge}>
+                  <Text className={styles.recordingText}>扫描完成 ✓</Text>
+                </View>
+              )}
+
+              {/* 扫描进度显示 */}
+              {cameraReady && isScanning && (
                 <View className={styles.countdownOverlay}>
-                  <Text className={styles.countdownNumber}>{countdown}</Text>
+                  <Text className={styles.countdownNumber}>{Math.floor(scanProgress)}%</Text>
                 </View>
               )}
 
               {/* 状态文字 */}
               <View className={styles.cameraStatus}>
                 <Text className={styles.cameraStatusText}>
-                  {cameraReady
-                    ? countdown > 0
-                      ? 'AI正在扫描环境...'
-                      : '环境扫描完成 ✓'
-                    : '正在启动摄像头...'}
+                  {!cameraReady
+                    ? '正在启动摄像头...'
+                    : isScanning
+                      ? '请缓慢转动手机扫描环境...'
+                      : scanProgress >= 100
+                        ? '环境扫描完成 ✓'
+                        : '摄像头已就绪'}
                 </Text>
               </View>
             </View>
+          </View>
+
+          {/* 扫描进度条 */}
+          {isScanning && (
+            <View
+              style={{
+                width: '90%',
+                margin: '12px auto',
+                height: 4,
+                background: '#e0e0e0',
+                borderRadius: 2,
+                overflow: 'hidden',
+              }}
+            >
+              <View
+                style={{
+                  width: `${scanProgress}%`,
+                  height: '100%',
+                  background: '#4CAF50',
+                  transition: 'width 0.2s linear',
+                }}
+              />
+            </View>
+          )}
+
+          {/* 引导动画：旋转箭头 */}
+          {isScanning && (
+            <View
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginTop: 8,
+                gap: 8,
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 24,
+                  animation: 'spin 2s linear infinite',
+                  display: 'inline-block',
+                }}
+              >
+                🔄
+              </Text>
+              <Text style={{ color: '#666', fontSize: 14 }}>请缓慢转动手机</Text>
+            </View>
+          )}
+
+          {/* 操作按钮 */}
+          <View style={{ padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {cameraReady && !isScanning && scanProgress < 100 && (
+              <View className={styles.analyzeBtn} onClick={handleStartScan}>
+                <Text className={styles.analyzeBtnText}>🔍 开始扫描</Text>
+              </View>
+            )}
+            {cameraReady && !isScanning && scanProgress >= 100 && (
+              <View className={styles.analyzeBtn} onClick={handleFinishScan}>
+                <Text className={styles.analyzeBtnText}>✅ 完成扫描</Text>
+              </View>
+            )}
           </View>
 
           {/* 已感知信息预览 */}
@@ -358,17 +687,15 @@ export default function AIAdvisorPage() {
               <View className={styles.perceivedPreviewTags}>
                 <View className={styles.perceivedPreviewTag}>
                   <Text className={styles.pptLabel}>时间</Text>
-                  <Text className={styles.pptValue}>
-                    {new Date().getHours() >= 6 && new Date().getHours() < 18 ? '白天' : '夜间'}
-                  </Text>
+                  <Text className={styles.pptValue}>{collectedEnvData.time || '获取中...'}</Text>
+                </View>
+                <View className={styles.perceivedPreviewTag}>
+                  <Text className={styles.pptLabel}>地点</Text>
+                  <Text className={styles.pptValue}>{collectedEnvData.location || '定位中...'}</Text>
                 </View>
                 <View className={styles.perceivedPreviewTag}>
                   <Text className={styles.pptLabel}>光线</Text>
-                  <Text className={styles.pptValue}>检测中</Text>
-                </View>
-                <View className={styles.perceivedPreviewTag}>
-                  <Text className={styles.pptLabel}>监控</Text>
-                  <Text className={styles.pptValue}>检测中</Text>
+                  <Text className={styles.pptValue}>{collectedEnvData.lightCondition || '检测中...'}</Text>
                 </View>
               </View>
             </View>
@@ -383,6 +710,23 @@ export default function AIAdvisorPage() {
           <View className={styles.guideBubble}>
             <Text className={styles.guideBubbleIcon}>🤖</Text>
             <Text className={styles.guideBubbleText}>{guideText}</Text>
+          </View>
+
+          {/* 重新扫描按钮 */}
+          <View style={{ padding: '0 20px 12px', display: 'flex', justifyContent: 'center' }}>
+            <View
+              style={{
+                padding: '8px 16px',
+                background: '#f5f5f5',
+                borderRadius: 16,
+                display: 'flex',
+                alignItems: 'center',
+                cursor: 'pointer',
+              }}
+              onClick={handleRescan}
+            >
+              <Text style={{ fontSize: 14, color: '#666' }}>📷 重新扫描环境</Text>
+            </View>
           </View>
 
           {/* 场景快捷选择 */}
@@ -417,6 +761,42 @@ export default function AIAdvisorPage() {
               maxlength={200}
               autoHeight
             />
+          </View>
+
+          {/* 录音按钮（按住说话） */}
+          <View style={{ padding: '12px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+            <View
+              style={{
+                width: 80,
+                height: 80,
+                borderRadius: '50%',
+                background: isRecordingAudio ? '#f44336' : '#4CAF50',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                cursor: 'pointer',
+                userSelect: 'none',
+                WebkitUserSelect: 'none',
+              }}
+              {...({
+                onTouchStart: handleStartRecording,
+                onTouchEnd: handleStopRecording,
+                onMouseDown: handleStartRecording,
+                onMouseUp: handleStopRecording,
+                onMouseLeave: handleStopRecording,
+              } as any)}
+            >
+              <Text style={{ fontSize: 28, color: '#fff' }}>{isRecordingAudio ? '⏹️' : '🎙️'}</Text>
+            </View>
+            <Text style={{ fontSize: 12, color: '#999' }}>
+              {isRecordingAudio ? '松开结束录音' : '按住说话'}
+            </Text>
+            {audioBlob && (
+              <Text style={{ fontSize: 14, color: '#4CAF50' }}>
+                ✅ 已录制音频 ({audioChunks.length} 段)
+              </Text>
+            )}
           </View>
 
           {/* 已感知信息预览 */}

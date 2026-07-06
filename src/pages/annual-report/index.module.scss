@@ -4,7 +4,7 @@
   min-height: 100vh;
   background: linear-gradient(180deg, #FF6B6B 0%, #FFA07A 30%, #F7F8FA 60%);
   padding: $page-padding;
-  padding-bottom: $spacing-xl * 2;
+  padding-bottom: calc(120rpx + env(safe-area-inset-bottom));
 }
 
 // 顶部封面

@@ -3,11 +3,12 @@
 .pageWrapper {
   min-height: 100vh;
   background: linear-gradient(180deg, #FFFCF8 0%, #F8F4EE 100%);
+  padding-bottom: calc(120rpx + env(safe-area-inset-bottom));
 }
 
 .container {
   min-height: 100vh;
-  padding: $spacing-xl $page-padding 80rpx;
+  padding: $spacing-xl $page-padding 0;
 }
 
 // 页面头部

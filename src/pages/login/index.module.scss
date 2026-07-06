@@ -7,6 +7,7 @@
   flex-direction: column;
   align-items: center;
   padding: 0 $page-padding;
+  padding-bottom: calc(120rpx + env(safe-area-inset-bottom));
 }
 
 .header {

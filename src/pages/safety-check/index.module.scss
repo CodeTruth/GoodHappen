@@ -12,7 +12,7 @@ $accent-blue: #42A5F5;
 .pageWrapper {
   min-height: 100vh;
   background: $bg-dark;
-  padding-bottom: 40rpx;
+  padding-bottom: calc(120rpx + env(safe-area-inset-bottom));
 }
 
 .container {

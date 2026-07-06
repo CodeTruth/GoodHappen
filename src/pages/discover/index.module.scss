@@ -35,6 +35,7 @@
 .contentScroll {
   flex: 1;
   padding: $spacing-md $spacing-lg $spacing-xl;
+  padding-bottom: calc(120px + env(safe-area-inset-bottom));
 }
 
 // ===== 筛选栏 =====

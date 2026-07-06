@@ -661,6 +661,319 @@ export const quickAssess = (
   return consultAIAdvisor(user, env, subject, action);
 };
 
+// ============================================
+// 完整上下文分析（增强版）
+// ============================================
+
+/** 完整分析上下文 */
+export interface FullAnalysisContext {
+  userProfile: UserProfile;
+  environment: EnvironmentContext;
+  subject: SubjectInfo;
+  action: KindnessAction;
+  realTimeData: {
+    timestamp: string;
+    gpsLocation: { latitude: number; longitude: number; address: string } | null;
+    lightCondition: string;
+    nearbyDescription: string;
+  };
+  userPersonalInfo: {
+    nickname: string;
+    age?: number;
+    gender?: string;
+    region?: string;
+    fuqiLevel?: string;
+  };
+}
+
+/**
+ * AI善行顾问 —— 完整上下文综合评估（增强版）
+ * 接收 FullAnalysisContext，输出更详细的分析结果
+ */
+export const consultAIAdvisorFull = (
+  context: FullAnalysisContext
+): AIAdvisorResult => {
+  const { userProfile, environment, subject, action, realTimeData, userPersonalInfo } = context;
+
+  // 使用增强版风险评估
+  const riskFactors = evaluateRiskFactorsFull(context);
+  const dangerScore = calculateDangerScore(riskFactors);
+  const adviceLevel = determineAdviceLevelFull(dangerScore, riskFactors, context);
+
+  // 使用增强版行动建议生成
+  const actions = generateActionsFull(adviceLevel, action, environment, subject, userProfile, userPersonalInfo);
+  const warnings = generateWarnings(adviceLevel, riskFactors);
+  const tips = generateTipsFull(adviceLevel, action, environment, realTimeData);
+  const protectionMeasures = generateProtectionMeasuresFull(adviceLevel, action, environment, realTimeData);
+
+  const levelConfig = ADVICE_LEVEL_CONFIG[adviceLevel];
+
+  // 构建增强摘要
+  let enhancedSummary = levelConfig.description;
+  if (realTimeData.gpsLocation) {
+    enhancedSummary += ` 当前位置：${realTimeData.gpsLocation.address || '已定位'}。`;
+  }
+  if (userPersonalInfo.age && userPersonalInfo.age < 18) {
+    enhancedSummary += ' 检测到未成年用户，已启用未成年人保护建议。';
+  }
+
+  return {
+    adviceLevel,
+    dangerScore,
+    confidence: Math.min(0.95, 0.6 + dangerScore / 200),
+    title: levelConfig.icon + ' ' + levelConfig.label,
+    summary: enhancedSummary,
+    actions,
+    riskFactors,
+    warnings,
+    tips,
+    protectionMeasures,
+  };
+};
+
+// ============================================
+// 增强版风险评估
+// ============================================
+
+function evaluateRiskFactorsFull(context: FullAnalysisContext): RiskFactor[] {
+  const { user, env, subject, action, realTimeData } = {
+    user: context.userProfile,
+    env: context.environment,
+    subject: context.subject,
+    action: context.action,
+    realTimeData: context.realTimeData,
+  };
+
+  // 先获取基础风险因素
+  const factors = evaluateRiskFactors(user, env, subject, action);
+
+  // === 基于实时GPS位置的风险 ===
+  if (realTimeData.gpsLocation) {
+    // 如果GPS显示在偏远位置（简单判断：地址中包含偏僻、郊区等关键词）
+    const addr = realTimeData.gpsLocation.address || '';
+    if (/偏僻|郊区|荒野|山区|乡下|农村|无人/.test(addr) && !factors.some(f => f.factor === '偏僻地点')) {
+      factors.push({
+        factor: 'GPS定位偏远',
+        impact: 'high',
+        description: 'GPS显示当前位置较为偏远，救援力量可能难以快速到达',
+        weight: 12,
+      });
+    }
+  }
+
+  // === 基于时间因素的风险 ===
+  try {
+    const timestamp = new Date(realTimeData.timestamp);
+    const hour = timestamp.getHours();
+
+    // 深夜时段（0-5点）额外风险
+    if ((hour >= 0 && hour < 5) && !factors.some(f => f.factor.includes('深夜') || f.factor.includes('夜间'))) {
+      factors.push({
+        factor: '深夜时段',
+        impact: 'high',
+        description: '深夜时段（0-5点），人迹罕至且求助资源有限',
+        weight: 14,
+      });
+    }
+
+    // 凌晨时段（5-6点）
+    if (hour >= 5 && hour < 6) {
+      factors.push({
+        factor: '凌晨时段',
+        impact: 'medium',
+        description: '凌晨时分，周围人员稀少，视线不佳',
+        weight: 8,
+      });
+    }
+  } catch {
+    // 时间解析失败，忽略
+  }
+
+  // === 基于光线条件的因素 ===
+  if (realTimeData.lightCondition === 'dark' || realTimeData.lightCondition === '昏暗') {
+    if (!factors.some(f => f.factor.includes('光线') || f.factor.includes('夜间') || f.factor.includes('深夜'))) {
+      factors.push({
+        factor: '光线不足',
+        impact: 'medium',
+        description: '环境光线较暗，不利于观察和判断情况',
+        weight: 7,
+      });
+    }
+  }
+
+  return factors.sort((a, b) => b.weight - a.weight);
+}
+
+// ============================================
+// 增强版建议等级判断
+// ============================================
+
+function determineAdviceLevelFull(
+  dangerScore: number,
+  _factors: RiskFactor[],
+  context: FullAnalysisContext
+): AdviceLevel {
+  const { environment, subject, userPersonalInfo } = context;
+
+  // 未成年人保护：如果用户未成年，自动提升一级谨慎度
+  const isMinor = userPersonalInfo.age !== undefined && userPersonalInfo.age < 18;
+  let adjustedScore = dangerScore;
+  if (isMinor) {
+    adjustedScore += 10; // 未成年用户增加10分风险权重
+  }
+
+  // 女性用户在夜间偏僻地点额外谨慎
+  const isFemaleAtRiskEnv =
+    userPersonalInfo.gender === 'female' &&
+    (environment.timeOfDay === 'night' || environment.timeOfDay === 'late_night') &&
+    (environment.isIsolated || environment.nearbyPeople <= 2);
+
+  if (isFemaleAtRiskEnv) {
+    adjustedScore += 8;
+  }
+
+  // 极高风险因素 → E
+  if (subject.behavior === 'aggressive' && subject.count > 1) return 'E';
+  if (subject.behavior === 'aggressive' && environment.nearbyPeople === 0) return 'E';
+  if (adjustedScore >= 70) return 'E';
+
+  // 高风险 → D
+  if (adjustedScore >= 55) return 'D';
+
+  // 需要同伴 → C
+  if (environment.isIsolated && environment.nearbyPeople === 0 && adjustedScore >= 35) return 'C';
+  if (subject.count > 1 && adjustedScore >= 30) return 'C';
+  // 未成年用户独自在偏僻地点
+  if (isMinor && environment.isIsolated) return 'C';
+
+  // 需要保护 → B
+  if (adjustedScore >= 20) return 'B';
+
+  // 安全 → A
+  if (!environment.isIsolated && environment.nearbyPeople >= 5 && environment.timeOfDay !== 'late_night') {
+    return 'A';
+  }
+
+  // 默认B（宁可多一层保护）
+  return 'B';
+}
+
+// ============================================
+// 增强版行动建议生成
+// ============================================
+
+function generateActionsFull(
+  level: AdviceLevel,
+  action: KindnessAction,
+  env: EnvironmentContext,
+  subject: SubjectInfo,
+  user: UserProfile,
+  userPersonalInfo: FullAnalysisContext['userPersonalInfo']
+): AdvisorAction[] {
+  // 先获取基础行动建议
+  const baseActions = generateActions(level, action, env, subject, user);
+  const actions: AdvisorAction[] = [...baseActions];
+
+  // 基于用户个人信息增加个性化建议
+  const isMinor = userPersonalInfo.age !== undefined && userPersonalInfo.age < 18;
+  const isElderly = userPersonalInfo.age !== undefined && userPersonalInfo.age >= 60;
+  const isFemale = userPersonalInfo.gender === 'female';
+
+  // 未成年用户：增加监护人联系建议
+  if (isMinor && !actions.some(a => a.action.includes('监护人') || a.action.includes('家长'))) {
+    actions.push({
+      level,
+      action: '联系监护人或家长',
+      reason: '未成年用户应在成人指导下行善，建议先联系监护人告知情况。',
+      icon: '👨‍👩‍👧',
+      urgent: level === 'E' || level === 'D',
+    });
+  }
+
+  // 老年用户：增加量力而行建议
+  if (isElderly && !actions.some(a => a.action.includes('量力而行'))) {
+    actions.splice(1, 0, {
+      level,
+      action: '量力而行，避免过度劳累',
+      reason: `检测到用户年龄为${userPersonalInfo.age}岁，建议根据自身身体状况决定是否直接参与救助。`,
+      icon: '💪',
+      urgent: false,
+    });
+  }
+
+  // 女性用户在夜间/偏僻环境：增加安全建议
+  if (isFemale && (env.timeOfDay === 'night' || env.timeOfDay === 'late_night' || env.isIsolated)) {
+    if (!actions.some(a => a.action.includes('安全距离') || a.action.includes('保护'))) {
+      actions.push({
+        level,
+        action: '优先确保自身安全',
+        reason: '夜间或偏僻环境中，女性用户应格外注意自身安全，优先选择呼叫帮助和远程协助。',
+        icon: '🛡️',
+        urgent: true,
+      });
+    }
+  }
+
+  // 新手用户：增加观察建议
+  if (user.experienceLevel === 'first_time' && level !== 'A') {
+    if (!actions.some(a => a.action.includes('观察'))) {
+      actions.push({
+        level,
+        action: '先观察再行动',
+        reason: '作为首次行善的用户，建议先在安全距离观察情况，不要贸然介入。',
+        icon: '👁️',
+        urgent: false,
+      });
+    }
+  }
+
+  return actions;
+}
+
+// ============================================
+// 增强版小贴士
+// ============================================
+
+function generateTipsFull(
+  level: AdviceLevel,
+  action: KindnessAction,
+  env: EnvironmentContext,
+  realTimeData: FullAnalysisContext['realTimeData']
+): string[] {
+  const tips = generateTips(level, action, env);
+
+  // 基于实时数据增加提示
+  if (realTimeData.gpsLocation) {
+    tips.push(`当前GPS已定位：${realTimeData.gpsLocation.address || `${realTimeData.gpsLocation.latitude.toFixed(4)}, ${realTimeData.gpsLocation.longitude.toFixed(4)}`}，可在求助时提供准确位置。`);
+  }
+
+  if (realTimeData.lightCondition === 'dark' || realTimeData.lightCondition === '昏暗') {
+    tips.push('环境光线较暗，建议打开手机闪光灯照明，同时注意周围环境安全。');
+  }
+
+  return tips;
+}
+
+// ============================================
+// 增强版保护措施
+// ============================================
+
+function generateProtectionMeasuresFull(
+  level: AdviceLevel,
+  action: KindnessAction,
+  env: EnvironmentContext,
+  realTimeData: FullAnalysisContext['realTimeData']
+): string[] {
+  const measures = generateProtectionMeasures(level, action, env);
+
+  // 如果有GPS数据，建议分享位置
+  if (realTimeData.gpsLocation && !measures.some(m => m.includes('位置') || m.includes('GPS'))) {
+    measures.push('将当前GPS位置分享给紧急联系人');
+  }
+
+  return measures;
+}
+
 function guessActionType(scenario: string): string {
   if (/老人|扶|摔倒/.test(scenario)) return 'elder_help';
   if (/车|交通|撞/.test(scenario)) return 'traffic';

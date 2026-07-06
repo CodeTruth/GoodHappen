@@ -3,7 +3,7 @@
 .container {
   min-height: 100vh;
   background: $color-bg-page;
-  padding-bottom: $spacing-xl * 2;
+  padding-bottom: calc(120rpx + env(safe-area-inset-bottom));
 }
 
 // 顶部统计头部
