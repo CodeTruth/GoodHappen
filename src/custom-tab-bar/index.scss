@@ -1,9 +1,9 @@
 .custom-tab-bar {
   display: flex;
   flex-direction: row;
-  align-items: center;
+  align-items: flex-end;
   justify-content: space-around;
-  height: 100px;
+  height: 120px;
   padding-bottom: env(safe-area-inset-bottom);
   background-color: #ffffff;
   border-top: 1px solid #e5e5e5;
@@ -17,16 +17,17 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-end;
     flex: 1;
     height: 100%;
+    padding-bottom: 8px;
     position: relative;
     cursor: pointer;
     transition: all 0.2s ease;
 
     &--active {
       .custom-tab-bar__text {
-        color: #FF6B6B;
+        color: #C4956A;
         font-weight: 600;
       }
     }
@@ -51,5 +52,38 @@
     color: #999999;
     line-height: 1.2;
     transition: color 0.2s ease;
+  }
+
+  // ========== 中间加号按钮 ==========
+  &__item--center {
+    justify-content: center;
+    padding-bottom: 0;
+    margin-top: -24px;  // 向上突出
+  }
+
+  &__center-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 92px;
+    height: 92px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #D4A356 0%, #C4956A 100%);
+    box-shadow: 0 6px 20px rgba(196, 149, 106, 0.45);
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    margin-bottom: 4px;
+
+    &--active {
+      transform: scale(1.08);
+      box-shadow: 0 8px 28px rgba(196, 149, 106, 0.55);
+      background: linear-gradient(135deg, #E5B76A 0%, #D4A356 100%);
+    }
+  }
+
+  &__center-icon {
+    font-size: 44px;
+    line-height: 1;
+    color: #ffffff;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
   }
 }

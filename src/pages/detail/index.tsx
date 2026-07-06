@@ -5,16 +5,6 @@ import { Kindness } from '@/types/kindness';
 import { getKindnessById } from '@/data/kindness';
 import { useKindnessStore } from '@/store/kindness';
 
-// 本地定义（原 @/data/mockComments 已移除）
-interface MockComment {
-  id: string;
-  userId: string;
-  userName: string;
-  userAvatar: string;
-  content: string;
-  createdAt: string;
-}
-const getMockComments = (_kindnessId: string): MockComment[] => [];
 import { useInteractionStore } from '@/store/interaction';
 import { useNotificationStore } from '@/store/notification';
 import { useProtectionStore } from '@/store/protection';
@@ -119,27 +109,22 @@ const DetailPage: React.FC = () => {
   }, []);
 
   // Mock 评论数据
-  const mockComments = useMemo<MockComment[]>(() => {
-    if (!kindness) return [];
-    return getMockComments(kindness.id);
-  }, [kindness]);
+  const [commentVersion, setCommentVersion] = useState(0);
 
-  // 合并评论：真实评论优先，Mock 评论作为兜底
+  // 评论列表（从 store 获取）
   const allComments = useMemo(() => {
-    const userComments = getCommentList(kindness?.id || '').map(c => ({
+    // 依赖 commentVersion 触发重新计算
+    void commentVersion;
+    const kindnessId = kindness?.id || '';
+    return getCommentList(kindnessId).map(c => ({
       id: c.id,
       userId: c.userId,
       userName: c.userName,
-      userAvatar: (c as any).userAvatar || '',
+      userAvatar: c.userAvatar || '',
       content: c.content,
       createdAt: c.createdAt,
     }));
-    // 如果有用户提交的真实评论，优先展示真实的；仅当真实评论为空时才展示Mock
-    if (userComments.length > 0) {
-      return userComments;
-    }
-    return mockComments;
-  }, [mockComments, kindness?.id, getCommentList]);
+  }, [kindness?.id, commentVersion]);
 
   // 格式化时间
   const formatDate = (dateStr: string) => {
@@ -187,6 +172,7 @@ const DetailPage: React.FC = () => {
     );
     if (result.success) {
       setCommentText('');
+      setCommentVersion(v => v + 1); // 触发评论列表刷新
       Taro.showToast({ title: '评论成功', icon: 'success' });
     } else {
       Taro.showToast({ title: result.reason || '评论失败', icon: 'none' });
@@ -197,6 +183,29 @@ const DetailPage: React.FC = () => {
   const handleShare = () => {
     Taro.showToast({ title: '已复制链接', icon: 'success' });
   };
+
+  // 计算互动数据
+  const liked = kindness ? hasLiked(kindness.id) : false;
+  const currentLikes = kindness ? getLikeCount(kindness.id) : 0;
+  const currentComments = kindness ? getCommentCount(kindness.id) : 0;
+
+  // AI 共鸣 fallback：当善行没有 aiResponse 时，生成一个本地 demo 回复
+  // 注意：useMemo 必须在所有条件返回之前声明（React Hooks 规则）
+  const displayAiResponse = useMemo(() => {
+    if (kindness?.aiResponse) return kindness.aiResponse;
+    if (!kindness) return null;
+    const demoPersonas: Array<{ persona: 'sudongpo' | 'confucius' | 'libai' | 'dufu' | 'zhuangzi' | 'liqingzhao' | 'taoyuanming' | 'wangwei'; personaName: string; content: string }> = [
+      { persona: 'sudongpo', personaName: '苏东坡', content: '人间有味是清欢。你做的这件事，虽小却暖，恰似一盏温茶，不声不响地暖了人心。千里共婵娟，不如邻里一声暖，善哉善哉。' },
+      { persona: 'confucius', personaName: '孔子', content: '德不孤，必有邻。你的善行虽不声张，却如春风化雨，润物无声。己欲立而立人，此乃仁者之心也。' },
+      { persona: 'libai', personaName: '李白', content: '天生我材必有用，千金散尽还复来！你的善举如春风拂面，让人心生豪气。这世间的温暖，正因有你这样的人而更加精彩！' },
+    ];
+    const hash = kindness.id.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
+    const demo = demoPersonas[hash % demoPersonas.length];
+    return {
+      ...demo,
+      createdAt: kindness.createdAt,
+    };
+  }, [kindness]);
 
   // 根据善行内容检测风险场景（事前学习）—— 仅代表性善行展示
   const learnInfo = useMemo(() => {
@@ -271,11 +280,6 @@ const DetailPage: React.FC = () => {
   }
 
   if (!kindness) return null;
-
-  // 实时数据
-  const currentLikes = getLikeCount(kindness.id, kindness.likes);
-  const currentComments = getCommentCount(kindness.id, kindness.comments);
-  const liked = hasLiked(kindness.id);
 
   const {
     userName,
@@ -362,7 +366,7 @@ const DetailPage: React.FC = () => {
       </View>
 
       {/* ===== AI 共鸣区（核心亮点） ===== */}
-      {aiResponse && (
+      {displayAiResponse && (
         <View className={styles.aiSection}>
           <View className={styles.aiBadge}>
             <Text className={styles.aiBadgeText}>AI 共鸣</Text>
@@ -371,16 +375,16 @@ const DetailPage: React.FC = () => {
             <View className={styles.aiHeader}>
               <View className={styles.aiPersonaIcon}>
                 <Text className={styles.aiPersonaEmoji}>
-                  {PERSONA_ICONS[aiResponse.persona] || '🤖'}
+                  {PERSONA_ICONS[displayAiResponse.persona] || '🤖'}
                 </Text>
               </View>
               <View className={styles.aiPersonaInfo}>
-                <Text className={styles.aiPersonaName}>{aiResponse.personaName}</Text>
-                <Text className={styles.aiPersonaTime}>{formatDate(aiResponse.createdAt)}</Text>
+                <Text className={styles.aiPersonaName}>{displayAiResponse.personaName}</Text>
+                <Text className={styles.aiPersonaTime}>{formatDate(displayAiResponse.createdAt)}</Text>
               </View>
             </View>
             <View className={styles.aiDivider} />
-            <Text className={styles.aiContent}>{aiResponse.content}</Text>
+            <Text className={styles.aiContent}>{displayAiResponse.content}</Text>
           </View>
         </View>
       )}

@@ -1240,3 +1240,126 @@
   color: $color-text-secondary;
   border: 1rpx solid $color-border;
 }
+
+// ============================================
+// 场景快捷选择
+// ============================================
+
+.scenePresetSection {
+  margin-bottom: $spacing-lg;
+}
+
+.scenePresetTitle {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  color: $color-text-secondary;
+  margin-bottom: $spacing-md;
+  padding-left: $spacing-sm;
+  border-left: 4rpx solid $color-primary;
+  display: block;
+}
+
+.scenePresetGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: $spacing-md;
+}
+
+.scenePresetItem {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-md;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: $spacing-xs;
+  box-shadow: $shadow-card;
+  border: 2rpx solid transparent;
+  transition: all $transition-fast;
+
+  &:active {
+    transform: scale(0.96);
+  }
+}
+
+.scenePresetActive {
+  border-color: $color-primary;
+  background: linear-gradient(135deg, rgba(196, 149, 106, 0.1) 0%, rgba(196, 149, 106, 0.05) 100%);
+  box-shadow: 0 4rpx 16rpx rgba(196, 149, 106, 0.2);
+}
+
+.scenePresetIcon {
+  font-size: 48rpx;
+}
+
+.scenePresetLabel {
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+  font-weight: $font-weight-medium;
+}
+
+// ============================================
+// 手动输入框
+// ============================================
+
+.manualInputCard {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  margin-bottom: $spacing-lg;
+  box-shadow: $shadow-card;
+}
+
+.manualInputLabel {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  color: $color-text-secondary;
+  margin-bottom: $spacing-md;
+  padding-left: $spacing-sm;
+  border-left: 4rpx solid $color-primary;
+  display: block;
+}
+
+.manualInputArea {
+  width: 100%;
+  min-height: 120rpx;
+  max-height: 240rpx;
+  background: $color-bg-page;
+  border-radius: $radius-md;
+  padding: $spacing-md;
+  font-size: $font-size-md;
+  color: $color-text-primary;
+  line-height: $line-height-normal;
+  border: 1rpx solid $color-border;
+}
+
+.manualInputPlaceholder {
+  color: $color-text-tertiary;
+  font-size: $font-size-md;
+}
+
+// ============================================
+// 开始分析按钮
+// ============================================
+
+.analyzeBtn {
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-dark 100%);
+  border-radius: $radius-button;
+  height: $button-height-md;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8rpx 24rpx rgba(196, 149, 106, 0.35);
+  margin-top: $spacing-md;
+  transition: transform $transition-fast;
+
+  &:active {
+    transform: scale(0.97);
+  }
+}
+
+.analyzeBtnText {
+  color: $color-text-white;
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+}

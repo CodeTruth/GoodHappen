@@ -388,7 +388,6 @@
 .bottomTabs {
   display: flex;
   align-items: center;
-  justify-content: space-around;
   background: #fff;
   border-top: 1rpx solid $color-border;
   padding: 12rpx 0 calc(12rpx + env(safe-area-inset-bottom));
@@ -400,10 +399,13 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 8rpx;
-  padding: 8rpx 40rpx;
+  flex: 1;
+  padding: 8rpx 0;
   cursor: pointer;
   position: relative;
+  min-width: 0;
 }
 
 .bottomTabText {
@@ -436,7 +438,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-top: -28rpx;
+  margin-top: -8rpx;
+  flex-shrink: 0;
   box-shadow: 0 6rpx 24rpx rgba(196, 149, 106, 0.5);
   cursor: pointer;
   transition: transform 0.15s;
@@ -451,4 +454,126 @@
   color: #fff;
   font-weight: 300;
   line-height: 1;
+}
+
+// ============================================
+// 商城Tab
+// ============================================
+
+.shopHeader {
+  padding: $spacing-lg;
+  background: linear-gradient(135deg, rgba(196, 149, 106, 0.08) 0%, rgba(196, 149, 106, 0.02) 100%);
+  margin-bottom: $spacing-lg;
+}
+
+.shopHeaderTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: $spacing-sm;
+}
+
+.shopTitle {
+  font-size: $font-size-xl;
+  font-weight: $font-weight-bold;
+  color: $color-text-primary;
+}
+
+.shopFortune {
+  font-size: $font-size-sm;
+  color: $color-primary;
+  font-weight: $font-weight-semibold;
+  background: rgba(196, 149, 106, 0.1);
+  padding: 6rpx 16rpx;
+  border-radius: 20rpx;
+}
+
+.shopSubtitle {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.shopGrid {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+  padding: 0 $spacing-lg;
+  padding-bottom: 200rpx;
+}
+
+.shopCard {
+  display: flex;
+  gap: $spacing-md;
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-md;
+  box-shadow: $shadow-card;
+}
+
+.shopCardImage {
+  width: 140rpx;
+  height: 140rpx;
+  background: $color-bg-page;
+  border-radius: $radius-md;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.shopCardEmoji {
+  font-size: 56rpx;
+}
+
+.shopCardInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-width: 0;
+}
+
+.shopCardName {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.shopCardCategory {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin-top: 4rpx;
+}
+
+.shopCardBottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 8rpx;
+}
+
+.shopCardPrice {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-bold;
+  color: $color-primary;
+}
+
+.shopCardBtn {
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  border-radius: 20rpx;
+  padding: 6rpx 20rpx;
+  transition: transform 0.15s;
+
+  &:active {
+    transform: scale(0.95);
+  }
+}
+
+.shopCardBtnText {
+  font-size: $font-size-xs;
+  color: #fff;
+  font-weight: $font-weight-medium;
 }

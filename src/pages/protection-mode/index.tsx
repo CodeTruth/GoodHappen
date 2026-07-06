@@ -75,6 +75,9 @@ export default function ProtectionModePage() {
   const canvasRef = useRef<any>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const recordedChunksRef = useRef<Blob[]>([]);
+  // 收集录制到的文件，结束时存入证据历史
+  const capturedVideoRef = useRef<Blob | string | null>(null);
+  const capturedAudioRef = useRef<Blob | string | null>(null);
 
   const [cameraReady, setCameraReady] = useState(false);
 
@@ -139,8 +142,36 @@ export default function ProtectionModePage() {
     if (!isDemo) return;
     if (session?.status !== 'active') return;
 
-    demoEndTimerRef.current = setTimeout(() => {
+    demoEndTimerRef.current = setTimeout(async () => {
+      const demoId = session?.id;
+      const demoGps = session?.currentGps;
+      const demoStartedAt = session?.startedAt;
+      const demoDuration = session?.duration;
+
       closeSession();
+
+      // 演示模式也保存证据记录（可能没有视频/音频 blob）
+      if (demoId) {
+        try {
+          const { useEvidenceHistoryStore } = await import('@/store/evidence-history');
+          const now = new Date().toISOString();
+          useEvidenceHistoryStore.getState().addRecord({
+            id: demoId,
+            source: 'protection',
+            title: `扇形保护（演示）· ${new Date(demoStartedAt || Date.now()).toLocaleString('zh-CN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}`,
+            description: demoGps?.address || '保护记录（演示）',
+            startedAt: demoStartedAt || now,
+            closedAt: now,
+            duration: demoDuration || 0,
+            gps: demoGps ? {
+              latitude: demoGps.latitude,
+              longitude: demoGps.longitude,
+              address: demoGps.address,
+            } : undefined,
+            files: [],
+          });
+        } catch { /* ignore */ }
+      }
       Taro.showToast({ title: '演示结束（3分钟）', icon: 'none' });
     }, 3 * 60 * 1000);
 
@@ -209,7 +240,10 @@ export default function ProtectionModePage() {
         });
       } else if (session?.status === 'closed' || session?.status === 'paused') {
         cameraCtxRef.current.stopRecord({
-          success: (res) => console.log('[ProtectionMode] Video stopped:', res.tempVideoPath),
+          success: (res) => {
+            console.log('[ProtectionMode] Video stopped:', res.tempVideoPath);
+            capturedVideoRef.current = res.tempVideoPath;
+          },
           fail: () => console.warn('[ProtectionMode] Video stop failed'),
         });
       }
@@ -219,15 +253,20 @@ export default function ProtectionModePage() {
         if (video && video.srcObject) {
           try {
             recordedChunksRef.current = [];
-            const mediaRecorder = new MediaRecorder(video.srcObject as MediaStream);
+            // 优先 mp4（移动端兼容性好），回退 webm
+            const videoMime = (typeof MediaRecorder !== 'undefined')
+              ? (['video/mp4', 'video/webm;codecs=vp8,opus', 'video/webm'] as const).find(f => MediaRecorder.isTypeSupported(f)) || 'video/webm'
+              : 'video/webm';
+            const mediaRecorder = new MediaRecorder(video.srcObject as MediaStream, { mimeType: videoMime });
             mediaRecorderRef.current = mediaRecorder;
             mediaRecorder.ondataavailable = (e) => {
               if (e.data.size > 0) recordedChunksRef.current.push(e.data);
             };
-            mediaRecorder.onstart = () => console.log('[ProtectionMode] H5 Video started');
+            mediaRecorder.onstart = () => console.log('[ProtectionMode] H5 Video started, mime:', videoMime);
             mediaRecorder.onstop = () => {
-              const blob = new Blob(recordedChunksRef.current, { type: 'video/webm' });
-              console.log('[ProtectionMode] H5 Video stopped:', blob.size);
+              const blob = new Blob(recordedChunksRef.current, { type: videoMime });
+              console.log('[ProtectionMode] H5 Video stopped:', blob.size, 'mime:', videoMime);
+              capturedVideoRef.current = blob;
             };
             mediaRecorder.onerror = () => console.warn('[ProtectionMode] H5 Video error');
             mediaRecorder.start(1000);
@@ -422,15 +461,16 @@ export default function ProtectionModePage() {
   }, [session, sourceScene, advisorLevel, advisorDangerScore, advisorActions]);
 
   /** 跳转记录善行（带上保护模式的证据信息） */
-  const handleGoRecord = useCallback(() => {
+  const handleGoRecord = useCallback((targetSession?: ProtectionSession) => {
+    const s = targetSession || session;
     const params = new URLSearchParams();
     params.set('from', 'protection');
-    if (session) {
-      params.set('duration', String(session.duration));
-      params.set('video', String(session.evidenceCollected.videoDuration));
-      params.set('audio', String(session.evidenceCollected.audioDuration));
-      params.set('gps', String(session.evidenceCollected.gpsPoints));
-      params.set('photos', String(session.evidenceCollected.photos));
+    if (s) {
+      params.set('duration', String(s.duration));
+      params.set('video', String(s.evidenceCollected.videoDuration));
+      params.set('audio', String(s.evidenceCollected.audioDuration));
+      params.set('gps', String(s.evidenceCollected.gpsPoints));
+      params.set('photos', String(s.evidenceCollected.photos));
     }
     if (sourceScene) params.set('scene', encodeURIComponent(sourceScene));
     Taro.navigateTo({ url: `/pages/record/index?${params.toString()}` });
@@ -443,18 +483,165 @@ export default function ProtectionModePage() {
       content: '确认结束保护模式？所有证据将自动保存。',
       confirmText: '确认结束',
       success: (res) => {
-        if (res.confirm) {
-          closeSession();
-          // 如果来自AI顾问建议，自动引导到记录页
-          if (sourceFrom === 'advisor') {
-            closeTimerRef.current = setTimeout(() => {
-              handleGoRecord();
-            }, 600);
+        if (!res.confirm) return;
+
+        const currentId = session?.id;
+        const currentGps = session?.currentGps;
+        const currentStartedAt = session?.startedAt;
+        const currentDuration = session?.duration;
+
+        // ===== 收集所有录制的文件（Promise 包装确保 blob 就绪） =====
+        const collectAllFiles = async (): Promise<any[]> => {
+          const files: any[] = [];
+
+          // 1. H5 端：停止 MediaRecorder 视频，等待 onstop 拿到 blob
+          if (isH5) {
+            try {
+              // 优先用 capturedVideoRef（onstop 已在录制时设置），否则手动 stop
+              let videoBlob: Blob | null = null;
+              if (capturedVideoRef.current && typeof capturedVideoRef.current !== 'string') {
+                videoBlob = capturedVideoRef.current;
+              }
+
+              console.log('[collectAllFiles] capturedVideoRef:', !!capturedVideoRef.current, 'type:', typeof capturedVideoRef.current);
+              console.log('[collectAllFiles] mediaRecorderRef:', !!mediaRecorderRef.current, 'state:', mediaRecorderRef.current?.state);
+              console.log('[collectAllFiles] recordedChunks:', recordedChunksRef.current.length);
+
+              if (!videoBlob && mediaRecorderRef.current) {
+                if (mediaRecorderRef.current.state !== 'inactive') {
+                  videoBlob = await new Promise<Blob | null>((resolve) => {
+                    const mr = mediaRecorderRef.current!;
+                    const chunks = recordedChunksRef.current;
+                    mr.onstop = () => {
+                      try {
+                        if (chunks.length > 0) {
+                          const blob = new Blob(chunks, { type: mr.mimeType || 'video/webm' });
+                          console.log('[collectAllFiles] onstop blob:', blob.size);
+                          resolve(blob.size > 0 ? blob : null);
+                        } else { resolve(null); }
+                      } catch { resolve(null); }
+                    };
+                    try { mr.stop(); } catch { resolve(null); }
+                    // 超时保底
+                    setTimeout(() => { console.log('[collectAllFiles] stop timeout'); resolve(null); }, 3000);
+                  });
+                } else {
+                  // recorder 已经是 inactive，直接用已收集的 chunks
+                  const chunks = recordedChunksRef.current;
+                  if (chunks.length > 0) {
+                    const mr = mediaRecorderRef.current;
+                    videoBlob = new Blob(chunks, { type: mr.mimeType || 'video/webm' });
+                    console.log('[collectAllFiles] inactive blob from chunks:', videoBlob.size);
+                  }
+                }
+              }
+
+              // 最终兜底：直接用 recordedChunksRef 创建 blob
+              if (!videoBlob && recordedChunksRef.current.length > 0) {
+                videoBlob = new Blob(recordedChunksRef.current, { type: 'video/webm' });
+                console.log('[collectAllFiles] fallback blob from chunks:', videoBlob.size);
+              }
+
+              mediaRecorderRef.current = null;
+              if (videoBlob && videoBlob.size > 0) {
+                try {
+                  const { blobToDataUrl } = await import('@/store/evidence-history');
+                  const dataUrl = await blobToDataUrl(videoBlob);
+                  files.push({
+                    id: `pv_${Date.now()}`,
+                    type: 'video' as const,
+                    dataUrl,
+                    size: videoBlob.size,
+                    mimeType: videoBlob.type,
+                    createdAt: new Date().toISOString(),
+                  });
+                  console.log('[ handleClose ] Video blob converted, size:', videoBlob.size, 'mime:', videoBlob.type);
+                } catch (e) {
+                  console.warn('[ handleClose ] Video blobToDataUrl failed:', e);
+                }
+              } else {
+                console.warn('[ handleClose ] No video blob available');
+              }
+            } catch (e) {
+              console.warn('[ handleClose ] Video collect error:', e);
+            }
           }
+
+          // 2. H5 端：从 lastH5AudioBlob 获取音频
+          if (isH5) {
+            try {
+              const { lastH5AudioBlob } = await import('@/services/protection-mode');
+              const audioBlob = lastH5AudioBlob;
+              if (audioBlob && audioBlob.size > 0) {
+                const { blobToDataUrl } = await import('@/store/evidence-history');
+                const dataUrl = await blobToDataUrl(audioBlob);
+                files.push({
+                  id: `pa_${Date.now()}`,
+                  type: 'audio' as const,
+                  dataUrl,
+                  size: audioBlob.size,
+                  createdAt: new Date().toISOString(),
+                });
+                console.log('[ handleClose ] Audio blob converted, size:', audioBlob.size);
+              }
+            } catch (e) {
+              console.warn('[ handleClose ] Audio collect error:', e);
+            }
+          }
+
+          return files;
+        };
+
+        // ===== 执行关闭流程 =====
+        collectAllFiles().then(async (files) => {
+          // 调用 closeSession 停止追踪、更新状态
+          const closed = closeSession();
+
+          // 一步到位写入证据历史（含文件）
+          if (currentId) {
+            try {
+              const { useEvidenceHistoryStore } = await import('@/store/evidence-history');
+              const now = new Date().toISOString();
+              useEvidenceHistoryStore.getState().addRecord({
+                id: currentId,
+                source: 'protection',
+                title: `扇形保护 · ${new Date(currentStartedAt || Date.now()).toLocaleString('zh-CN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}`,
+                description: currentGps?.address || '保护记录',
+                startedAt: currentStartedAt || now,
+                closedAt: now,
+                duration: currentDuration || 0,
+                gps: currentGps ? {
+                  latitude: currentGps.latitude,
+                  longitude: currentGps.longitude,
+                  address: currentGps.address,
+                } : undefined,
+                files,
+              });
+              console.log('[ handleClose ] Evidence saved with', files.length, 'files');
+            } catch (e) {
+              console.warn('[ handleClose ] Failed to save evidence history:', e);
+            }
+          }
+
+          // 提示用户
+          Taro.showToast({
+            title: files.length > 0
+              ? `证据已保存(${files.length}个文件)，可在「我的-证据历史」中查看`
+              : '证据已保存，可在「我的-证据历史」中查看',
+            icon: 'none',
+            duration: 3000,
+          });
+        });
+
+        // 如果来自AI顾问建议，自动引导到记录页
+        if (sourceFrom === 'advisor') {
+          closeTimerRef.current = setTimeout(() => {
+            handleGoRecord();
+          }, 3500);
         }
       },
     });
-  }, [sourceFrom, handleGoRecord]);
+  }, [session?.id, session?.currentGps, session?.startedAt, session?.duration, sourceFrom, handleGoRecord]);
 
   /** 跳转保护详情 */
   const handleGoWitness = useCallback(() => {
@@ -647,9 +834,9 @@ export default function ProtectionModePage() {
         </View>
 
         <View className={styles.circleBtnWrap}>
-          <View className={styles.circleBtnActive}>
+          <View className={styles.circleBtnActive} onClick={handleClose}>
             <Text className={styles.activeTimer}>{formatDuration(session.duration)}</Text>
-            <Text className={styles.activeLabel}>保护中</Text>
+            <Text className={styles.activeLabel}>保护中 · 点击结束</Text>
           </View>
         </View>
 
@@ -685,9 +872,9 @@ export default function ProtectionModePage() {
             <Text className={styles.actionBtnIcon}>{'\u23F8\uFE0F'}</Text>
             <Text className={styles.actionBtnText}>暂停</Text>
           </View>
-          <View className={`${styles.actionBtn} ${styles.actionBtnSOS}`} onClick={handleSOS}>
-            <Text className={styles.actionBtnIcon}>{'\u{1F198}'}</Text>
-            <Text className={styles.actionBtnText}>紧急求助</Text>
+          <View className={`${styles.actionBtn} ${styles.actionBtnClose}`} onClick={handleClose}>
+            <Text className={styles.actionBtnIcon}>{'\u{1F6D1}'}</Text>
+            <Text className={styles.actionBtnText}>结束保护</Text>
           </View>
         </View>
 

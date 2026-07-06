@@ -4,6 +4,7 @@ import Taro from '@tarojs/taro';
 import { useFortuneStore } from '@/store/fortune';
 import { useKindnessStore } from '@/store/kindness';
 import { useUserStore, checkIsMinor } from '@/store/user';
+import { getLevelProgress } from '@/data/fortune-levels';
 
 import AnimatedNumber from '@/components/AnimatedNumber';
 import styles from './index.module.scss';
@@ -16,12 +17,6 @@ const getCurrentUser = () => ({
   bio: '',
   badges: [] as string[],
 });
-const getLevelProgress = (_totalFortune: number) => ({
-  current: { level: 0, name: '新手', min: 0, icon: '⭐', description: '初入善行之路' },
-  next: { level: 1, name: '初学者', min: 100, icon: '⭐' },
-  progress: 0,
-  remaining: 100,
-});
 
 const MinePage: React.FC = () => {
   // 更新自定义 tabBar 选中状态（H5环境中用useEffect替代useDidShow）
@@ -30,7 +25,7 @@ const MinePage: React.FC = () => {
       const page = Taro.getCurrentInstance().page;
       if (page && Taro.getTabBar) {
         const tabbar = Taro.getTabBar<{ current: number }>(page);
-        if (tabbar) { tabbar.current = 3; }
+        if (tabbar) { tabbar.current = 4; }
       }
     } catch { /* H5 环境不支持 getTabBar */ }
   }, []);
@@ -141,6 +136,7 @@ const MinePage: React.FC = () => {
   ];
 
   const protectionItems = [
+    { icon: '📂', text: '证据历史', action: () => Taro.navigateTo({ url: '/pages/evidence-history/index' }) },
     { icon: '⚖️', text: '法律援助', action: () => Taro.navigateTo({ url: '/pages/legal-aid/index' }) },
     { icon: '📸', text: '善行见证', action: () => Taro.navigateTo({ url: '/pages/witness-network/index' }) },
     { icon: '🏥', text: '善行保险', action: () => Taro.navigateTo({ url: '/pages/insurance/index' }) },

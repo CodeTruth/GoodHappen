@@ -280,6 +280,8 @@ async function _initGPS(sessionId: string): Promise<void> {
 
 let _h5AudioRecorder: MediaRecorder | null = null;
 let _h5AudioChunks: Blob[] = [];
+/** 暴露 H5 录音的 blob 供页面层收集（base64 Data URL） */
+export let lastH5AudioBlob: Blob | null = null;
 
 /**
  * 初始化录音
@@ -412,9 +414,52 @@ export const closeSession = (): ProtectionSession | null => {
     isRecording: false,
     isAudioRecording: false,
   };
+  // 保存到 localStorage，供用户稍后发布善行记录使用
+  try {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('haoshi_last_protection_session', JSON.stringify(closed));
+    }
+  } catch (e) {
+    console.warn('[ProtectionMode] Failed to save session to localStorage:', e);
+  }
+  // 注意：证据历史记录由页面层 handleClose 统一写入（含完整文件）
   _currentSession = null;
   _notifyListeners();
   return closed;
+};
+
+/**
+ * 获取最近一次关闭的保护会话（用于发布善行记录）
+ */
+export const getLastClosedSession = (): ProtectionSession | null => {
+  try {
+    if (typeof window === 'undefined') return null;
+    const raw = localStorage.getItem('haoshi_last_protection_session');
+    if (!raw) return null;
+    const session = JSON.parse(raw) as ProtectionSession;
+    // 只有 closed 状态的才返回
+    if (session.status !== 'closed') {
+      localStorage.removeItem('haoshi_last_protection_session');
+      return null;
+    }
+    return session;
+  } catch (e) {
+    console.warn('[ProtectionMode] Failed to load session from localStorage:', e);
+    return null;
+  }
+};
+
+/**
+ * 清除已保存的保护会话（发布成功后调用）
+ */
+export const clearLastClosedSession = (): void => {
+  try {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('haoshi_last_protection_session');
+    }
+  } catch (e) {
+    console.warn('[ProtectionMode] Failed to clear session from localStorage:', e);
+  }
 };
 
 /**
@@ -423,6 +468,13 @@ export const closeSession = (): ProtectionSession | null => {
 function _stopAudioRecording() {
   if (typeof window !== 'undefined' && _h5AudioRecorder) {
     try {
+      // 在 stop 之前保存录音 blob
+      _h5AudioRecorder.onstop = () => {
+        try {
+          lastH5AudioBlob = new Blob(_h5AudioChunks, { type: 'audio/webm' });
+          console.log('[ProtectionMode] H5 Audio blob saved:', lastH5AudioBlob.size);
+        } catch { /* ignore */ }
+      };
       _h5AudioRecorder.stop();
       const tracks = _h5AudioRecorder.stream.getTracks();
       tracks.forEach(track => track.stop());

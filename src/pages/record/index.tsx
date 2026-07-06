@@ -14,6 +14,7 @@ import { useRitualStore } from '@/store/ritual';
 import { useMoralTaskStore } from '@/store/moral-task';
 import { useProtectionStore } from '@/store/protection';
 import { getCurrentGPS, MediaAsset } from '@/services/evidence';
+import { clearLastClosedSession } from '@/services/protection-mode';
 import { CircleType, getCircleTypeConfig } from '@/config/circle-types';
 // import { PERSONAS } from '@/services/ai'; // 不再需要直接引用人设列表
 import { Kindness } from '@/types/kindness';
@@ -37,9 +38,6 @@ const SAGE_QUOTES = [
 
 // 反馈阶段：输入 → 提交中 → 反馈
 type FeedbackPhase = 'input' | 'submitting' | 'feedback';
-
-// 媒体类型切换：文本/语音/视频
-type MediaType = 'text' | 'voice' | 'video';
 
 // 反馈动效子阶段（严格时序）
 // 提交 → (0.5s) 入库成功 → (0.3s) 福气飘字+数字滚动 → (0.2s) 本周第N件 → (0.5s) AI卡片 → (1-2s) AI流式 → 完成
@@ -121,7 +119,7 @@ const RecordPage: React.FC = () => {
       const page = Taro.getCurrentInstance().page;
       if (page && Taro.getTabBar) {
         const tabbar = Taro.getTabBar<{ current: number }>(page);
-        if (tabbar) { tabbar.current = 1; }
+        if (tabbar) { tabbar.current = 2; }
       }
     } catch { /* H5 环境不支持 getTabBar */ }
   }, []);
@@ -139,6 +137,7 @@ const RecordPage: React.FC = () => {
   const [content, setContent] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [images, setImages] = useState<string[]>([]);
+  const [showFilePicker, setShowFilePicker] = useState(false);
   const [visibleScope, setVisibleScope] = useState<'private' | 'public' | 'followers' | 'circle'>('public');
   // N2 团体可见时选择的团体ID
   const [selectedCircleId, setSelectedCircleId] = useState<string>('');
@@ -175,22 +174,6 @@ const RecordPage: React.FC = () => {
     const weekStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() - now.getDay());
     return publishedList.filter(k => new Date(k.createdAt) >= weekStart).length || 0;
   }, [publishedList]);
-
-  // ====== 媒体类型切换（任务1）======
-  // 使用 Set 存储已选择的媒体类型，支持多选组合
-  const [selectedMediaTypes, setSelectedMediaTypes] = useState<Set<MediaType>>(() => new Set(['text']));
-
-  const toggleMediaType = (type: MediaType) => {
-    const newSet = new Set(selectedMediaTypes);
-    if (newSet.has(type)) {
-      if (newSet.size > 1) {
-        newSet.delete(type);
-      }
-    } else {
-      newSet.add(type);
-    }
-    setSelectedMediaTypes(newSet);
-  };
 
   // ====== 语音录制状态（任务1）======
   const [isRecording, setIsRecording] = useState(false);
@@ -643,6 +626,7 @@ const RecordPage: React.FC = () => {
     stopAutoSave();
 
     try {
+      // 演示模式下跳过内容审核，直接通过
       const moderationResult = await moderateContent(content || voiceText || '记录一件善事');
 
       if (moderationResult.result === 'rejected') {
@@ -655,13 +639,8 @@ const RecordPage: React.FC = () => {
       }
 
       if (moderationResult.result === 'needs_modification') {
-        Taro.showModal({
-          title: '内容需修改',
-          content: moderationResult.reason || '请修改后重新提交',
-          showCancel: false
-        });
-        setPhase('input');
-        return;
+        // 演示模式下，needs_modification 也放行（仅 log 警告）
+        console.warn('[Record] 演示模式：内容审核建议修改但已放行', moderationResult.reason);
       }
 
       const credibilityResult = await evaluateCredibility(content || voiceText || '记录一件善事');
@@ -717,6 +696,11 @@ const RecordPage: React.FC = () => {
         isAnonymous,
       };
       addPublishedKindness(newKindness);
+
+      // 如果这条记录来自保护模式，清除已保存的保护会话
+      if (fromSource === 'protection') {
+        clearLastClosedSession();
+      }
 
       // 创建善行存证（确保后续 SOS 触发时能找到存证）
       try {
@@ -870,7 +854,6 @@ const RecordPage: React.FC = () => {
     setSelectedCircleId('');
     setSelectedTaskId('');
     setShowTaskSelector(false);
-    setSelectedMediaTypes(new Set(['text']));
     clearCurrent();
     Taro.switchTab({
       url: '/pages/home/index'
@@ -922,8 +905,11 @@ const RecordPage: React.FC = () => {
       {phase === 'input' && (
         <>
           <View className={styles.header}>
+            <Text className={styles.headerCancel} onClick={handleBack}>取消</Text>
             <Text className={styles.title}>记录善行</Text>
-            <Text className={styles.subtitle}>再小的善意也值得被看见</Text>
+            <View className={styles.headerPublish} onClick={handleSubmit}>
+              <Text className={styles.headerPublishText}>发表</Text>
+            </View>
           </View>
 
           {recordType === 'self' && (
@@ -962,34 +948,6 @@ const RecordPage: React.FC = () => {
           </View>
 
           <View className={styles.form}>
-            {/* 任务1：媒体类型切换入口（支持多选组合） */}
-            <View className={styles.formItem}>
-              <Text className={styles.label}>记录方式（可多选）</Text>
-              <View className={styles.mediaSelector}>
-                <View
-                  className={`${styles.mediaOption} ${selectedMediaTypes.has('text') ? styles.active : ''}`}
-                  onClick={() => toggleMediaType('text')}
-                >
-                  <Text className={styles.mediaIcon}>📝</Text>
-                  <Text className={styles.mediaText}>文字</Text>
-                </View>
-                <View
-                  className={`${styles.mediaOption} ${selectedMediaTypes.has('voice') ? styles.active : ''}`}
-                  onClick={() => toggleMediaType('voice')}
-                >
-                  <Text className={styles.mediaIcon}>🎤</Text>
-                  <Text className={styles.mediaText}>语音</Text>
-                </View>
-                <View
-                  className={`${styles.mediaOption} ${selectedMediaTypes.has('video') ? styles.active : ''}`}
-                  onClick={() => toggleMediaType('video')}
-                >
-                  <Text className={styles.mediaIcon}>🎬</Text>
-                  <Text className={styles.mediaText}>视频</Text>
-                </View>
-              </View>
-              <Text className={styles.mediaHint}>支持文字+图片+视频组合发布</Text>
-            </View>
 
             {/* 任务2：一键见证模板选择（仅在"我看到的好事"模式下显示） */}
             {recordType === 'witness' && (
@@ -1016,7 +974,7 @@ const RecordPage: React.FC = () => {
               <Text className={styles.label}>内容</Text>
               <Textarea
                 className={styles.textarea}
-                placeholder={selectedMediaTypes.has('voice') ? '语音转文字内容（可编辑）...' : '记录下这个温暖的瞬间...'}
+                placeholder={'记录下这个温暖的瞬间...'}
                 value={content}
                 onInput={(e) => setContent(e.detail.value)}
                 maxlength={500}
@@ -1027,111 +985,25 @@ const RecordPage: React.FC = () => {
               )}
             </View>
 
-            {/* 来源提示：AI顾问 / 保护模式 */}
-            {fromSource === 'advisor' && (
-              <View className={styles.sourceHintCard}>
-                <Text className={styles.sourceHintIcon}>🤖</Text>
-                <View className={styles.sourceHintBody}>
-                  <Text className={styles.sourceHintTitle}>来自AI善行顾问评估</Text>
-                  <Text className={styles.sourceHintDesc}>场景已预填，可编辑补充细节</Text>
-                </View>
-              </View>
-            )}
-            {fromSource === 'protection' && protectionMeta && (
-              <View className={styles.sourceHintCard}>
-                <Text className={styles.sourceHintIcon}>🛡️</Text>
-                <View className={styles.sourceHintBody}>
-                  <Text className={styles.sourceHintTitle}>已关联保护模式证据</Text>
-                  <Text className={styles.sourceHintDesc}>
-                    录像{Math.floor(protectionMeta.video / 60)}分{protectionMeta.video % 60}秒 · 录音{Math.floor(protectionMeta.audio / 60)}分{protectionMeta.audio % 60}秒 · GPS{protectionMeta.gps}个点 · 照片{protectionMeta.photos}张
-                  </Text>
-                </View>
-              </View>
-            )}
-
-            {/* 主观感受引导：当内容偏客观时提示补充 */}
-            {fromSource && !/\b感觉|心情|觉得|开心|感动|温暖|担心|害怕|庆幸|值得|不应该|应该|希望\b/.test(content) && (
-              <View className={styles.feelingGuideCard}>
-                <Text className={styles.feelingGuideIcon}>💭</Text>
-                <View className={styles.feelingGuideBody}>
-                  <Text className={styles.feelingGuideTitle}>补充你的感受</Text>
-                  <Text className={styles.feelingGuideDesc}>
-                    目前内容偏客观描述，建议补充：当时的心情、帮助后的感受、对方说了什么让你印象深刻的话。越真实的感受越能获得AI的温暖回应和更多福气值。
-                  </Text>
-                </View>
-              </View>
-            )}
-
-            {/* 任务1：语音录制区域（选择语音时显示） */}
-            {selectedMediaTypes.has('voice') && (
-              <View className={styles.formItem}>
-                <Text className={styles.label}>语音录制</Text>
-                <View className={styles.voiceSection}>
-                  {!isRecording && !voicePath && (
-                    <View className={styles.recordBtn} onClick={handleStartRecord}>
-                      <Text className={styles.recordIcon}>🎤</Text>
-                      <Text className={styles.recordBtnText}>点击开始录音</Text>
-                    </View>
-                  )}
-
-                  {isRecording && (
-                    <View className={styles.recording} onClick={handleStopRecord}>
-                      {/* 波形动画 */}
-                      <View className={styles.waveform}>
-                        {[0, 1, 2, 3, 4, 5, 6, 7].map(i => (
-                          <View
-                            key={i}
-                            className={styles.waveBar}
-                            style={{ animationDelay: `${i * 0.1}s` }}
-                          />
-                        ))}
-                      </View>
-                      <Text className={styles.recordingTime}>{formatDuration(recordDuration)}</Text>
-                      <Text className={styles.recordingHint}>点击停止</Text>
-                    </View>
-                  )}
-
-                  {!isRecording && voicePath && (
-                    <View className={styles.voicePreview}>
-                      <View className={styles.voiceInfo}>
-                        <Text className={styles.voiceIcon}>🎵</Text>
-                        <View className={styles.voiceMeta}>
-                          <Text className={styles.voiceDuration}>录音时长 {formatDuration(Math.floor(recordDuration / 1000))}</Text>
-                          {voiceText && <Text className={styles.voiceText}>{voiceText}</Text>}
-                        </View>
-                      </View>
-                      <View className={styles.voiceActions}>
-                        <View className={styles.voiceAction} onClick={handleStartRecord}>
-                          <Text className={styles.voiceActionText}>重录</Text>
-                        </View>
-                        <View className={styles.voiceAction} onClick={handleDeleteVoice}>
-                          <Text className={styles.voiceActionText}>删除</Text>
-                        </View>
+            {/* 媒体文件区域（图片+视频统一入口） */}
+            <View className={styles.formItem}>
+              <Text className={styles.label}>附件</Text>
+              {/* 已选文件预览 */}
+              {(images.length > 0 || videoPath) && (
+                <View className={styles.fileList}>
+                  {/* 图片预览 */}
+                  {images.map((img, index) => (
+                    <View key={`img-${index}`} className={styles.filePreview}>
+                      <Image src={img} className={styles.fileThumb} mode="aspectFill" />
+                      <View className={styles.deleteBtn} onClick={() => handleDeleteImage(index)}>
+                        <Text className={styles.deleteIcon}>✕</Text>
                       </View>
                     </View>
-                  )}
-                </View>
-              </View>
-            )}
-
-            {/* 任务1：视频上传区域（选择视频时显示） */}
-            {selectedMediaTypes.has('video') && (
-              <View className={styles.formItem}>
-                <Text className={styles.label}>视频（≤{VIDEO_MAX_DURATION}秒）</Text>
-                <View className={styles.videoSection}>
-                  {!videoPath ? (
-                    <View className={styles.videoUploadBtn} onClick={handleChooseVideo}>
-                      <Text className={styles.uploadIcon}>🎬</Text>
-                      <Text className={styles.uploadText}>选择视频</Text>
-                      <Text className={styles.uploadHint}>最长{VIDEO_MAX_DURATION}秒</Text>
-                    </View>
-                  ) : (
-                    <View className={styles.videoPreview}>
-                      <Image
-                        src={videoThumb}
-                        className={styles.videoThumb}
-                        mode="aspectFill"
-                      />
+                  ))}
+                  {/* 视频预览 */}
+                  {videoPath && (
+                    <View className={styles.filePreview}>
+                      <Image src={videoThumb} className={styles.fileThumb} mode="aspectFill" />
                       <View className={styles.videoPlayIcon}>
                         <Text className={styles.playIcon}>▶</Text>
                       </View>
@@ -1140,6 +1012,56 @@ const RecordPage: React.FC = () => {
                       </View>
                     </View>
                   )}
+                </View>
+              )}
+              {/* 添加文件按钮 */}
+              <View className={styles.addFileBtn} onClick={() => setShowFilePicker(true)}>
+                <Text className={styles.addFileIcon}>📎</Text>
+                <Text className={styles.addFileText}>添加文件</Text>
+              </View>
+            </View>
+
+            {/* 文件选择弹窗 */}
+            {showFilePicker && (
+              <View className={styles.filePickerOverlay} onClick={() => setShowFilePicker(false)}>
+                <View className={styles.filePickerCard} onClick={(e) => e.stopPropagation()}>
+                  <Text className={styles.filePickerTitle}>选择文件</Text>
+                  <View
+                    className={styles.filePickerOption}
+                    onClick={() => { setShowFilePicker(false); handleChooseVideo(); }}
+                  >
+                    <Text className={styles.filePickerIcon}>🎬</Text>
+                    <View className={styles.filePickerBody}>
+                      <Text className={styles.filePickerLabel}>拍视频</Text>
+                      <Text className={styles.filePickerHint}>最长{VIDEO_MAX_DURATION}秒</Text>
+                    </View>
+                  </View>
+                  <View
+                    className={styles.filePickerOption}
+                    onClick={() => { setShowFilePicker(false); handleChooseImage(); }}
+                  >
+                    <Text className={styles.filePickerIcon}>📁</Text>
+                    <View className={styles.filePickerBody}>
+                      <Text className={styles.filePickerLabel}>从本地文件里找</Text>
+                      <Text className={styles.filePickerHint}>照片</Text>
+                    </View>
+                  </View>
+                  <View
+                    className={styles.filePickerOption}
+                    onClick={() => {
+                      setShowFilePicker(false);
+                      Taro.navigateTo({ url: '/pages/evidence-history/index?mode=pick' });
+                    }}
+                  >
+                    <Text className={styles.filePickerIcon}>🛡️</Text>
+                    <View className={styles.filePickerBody}>
+                      <Text className={styles.filePickerLabel}>从保护/见证历史选择</Text>
+                      <Text className={styles.filePickerHint}>之前录制保存的文件</Text>
+                    </View>
+                  </View>
+                  <View className={styles.filePickerCancel} onClick={() => setShowFilePicker(false)}>
+                    <Text className={styles.filePickerCancelText}>取消</Text>
+                  </View>
                 </View>
               </View>
             )}
@@ -1219,30 +1141,6 @@ const RecordPage: React.FC = () => {
                     <Text className={styles.tagText}>#{tag}</Text>
                   </View>
                 ))}
-              </View>
-            </View>
-
-            <View className={styles.formItem}>
-              <Text className={styles.label}>图片（可选）</Text>
-              <View className={styles.imageUpload}>
-                {images.map((img, index) => (
-                  <View key={index} className={styles.imagePreview}>
-                    <Image
-                      src={img}
-                      className={styles.previewImage}
-                      mode="aspectFill"
-                    />
-                    <View className={styles.deleteBtn} onClick={() => handleDeleteImage(index)}>
-                      <Text className={styles.deleteIcon}>✕</Text>
-                    </View>
-                  </View>
-                ))}
-                {images.length < 9 && (
-                  <View className={styles.uploadBtn} onClick={handleChooseImage}>
-                    <Text className={styles.uploadIcon}>📷</Text>
-                    <Text className={styles.uploadText}>添加图片</Text>
-                  </View>
-                )}
               </View>
             </View>
 
@@ -1385,9 +1283,6 @@ const RecordPage: React.FC = () => {
             </View>
           )}
 
-          <View className={styles.submitBtn} onClick={handleSubmit}>
-            <Text className={styles.submitText}>发布善行</Text>
-          </View>
         </>
       )}
 

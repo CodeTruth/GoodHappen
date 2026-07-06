@@ -13,10 +13,21 @@ import styles from './index.module.scss';
 type TabType = 'ranking' | 'report' | 'examples';
 
 const CircleDashboardPage: React.FC = () => {
+  // Tab 页面：设置 tabBar 选中索引
+  useEffect(() => {
+    try {
+      const page = Taro.getCurrentInstance().page;
+      if (page && Taro.getTabBar) {
+        const tabbar = Taro.getTabBar<{ current: number }>(page);
+        if (tabbar) tabbar.current = 3;
+      }
+    } catch { /* H5 不支持 */ }
+  }, []);
+
   const router = useRouter();
   const circleId = router.params.id || '';
 
-  const { getCircleById, hasPermission } = useCircleStore();
+  const { getCircleById, hasPermission, getCurrentUserCircles } = useCircleStore();
   const { userInfo } = useUserStore();
 
   // 圈子类型配置
@@ -116,6 +127,80 @@ const CircleDashboardPage: React.FC = () => {
     const d = new Date(dateStr);
     return `${d.getMonth() + 1}/${d.getDate()}`;
   };
+
+  // 没有 circleId（从 Tab 进入）：展示用户圈子列表
+  if (!circleId) {
+    const myCircles = userInfo ? getCurrentUserCircles(userInfo.id) : [];
+
+    if (myCircles.length === 0) {
+      return (
+        <View className={styles.container}>
+          <View className={styles.empty}>
+            <Text className={styles.emptyIcon}>📊</Text>
+            <Text className={styles.emptyText}>你还没有加入任何善行圈</Text>
+            <View
+              className={styles.actionBtn}
+              style={{ marginTop: '30rpx' }}
+              onClick={() => Taro.navigateTo({ url: '/pages/circle/index' })}
+            >
+              <Text className={styles.actionBtnText}>去看看善行圈</Text>
+            </View>
+          </View>
+        </View>
+      );
+    }
+
+    return (
+      <View className={styles.container}>
+        <View className={styles.headerCard}>
+          <Text className={styles.headerTitle}>我的善行圈</Text>
+          <Text className={styles.headerSubtitle}>共 {myCircles.length} 个圈子</Text>
+        </View>
+
+        {myCircles.map((c) => (
+          <View
+            key={c.id}
+            className={styles.starCard}
+            style={{ marginBottom: '20rpx', cursor: 'pointer' }}
+            onClick={() => Taro.navigateTo({ url: `/pages/circle-dashboard/index?id=${c.id}` })}
+          >
+            <Text className={styles.starIcon}>{c.type === 'class' ? '🎓' : c.type === 'community' ? '🏘️' : '🌐'}</Text>
+            <View className={styles.starContent}>
+              <Text className={styles.starTitle} style={{ fontSize: '30rpx', fontWeight: 600 }}>{c.name}</Text>
+              <Text className={styles.starDesc} style={{ color: '#9E8E7E', fontSize: '24rpx' }}>
+                {c.members.length}人
+              </Text>
+              {c.members.length > 0 && (
+                <View style={{ marginTop: '12rpx' }}>
+                  {c.members.slice(0, 3).map((m, i) => (
+                    <Text
+                      key={m.userId}
+                      style={{
+                        fontSize: '22rpx',
+                        color: i === 0 ? '#C4956A' : '#9E8E7E',
+                        marginRight: '16rpx',
+                      }}
+                    >
+                      {m.role === 'admin' ? '👑' : ''} {m.userName}
+                    </Text>
+                  ))}
+                </View>
+              )}
+            </View>
+            <Text style={{ color: '#C4956A', fontSize: '24rpx' }}>查看 &gt;</Text>
+          </View>
+        ))}
+
+        <View
+          className={styles.actionBtn}
+          style={{ marginTop: '30rpx', textAlign: 'center' }}
+          onClick={() => Taro.navigateTo({ url: '/pages/circle/index' })}
+        >
+          <Text className={styles.actionBtnText}>+ 加入更多善行圈</Text>
+        </View>
+      </View>
+    );
+  }
 
   if (!isAdmin) {
     return (

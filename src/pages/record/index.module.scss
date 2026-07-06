@@ -1,4 +1,4 @@
-@use '@/styles/variables.scss' as *;
+﻿@use '@/styles/variables.scss' as *;
 
 .pageWrapper {
   min-height: 100vh;
@@ -8,23 +8,46 @@
   min-height: 100vh;
   background: $color-bg-page;
   padding: $page-padding;
-  padding-bottom: calc(#{$page-padding} + 120px); // 为自定义 tabBar 留出空间
+  padding-bottom: calc(#{$page-padding} + 120px); // 涓鸿嚜瀹氫箟 tabBar 鐣欏嚭绌洪棿
 }
 
 .header {
-  margin-bottom: $spacing-lg;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20rpx 0;
+  margin-bottom: $spacing-md;
+}
+
+.headerCancel {
+  font-size: $font-size-md;
+  color: $color-text-secondary;
+  padding: 12rpx 16rpx;
+  cursor: pointer;
 }
 
 .title {
-  font-size: $font-size-xxl;
+  font-size: $font-size-xl;
   font-weight: $font-weight-semibold;
   color: $color-text-primary;
-  margin-bottom: $spacing-xs;
 }
 
-.subtitle {
+.headerPublish {
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  border-radius: 32rpx;
+  padding: 12rpx 32rpx;
+  cursor: pointer;
+  transition: transform 0.15s;
+
+  &:active {
+    transform: scale(0.95);
+  }
+}
+
+.headerPublishText {
   font-size: $font-size-sm;
-  color: $color-text-tertiary;
+  color: #fff;
+  font-weight: $font-weight-semibold;
 }
 
 .typeSelector {
@@ -72,7 +95,7 @@
   margin-bottom: $spacing-lg;
 }
 
-// 来源提示（AI顾问 / 保护模式）
+// 鏉ユ簮鎻愮ず锛圓I椤鹃棶 / 淇濇姢妯″紡锛?
 .sourceHintCard {
   display: flex;
   align-items: center;
@@ -106,7 +129,7 @@
   color: $color-text-secondary;
 }
 
-// 主观感受引导
+// 涓昏鎰熷彈寮曞
 .feelingGuideCard {
   display: flex;
   align-items: flex-start;
@@ -322,7 +345,7 @@
   animation: inkSpread 2s ease-in-out infinite;
 }
 
-// 墨滴扩散动画
+// 澧ㄦ淮鎵╂暎鍔ㄧ敾
 @keyframes inkSpread {
   0% {
     transform: scale(0.8);
@@ -421,7 +444,7 @@
   }
 }
 
-// 任务3：飘字动画（从下往上飘并淡出）
+// 浠诲姟3锛氶瀛楀姩鐢伙紙浠庝笅寰€涓婇骞舵贰鍑猴級
 .floatText {
   position: absolute;
   top: 0;
@@ -516,7 +539,7 @@
   }
 }
 
-// 第二位AI卡片慢速淡入
+// 绗簩浣岮I鍗＄墖鎱㈤€熸贰鍏?
 @keyframes fadeInSlow {
   0% {
     opacity: 0;
@@ -579,7 +602,7 @@
   }
 }
 
-// 次要按钮（返回首页）
+// 娆¤鎸夐挳锛堣繑鍥為椤碉級
 .actionBtnSecondary {
   background: $color-bg-card;
   border: 2rpx solid $color-primary;
@@ -625,7 +648,7 @@
 }
 
 // ============================================
-// 任务1：媒体类型切换
+// 浠诲姟1锛氬獟浣撶被鍨嬪垏鎹?
 // ============================================
 .mediaSelector {
   display: flex;
@@ -673,7 +696,7 @@
 }
 
 // ============================================
-// 任务1：语音录制
+// 浠诲姟1锛氳闊冲綍鍒?
 // ============================================
 .voiceSection {
   width: 100%;
@@ -706,7 +729,7 @@
   font-weight: $font-weight-medium;
 }
 
-// 录音中状态
+// 褰曢煶涓姸鎬?
 .recording {
   width: 100%;
   height: 200rpx;
@@ -723,7 +746,7 @@
   }
 }
 
-// 波形动画
+// 娉㈠舰鍔ㄧ敾
 .waveform {
   display: flex;
   align-items: center;
@@ -760,7 +783,7 @@
   color: rgba(255, 255, 255, 0.8);
 }
 
-// 录音完成预览
+// 褰曢煶瀹屾垚棰勮
 .voicePreview {
   width: 100%;
   background: $color-bg-page;
@@ -824,7 +847,7 @@
 }
 
 // ============================================
-// 任务1：视频上传
+// 浠诲姟1锛氳棰戜笂浼?
 // ============================================
 .videoSection {
   width: 100%;
@@ -852,7 +875,7 @@
   color: $color-text-tertiary;
 }
 
-// 视频缩略图预览
+// 瑙嗛缂╃暐鍥鹃瑙?
 .videoPreview {
   position: relative;
   width: 100%;
@@ -888,7 +911,7 @@
 }
 
 // ============================================
-// 任务2：草稿保存提示与列表
+// 浠诲姟2锛氳崏绋夸繚瀛樻彁绀轰笌鍒楄〃
 // ============================================
 .draftSavedHint {
   text-align: center;
@@ -961,7 +984,7 @@
 }
 
 // ============================================
-// N2 团体可见：团体选择器
+// N2 鍥綋鍙锛氬洟浣撻€夋嫨鍣?
 // ============================================
 .circleSelector {
   margin-top: $spacing-md;
@@ -1014,7 +1037,7 @@
 }
 
 // ============================================
-// 德育任务关联选择器
+// 寰疯偛浠诲姟鍏宠仈閫夋嫨鍣?
 // ============================================
 .taskSelector {
   margin-top: $spacing-md;
@@ -1142,7 +1165,7 @@
 }
 
 // ============================================
-// 匿名行善开关
+// 鍖垮悕琛屽杽寮€鍏?
 // ============================================
 .anonymousToggle {
   display: flex;
@@ -1212,7 +1235,7 @@
 }
 
 // ============================================
-// 善行风险检测横幅
+// 鍠勮椋庨櫓妫€娴嬫í骞?
 // ============================================
 .riskBanner {
   margin: $spacing-md 0;
@@ -1283,7 +1306,7 @@
 }
 
 // ============================================
-// 事后补录引导
+// 浜嬪悗琛ュ綍寮曞
 // ============================================
 .postHocGuide {
   margin: $spacing-md 0;
@@ -1350,7 +1373,7 @@
 }
 
 // ============================================
-// 任务2：一键见证模板选择器
+// 浠诲姟2锛氫竴閿璇佹ā鏉块€夋嫨鍣?
 // ============================================
 .witnessTemplates {
   display: flex;
@@ -1395,7 +1418,7 @@
 }
 
 // ============================================
-// 任务3：首次匿名行善提示
+// 浠诲姟3锛氶娆″尶鍚嶈鍠勬彁绀?
 // ============================================
 .anonymousFirstTip {
   margin-top: $spacing-sm;
@@ -1422,3 +1445,196 @@
     transform: translateY(0);
   }
 }
+
+// ============================================
+// 娣诲姞鏂囦欢 & 鏂囦欢閫夋嫨寮圭獥
+// ============================================
+.fileList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+  margin-bottom: 20rpx;
+}
+
+.filePreview {
+  width: 160rpx;
+  height: 160rpx;
+  border-radius: 12rpx;
+  overflow: hidden;
+  position: relative;
+  background: $color-bg-hover;
+
+  .deleteBtn {
+    position: absolute;
+    top: 4rpx;
+    right: 4rpx;
+    width: 36rpx;
+    height: 36rpx;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+  }
+
+  .deleteIcon {
+    font-size: 22rpx;
+    color: #fff;
+    line-height: 1;
+  }
+}
+
+.fileThumb {
+  width: 100%;
+  height: 100%;
+}
+
+.playIcon {
+  font-size: 40rpx;
+  color: #fff;
+}
+
+.videoPlayIcon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 60rpx;
+  height: 60rpx;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.addFileBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12rpx;
+  padding: 28rpx;
+  background: $color-bg-page;
+  border: 2rpx dashed #D4C5B2;
+  border-radius: 16rpx;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:active {
+    background: #F5F0EA;
+    border-color: $color-primary;
+  }
+}
+
+.addFileIcon {
+  font-size: 40rpx;
+}
+
+.addFileText {
+  font-size: $font-size-md;
+  color: $color-text-secondary;
+}
+
+// 鏂囦欢閫夋嫨寮圭獥
+.filePickerOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 10000;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.filePickerCard {
+  width: 100%;
+  background: #fff;
+  border-radius: 24rpx 24rpx 0 0;
+  padding: 32rpx 32rpx calc(32rpx + env(safe-area-inset-bottom));
+  animation: slideUp 0.25s ease-out;
+}
+
+.filePickerTitle {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: $color-text-primary;
+  text-align: center;
+  margin-bottom: 32rpx;
+}
+
+.filePickerOption {
+  display: flex;
+  align-items: center;
+  gap: 24rpx;
+  padding: 28rpx 24rpx;
+  border-radius: 16rpx;
+  background: $color-bg-page;
+  margin-bottom: 16rpx;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:active {
+    background: #F0EBE4;
+    transform: scale(0.98);
+  }
+}
+
+.filePickerIcon {
+  font-size: 48rpx;
+  flex-shrink: 0;
+}
+
+.filePickerBody {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+}
+
+.filePickerLabel {
+  font-size: $font-size-md;
+  font-weight: 600;
+  color: $color-text-primary;
+}
+
+.filePickerHint {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.filePickerCancel {
+  margin-top: 8rpx;
+  padding: 24rpx;
+  text-align: center;
+  border-radius: 16rpx;
+  background: #F5F5F5;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:active {
+    background: #ECECEC;
+  }
+}
+
+.filePickerCancelText {
+  font-size: $font-size-md;
+  color: $color-text-secondary;
+  font-weight: 500;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+

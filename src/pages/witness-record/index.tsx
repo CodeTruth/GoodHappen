@@ -4,6 +4,7 @@ import Taro from '@tarojs/taro';
 import { useKindnessStore } from '@/store/kindness';
 import { useUserStore } from '@/store/user';
 import { useFortuneStore } from '@/store/fortune';
+import { useEvidenceHistoryStore, blobToDataUrl } from '@/store/evidence-history';
 
 import styles from './index.module.scss';
 
@@ -15,6 +16,7 @@ export default function WitnessRecordPage() {
   const canvasRef = useRef<any>(null);
   const mediaRecorderRef = useRef<any>(null);
   const recordedChunksRef = useRef<Blob[]>([]);
+  const videoBlobRef = useRef<Blob | null>(null);
 
   // 状态
   const [cameraReady, setCameraReady] = useState(false);
@@ -70,27 +72,25 @@ export default function WitnessRecordPage() {
 
   // ===== 页面显示时重置状态（重新进入时清空旧数据） =====
   useEffect(() => {
-    Taro.useDidShow(() => {
-      setPhotos([]);
-      setVideoUrl('');
-      setIsRecording(false);
-      setRecordTime(0);
-      setShowPublish(false);
-      setDescription('');
-      setCameraError('');
-      setLocation(null);
-      setLocationError('');
-      if (recordTimerRef.current) {
-        clearInterval(recordTimerRef.current);
-        recordTimerRef.current = null;
-      }
-      if (mediaRecorderRef.current) {
-        try {
-          mediaRecorderRef.current.stop();
-        } catch (_) {}
-        mediaRecorderRef.current = null;
-      }
-    });
+    setPhotos([]);
+    setVideoUrl('');
+    setIsRecording(false);
+    setRecordTime(0);
+    setShowPublish(false);
+    setDescription('');
+    setCameraError('');
+    setLocation(null);
+    setLocationError('');
+    if (recordTimerRef.current) {
+      clearInterval(recordTimerRef.current);
+      recordTimerRef.current = null;
+    }
+    if (mediaRecorderRef.current) {
+      try {
+        mediaRecorderRef.current.stop();
+      } catch (_) {}
+      mediaRecorderRef.current = null;
+    }
   }, []);
 
   // ===== 获取GPS位置 =====
@@ -106,6 +106,12 @@ export default function WitnessRecordPage() {
       },
       fail: () => {
         setLocationError('定位失败');
+        // 使用默认位置，确保证据有 GPS 信息
+        setLocation({
+          lat: 39.9045,
+          lng: 116.4078,
+          address: '定位中（使用默认位置）',
+        });
       },
     });
   }, []);
@@ -154,69 +160,88 @@ export default function WitnessRecordPage() {
     return 'video/webm';
   };
 
-// ===== 开始/停止录像（H5） =====
-  const toggleRecord = useCallback(() => {
+  // 用 ref 跟踪录像状态，避免 useCallback 闭包问题
+  const isRecordingRef = useRef(false);
+
+  // ===== 开始录像 =====
+  const startRecord = useCallback(() => {
     if (!isH5) return;
+    const video = videoRef.current;
+    if (!video || !video.srcObject) {
+      Taro.showToast({ title: '摄像头未就绪', icon: 'none' });
+      return;
+    }
 
-    if (isRecording) {
-      if (mediaRecorderRef.current) {
-        try {
-          mediaRecorderRef.current.stop();
-        } catch (err) {
-          console.warn('[WitnessRecord] Stop recording error:', err);
+    try {
+      recordedChunksRef.current = [];
+      const format = getBestVideoFormat();
+      const mediaRecorder = new MediaRecorder(video.srcObject as MediaStream, { mimeType: format });
+      mediaRecorderRef.current = mediaRecorder;
+
+      mediaRecorder.ondataavailable = (e: any) => {
+        if (e.data.size > 0) recordedChunksRef.current.push(e.data);
+      };
+
+      mediaRecorder.onstop = () => {
+        if (recordedChunksRef.current.length > 0) {
+          const blob = new Blob(recordedChunksRef.current, { type: format });
+          videoBlobRef.current = blob;
+          const url = URL.createObjectURL(blob);
+          setVideoUrl(url);
+          Taro.showToast({ title: '录像已保存', icon: 'success' });
+        } else {
+          videoBlobRef.current = null;
+          Taro.showToast({ title: '录像内容为空', icon: 'none' });
         }
-      }
-      if (recordTimerRef.current) {
-        clearInterval(recordTimerRef.current);
-        recordTimerRef.current = null;
-      }
-      setIsRecording(false);
-    } else {
-      const video = videoRef.current;
-      if (!video || !video.srcObject) {
-        Taro.showToast({ title: '摄像头未就绪', icon: 'none' });
-        return;
-      }
+      };
 
+      mediaRecorder.onerror = (err: any) => {
+        console.warn('[WitnessRecord] Recording error:', err);
+        Taro.showToast({ title: '录像失败', icon: 'none' });
+        isRecordingRef.current = false;
+        setIsRecording(false);
+      };
+
+      mediaRecorder.start(1000);
+      isRecordingRef.current = true;
+      setIsRecording(true);
+      setRecordTime(0);
+      recordTimerRef.current = setInterval(() => {
+        setRecordTime(t => t + 1);
+      }, 1000);
+    } catch (err) {
+      console.warn('[WitnessRecord] MediaRecorder not supported:', err);
+      Taro.showToast({ title: '当前浏览器不支持录像', icon: 'none' });
+    }
+  }, []);
+
+  // ===== 停止录像 =====
+  const stopRecord = useCallback(() => {
+    if (!isH5) return;
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
       try {
-        recordedChunksRef.current = [];
-        const format = getBestVideoFormat();
-        const mediaRecorder = new MediaRecorder(video.srcObject as MediaStream, { mimeType: format });
-        mediaRecorderRef.current = mediaRecorder;
-
-        mediaRecorder.ondataavailable = (e: any) => {
-          if (e.data.size > 0) recordedChunksRef.current.push(e.data);
-        };
-
-        mediaRecorder.onstop = () => {
-          if (recordedChunksRef.current.length > 0) {
-            const blob = new Blob(recordedChunksRef.current, { type: format });
-            const url = URL.createObjectURL(blob);
-            setVideoUrl(url);
-            Taro.showToast({ title: '录像已保存', icon: 'success' });
-          } else {
-            Taro.showToast({ title: '录像内容为空', icon: 'none' });
-          }
-        };
-
-        mediaRecorder.onerror = (err: any) => {
-          console.warn('[WitnessRecord] Recording error:', err);
-          Taro.showToast({ title: '录像失败', icon: 'none' });
-          setIsRecording(false);
-        };
-
-        mediaRecorder.start(1000);
-        setIsRecording(true);
-        setRecordTime(0);
-        recordTimerRef.current = setInterval(() => {
-          setRecordTime(t => t + 1);
-        }, 1000);
+        mediaRecorderRef.current.stop();
       } catch (err) {
-        console.warn('[WitnessRecord] MediaRecorder not supported:', err);
-        Taro.showToast({ title: '当前浏览器不支持录像', icon: 'none' });
+        console.warn('[WitnessRecord] Stop recording error:', err);
+        Taro.showToast({ title: '停止录像失败，请重试', icon: 'none' });
       }
     }
-  }, [isRecording]);
+    if (recordTimerRef.current) {
+      clearInterval(recordTimerRef.current);
+      recordTimerRef.current = null;
+    }
+    isRecordingRef.current = false;
+    setIsRecording(false);
+  }, []);
+
+  // ===== 切换录像（开始/停止） =====
+  const toggleRecord = useCallback(() => {
+    if (isRecordingRef.current) {
+      stopRecord();
+    } else {
+      startRecord();
+    }
+  }, [startRecord, stopRecord]);
 
   // ===== 格式化录制时间 =====
   const formatRecordTime = (seconds: number) => {
@@ -234,6 +259,7 @@ export default function WitnessRecordPage() {
   const removeVideo = () => {
     setVideoUrl('');
     setRecordTime(0);
+    videoBlobRef.current = null;
   };
 
   // ===== 打开发布面板 =====
@@ -246,9 +272,20 @@ export default function WitnessRecordPage() {
   };
 
   // ===== 发布见证 =====
-  const handlePublish = () => {
+  const handlePublish = async () => {
     if (publishing) return;
     setPublishing(true);
+
+    // 预先把视频 blob 转成 base64 data URL（object URL 刷新后失效，无法持久化）
+    let videoDataUrl = '';
+    if (videoBlobRef.current && videoBlobRef.current.size > 0) {
+      try {
+        Taro.showToast({ title: '正在处理视频...', icon: 'loading', duration: 10000 });
+        videoDataUrl = await blobToDataUrl(videoBlobRef.current);
+      } catch (e) {
+        console.warn('[WitnessRecord] Video blob to dataUrl failed:', e);
+      }
+    }
 
     const newKindness = {
       id: `witness_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
@@ -275,15 +312,65 @@ export default function WitnessRecordPage() {
       addPublished(newKindness);
       addFortune(15, 'witness');
 
+      // 保存到证据历史
+      try {
+        const files: any[] = [];
+        photos.forEach((p, i) => {
+          files.push({
+            id: `witness_photo_${i}_${Date.now()}`,
+            type: 'photo' as const,
+            dataUrl: p,
+            size: p.length || 0,
+            createdAt: new Date().toISOString(),
+          });
+        });
+        if (videoDataUrl) {
+          files.push({
+            id: `witness_video_${Date.now()}`,
+            type: 'video' as const,
+            dataUrl: videoDataUrl,
+            size: videoDataUrl.length,
+            createdAt: new Date().toISOString(),
+          });
+        }
+        useEvidenceHistoryStore.getState().addRecord({
+          id: newKindness.id,
+          source: 'witness',
+          title: `扇形见证 · ${new Date().toLocaleString('zh-CN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}`,
+          description: description || location?.address || '见证记录',
+          startedAt: new Date().toISOString(),
+          closedAt: new Date().toISOString(),
+          duration: recordTime,
+          gps: location?.address ? {
+            latitude: location.lat,
+            longitude: location.lng,
+            address: location.address,
+          } : undefined,
+          files,
+        });
+      } catch (e) {
+        console.warn('[WitnessRecord] Failed to save to evidence history:', e);
+      }
+
       Taro.showToast({
         title: '见证发布成功！+15福气',
         icon: 'success',
         duration: 2000,
       });
 
+      // 发布成功后提示证据保存位置
+      setTimeout(() => {
+        Taro.showToast({
+          title: '证据已保存，可在「我的-证据历史」中查看',
+          icon: 'none',
+          duration: 2500,
+        });
+      }, 2200);
+
+      // 跳转延迟到证据提示显示完毕后
       setTimeout(() => {
         Taro.switchTab({ url: '/pages/home/index' });
-      }, 1500);
+      }, 5000);
     }, 800);
   };
 

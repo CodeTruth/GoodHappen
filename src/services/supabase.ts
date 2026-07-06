@@ -24,7 +24,11 @@ if (supabaseUrl && supabaseKey) {
   console.warn('[Supabase] 环境变量未配置，Supabase 功能将不可用。请在 .env 或 Taro defineConstants 中配置 SUPABASE_URL 和 SUPABASE_ANON_KEY');
 }
 
-export const supabase = supabaseInstance!;
+/**
+ * 安全获取 Supabase 客户端实例。
+ * 当 Supabase 未配置时返回 null，调用方应配合 isSupabaseAvailable() 使用。
+ */
+export const supabase = supabaseInstance;
 
 export const isSupabaseAvailable = (): boolean => {
   return !!supabaseUrl && !!supabaseKey;

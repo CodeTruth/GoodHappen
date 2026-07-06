@@ -59,6 +59,16 @@ export default function AIAdvisorPage() {
     if (timeoutRef.current) { clearTimeout(timeoutRef.current); timeoutRef.current = null }
   }, [])
 
+  // 常用场景快捷选项
+  const SCENE_PRESETS = [
+    { icon: '👴', label: '老人摔倒', text: '看到一位老人摔倒在路边，周围没什么人，似乎无法起身' },
+    { icon: '🚗', label: '交通事故', text: '看到路口有两辆车相撞，有人受伤流血，情况紧急' },
+    { icon: '🌊', label: '有人溺水', text: '看到有人在河里挣扎，喊救命，周围没有救生设备' },
+    { icon: '💼', label: '拾金不昧', text: '在地铁座位上捡到一个钱包，里面有身份证和现金' },
+    { icon: '😵', label: '有人晕倒', text: '看到一位女士突然晕倒在商场里，脸色苍白' },
+    { icon: '🐕', label: '流浪动物', text: '看到一只受伤的流浪猫在路边，腿好像断了' },
+  ]
+
   // ===== 开始引导流程（实时感知模式） =====
   const handleStart = useCallback(() => {
     clearAllTimers()
@@ -67,6 +77,7 @@ export default function AIAdvisorPage() {
     setGuideText('请将摄像头对准需要帮助的现场')
     setVoiceText('')
     setCameraReady(false)
+    setUserInput('')
 
     // 模拟摄像头初始化
     timeoutRef.current = setTimeout(() => {
@@ -78,47 +89,31 @@ export default function AIAdvisorPage() {
         setCountdown(count)
         if (count <= 0) {
           if (timerRef.current) clearInterval(timerRef.current)
-          // 摄像头阶段完成，进入语音引导
+          // 摄像头阶段完成，进入语音/文字输入阶段
           setStep('guiding_voice')
-          setGuideText('请描述现场情况，例如"一位老人摔倒了"')
-          setIsListening(true)
-
-          // 模拟自动录音过程
-          simulateAutoRecording()
+          setGuideText('请描述现场情况')
+          setIsListening(false)
         }
       }, 1000)
     }, 800)
   }, [clearAllTimers])
 
-  // ===== 模拟自动录音（系统自动聆听，无需用户按住） =====
-  const simulateAutoRecording = useCallback(() => {
-    const phrases = [
-      '看到',
-      '看到一位',
-      '看到一位老人',
-      '看到一位老人摔倒',
-      '看到一位老人摔倒在路边',
-      '看到一位老人摔倒在路边，',
-      '看到一位老人摔倒在路边，周围',
-      '看到一位老人摔倒在路边，周围没什么人',
-      '看到一位老人摔倒在路边，周围没什么人，似乎',
-      '看到一位老人摔倒在路边，周围没什么人，似乎无法起身',
-    ]
-
-    let idx = 0
-    timerRef.current = setInterval(() => {
-      setVoiceText(phrases[idx] || phrases[phrases.length - 1])
-      idx += 1
-      if (idx >= phrases.length) {
-        if (timerRef.current) clearInterval(timerRef.current)
-        // 语音收集完成，短暂停顿后自动分析
-        timeoutRef.current = setTimeout(() => {
-          setIsListening(false)
-          handleAutoAnalyze(phrases[phrases.length - 1])
-        }, 600)
-      }
-    }, 250)
+  // ===== 选择快捷场景 =====
+  const handleSelectScene = useCallback((text: string) => {
+    setVoiceText(text)
+    setUserInput(text)
   }, [])
+
+  // ===== 用户手动开始分析 =====
+  const handleManualAnalyze = useCallback(() => {
+    const text = userInput.trim() || voiceText.trim()
+    if (!text) {
+      Taro.showToast({ title: '请先描述现场情况', icon: 'none' })
+      return
+    }
+    setVoiceText(text)
+    handleAutoAnalyze(text)
+  }, [userInput, voiceText])
 
   // ===== 自动分析 =====
   const handleAutoAnalyze = useCallback((finalVoice: string) => {
@@ -381,7 +376,7 @@ export default function AIAdvisorPage() {
         </View>
       )}
 
-      {/* ===== 引导语音阶段 ===== */}
+      {/* ===== 引导语音/输入阶段 ===== */}
       {step === 'guiding_voice' && (
         <View className={styles.guideContainer}>
           {/* 引导语音气泡 */}
@@ -390,35 +385,41 @@ export default function AIAdvisorPage() {
             <Text className={styles.guideBubbleText}>{guideText}</Text>
           </View>
 
-          {/* 语音波形动画 */}
-          <View className={styles.voiceWaveSection}>
-            <View className={styles.voiceWaveContainer}>
-              {Array.from({ length: 20 }).map((_, i) => (
+          {/* 场景快捷选择 */}
+          <View className={styles.scenePresetSection}>
+            <Text className={styles.scenePresetTitle}>常见场景（点击快速填入）</Text>
+            <View className={styles.scenePresetGrid}>
+              {SCENE_PRESETS.map((scene, idx) => (
                 <View
-                  key={i}
-                  className={`${styles.voiceWaveBar} ${isListening ? styles.active : ''}`}
-                  style={{
-                    animationDelay: `${i * 0.05}s`,
-                    height: isListening ? `${(i % 5) * 8 + 10}px` : '6px',
-                  }}
-                />
+                  key={idx}
+                  className={`${styles.scenePresetItem} ${voiceText === scene.text ? styles.scenePresetActive : ''}`}
+                  onClick={() => handleSelectScene(scene.text)}
+                >
+                  <Text className={styles.scenePresetIcon}>{scene.icon}</Text>
+                  <Text className={styles.scenePresetLabel}>{scene.label}</Text>
+                </View>
               ))}
             </View>
-            <Text className={styles.voiceWaveStatus}>
-              {isListening ? '正在聆听...' : '聆听完成'}
-            </Text>
           </View>
 
-          {/* 语音识别文本 */}
-          <View className={styles.voiceTranscriptBox}>
-            <Text className={styles.voiceTranscriptLabel}>识别内容</Text>
-            <Text className={styles.voiceTranscriptText}>
-              {voiceText || '等待语音输入...'}
-              {isListening && <Text className={styles.voiceCursor}>|</Text>}
-            </Text>
+          {/* 手动输入框 */}
+          <View className={styles.manualInputCard}>
+            <Text className={styles.manualInputLabel}>或手动描述现场情况</Text>
+            <Textarea
+              className={styles.manualInputArea}
+              placeholder='例如：看到一位老人摔倒在路边，周围没什么人...'
+              placeholderClass={styles.manualInputPlaceholder}
+              value={userInput}
+              onInput={(e) => {
+                setUserInput(e.detail.value)
+                setVoiceText(e.detail.value)
+              }}
+              maxlength={200}
+              autoHeight
+            />
           </View>
 
-          {/* 已感知信息 */}
+          {/* 已感知信息预览 */}
           {voiceText && (
             <View className={styles.perceivedPreview}>
               <Text className={styles.perceivedPreviewTitle}>已感知信息</Text>
@@ -428,7 +429,10 @@ export default function AIAdvisorPage() {
                   <Text className={styles.pptValue}>
                     {guessActionType(voiceText) === 'elder_help' ? '老人求助' :
                      guessActionType(voiceText) === 'traffic' ? '交通事故' :
-                     guessActionType(voiceText) === 'rescue' ? '水域救援' : '现场情况'}
+                     guessActionType(voiceText) === 'rescue' ? '水域救援' :
+                     guessActionType(voiceText) === 'conflict' ? '冲突纠纷' :
+                     guessActionType(voiceText) === 'medical' ? '医疗急救' :
+                     guessActionType(voiceText) === 'crime' ? '违法犯罪' : '现场情况'}
                   </Text>
                 </View>
                 <View className={styles.perceivedPreviewTag}>
@@ -455,6 +459,11 @@ export default function AIAdvisorPage() {
               </View>
             </View>
           )}
+
+          {/* 开始分析按钮 */}
+          <View className={styles.analyzeBtn} onClick={handleManualAnalyze}>
+            <Text className={styles.analyzeBtnText}>🔮 开始分析</Text>
+          </View>
         </View>
       )}
 

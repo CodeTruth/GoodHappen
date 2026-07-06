@@ -1,80 +1,115 @@
-@use '@/styles/variables.scss' as *;
-
-.pageWrapper {
+.page {
   min-height: 100vh;
+  background: #F8F4EE;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 140px;
 }
 
-.container {
-  min-height: 100vh;
-  background: $color-bg-page;
-  padding: $page-padding;
-  padding-bottom: calc(#{$page-padding} + 120px); // 为自定义 tabBar 留出空间
-}
-
+// ===== 头部 =====
 .header {
-  margin-bottom: $spacing-lg;
+  padding: 32rpx 32rpx 8rpx;
 }
 
-// ===== 本周善行之星排行榜 =====
+.title {
+  font-size: 40rpx;
+  font-weight: 700;
+  color: #2C2419;
+  display: block;
+}
+
+.subtitle {
+  font-size: 26rpx;
+  color: #9E8E7E;
+  margin-top: 8rpx;
+  display: block;
+}
+
+// ===== Tab 切换 =====
+.tabBar {
+  display: flex;
+  margin: 24rpx 32rpx;
+  background: #EDE8E0;
+  border-radius: 16rpx;
+  padding: 6rpx;
+  flex-shrink: 0;
+}
+
+.tab {
+  flex: 1;
+  text-align: center;
+  padding: 16rpx 0;
+  border-radius: 12rpx;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.tabActive {
+  background: #fff;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.06);
+}
+
+.tabText {
+  font-size: 28rpx;
+  color: #7A6B55;
+  font-weight: 500;
+}
+
+.tabActive .tabText {
+  color: #C4956A;
+  font-weight: 600;
+}
+
+// ===== 滚动体 =====
+.body {
+  flex: 1;
+  padding: 0 32rpx;
+}
+
+// ===== 排行榜 =====
 .rankingCard {
-  background: $color-bg-card;
-  border-radius: $radius-lg;
-  padding: $spacing-lg;
-  margin-bottom: $spacing-lg;
-  box-shadow: $shadow-card;
-  border: 2rpx solid rgba($color-primary, 0.15);
+  background: #fff;
+  border-radius: 20rpx;
+  padding: 24rpx;
+  margin-bottom: 24rpx;
 }
 
 .rankingHeader {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  margin-bottom: $spacing-md;
-  padding-bottom: $spacing-md;
-  border-bottom: 2rpx solid rgba($color-primary, 0.1);
+  margin-bottom: 20rpx;
 }
 
 .rankingTitle {
-  font-size: $font-size-lg;
-  font-weight: $font-weight-semibold;
-  color: $color-text-primary;
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #2C2419;
 }
 
 .rankingSubtitle {
-  font-size: $font-size-xs;
-  color: $color-text-tertiary;
+  font-size: 22rpx;
+  color: #A89880;
+  margin-top: 4rpx;
+  display: block;
 }
 
 .rankingItem {
   display: flex;
   align-items: center;
-  gap: $spacing-md;
-  padding: $spacing-md 0;
-  border-bottom: 1rpx solid $color-divider;
-  transition: all $transition-base;
+  padding: 16rpx 0;
+  border-bottom: 1rpx solid #F0EDE6;
+  cursor: pointer;
 
-  &:last-child {
-    border-bottom: none;
-  }
+  &:last-child { border-bottom: none; }
+}
 
-  &:active {
-    opacity: 0.8;
-  }
-
-  &.rankingItemTop {
-    background: linear-gradient(135deg, #FFF9F0 0%, #FFF3E0 100%);
-    margin: 0 -#{$spacing-lg};
-    padding: $spacing-md $spacing-lg;
-    border-bottom-color: transparent;
-    border-radius: $radius-sm;
-  }
+.rankingItemTop {
+  background: linear-gradient(90deg, #FFF9F0 0%, transparent 100%);
+  border-radius: 12rpx;
+  padding: 16rpx 12rpx;
 }
 
 .rankingPos {
-  width: 48rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  width: 56rpx;
+  text-align: center;
   flex-shrink: 0;
 }
 
@@ -83,17 +118,17 @@
 }
 
 .rankingNum {
-  font-size: $font-size-md;
-  font-weight: $font-weight-bold;
-  color: $color-text-tertiary;
+  font-size: 28rpx;
+  color: #A89880;
+  font-weight: 600;
 }
 
 .rankingAvatar {
-  width: 64rpx;
-  height: 64rpx;
-  border-radius: $radius-round;
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 50%;
+  margin: 0 16rpx;
   flex-shrink: 0;
-  object-fit: cover;
 }
 
 .rankingInfo {
@@ -104,162 +139,415 @@
 .rankingNameRow {
   display: flex;
   align-items: center;
-  gap: $spacing-xs;
-  margin-bottom: 2rpx;
+  gap: 8rpx;
 }
 
 .rankingName {
-  font-size: $font-size-sm;
-  font-weight: $font-weight-medium;
-  color: $color-text-primary;
+  font-size: 28rpx;
+  font-weight: 500;
+  color: #2C2419;
 }
 
 .rankingBadge {
-  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
-  border-radius: $radius-sm;
-  padding: 2rpx $spacing-xs;
+  background: linear-gradient(135deg, #C4956A, #D4A76A);
+  border-radius: 6rpx;
+  padding: 2rpx 10rpx;
 }
 
 .rankingBadgeText {
   font-size: 18rpx;
-  color: #FFFFFF;
-  font-weight: $font-weight-medium;
+  color: #fff;
+  font-weight: 600;
 }
 
 .rankingRegion {
-  font-size: $font-size-xs;
-  color: $color-text-tertiary;
+  font-size: 22rpx;
+  color: #9E8E7E;
+  margin-top: 4rpx;
 }
 
 .rankingCount {
-  font-size: $font-size-sm;
-  color: $color-primary;
-  font-weight: $font-weight-bold;
-  white-space: nowrap;
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #C4956A;
+  flex-shrink: 0;
 }
 
-.title {
-  font-size: $font-size-xxl;
-  font-weight: $font-weight-semibold;
-  color: $color-text-primary;
-  margin-bottom: $spacing-xs;
-}
-
-.subtitle {
-  font-size: $font-size-sm;
-  color: $color-text-tertiary;
-}
-
-.createBtn {
-  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
-  border-radius: $radius-lg;
-  padding: $spacing-lg;
-  margin-bottom: $spacing-lg;
+// ===== 圈子列表 =====
+.circleList {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all $transition-base;
+  flex-direction: column;
+  gap: 20rpx;
+}
+
+.circleCard {
+  background: #fff;
+  border-radius: 20rpx;
+  padding: 24rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.04);
+  cursor: pointer;
+  transition: all 0.15s;
 
   &:active {
-    opacity: 0.9;
+    opacity: 0.85;
     transform: scale(0.98);
   }
 }
 
-.createIcon {
-  font-size: $font-size-xl;
-  margin-right: $spacing-sm;
-}
-
-.createText {
-  font-size: $font-size-md;
-  font-weight: $font-weight-medium;
-  color: $color-text-white;
-}
-
-.circleList {
+.circleCardHead {
   display: flex;
-  flex-direction: column;
-  gap: $spacing-md;
-}
-
-.circleCard {
-  background: $color-bg-card;
-  border-radius: $radius-lg;
-  padding: $spacing-lg;
-  box-shadow: $shadow-card;
-}
-
-.circleHeader {
-  display: flex;
+  gap: 16rpx;
   align-items: center;
-  margin-bottom: $spacing-md;
+  margin-bottom: 12rpx;
 }
 
-.circleIcon {
-  width: 80rpx;
-  height: 80rpx;
-  background: linear-gradient(135deg, #FFF5F5 0%, #FFE8E8 100%);
-  border-radius: $radius-md;
+.circleIconBox {
+  font-size: 44rpx;
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 18rpx;
+  background: #F8F4EE;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: $font-size-xl;
-  margin-right: $spacing-md;
+  flex-shrink: 0;
 }
 
-.circleInfo {
+.circleHeadInfo {
   flex: 1;
+  min-width: 0;
 }
 
 .circleName {
-  font-size: $font-size-lg;
-  font-weight: $font-weight-semibold;
-  color: $color-text-primary;
-  margin-bottom: $spacing-xs;
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #2C2419;
 }
 
-.circleType {
-  font-size: $font-size-sm;
-  color: $color-text-tertiary;
+.circleTypeTag {
+  font-size: 20rpx;
+  color: #C4956A;
+  background: #FFF5EC;
+  padding: 2rpx 12rpx;
+  border-radius: 8rpx;
+  font-weight: 500;
+}
+
+.circleMembers {
+  font-size: 22rpx;
+  color: #A89880;
+  margin-top: 4rpx;
 }
 
 .circleDesc {
-  font-size: $font-size-md;
-  line-height: $line-height-loose;
-  color: $color-text-secondary;
-  margin-bottom: $spacing-md;
+  font-size: 24rpx;
+  color: #7A6B55;
+  line-height: 1.5;
+  margin-bottom: 16rpx;
 }
 
 .circleStats {
   display: flex;
-  gap: $spacing-xl;
-  padding-top: $spacing-md;
-  border-top: 1rpx solid $color-border;
+  gap: 24rpx;
 }
 
-.stat {
+.statItem {
+  font-size: 22rpx;
+  color: #9E8E7E;
+  background: #F8F4EE;
+  padding: 6rpx 16rpx;
+  border-radius: 8rpx;
+}
+
+// ===== 发现页操作按钮 =====
+.discoverActions {
+  display: flex;
+  gap: 16rpx;
+}
+
+.viewBtn {
+  flex: 1;
+  padding: 16rpx;
+  border: 2rpx solid #D4C5B2;
+  border-radius: 12rpx;
   text-align: center;
+  cursor: pointer;
+  transition: all 0.15s;
+
+  &:active { background: #F8F4EE; }
 }
 
-.statValue {
-  font-size: $font-size-lg;
-  font-weight: $font-weight-semibold;
-  color: $color-primary;
-  margin-bottom: $spacing-xs;
+.viewBtnText {
+  font-size: 26rpx;
+  color: #5D4E37;
+  font-weight: 500;
 }
 
-.statLabel {
-  font-size: $font-size-sm;
-  color: $color-text-tertiary;
+.joinBtn {
+  flex: 1;
+  padding: 16rpx;
+  background: linear-gradient(135deg, #C4956A, #D4A76A);
+  border-radius: 12rpx;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.15s;
+
+  &:active {
+    opacity: 0.85;
+    transform: scale(0.97);
+  }
 }
 
+.joinBtnText {
+  font-size: 26rpx;
+  color: #fff;
+  font-weight: 600;
+}
+
+// ===== 空状态 =====
 .empty {
-  text-align: center;
-  padding: $spacing-xl 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 80rpx 40rpx;
+  gap: 16rpx;
 }
 
-.emptyText {
-  font-size: $font-size-md;
-  color: $color-text-tertiary;
+.emptyIcon {
+  font-size: 80rpx;
+}
+
+.emptyTitle {
+  font-size: 28rpx;
+  color: #5D4E37;
+  font-weight: 500;
+}
+
+.emptyDesc {
+  font-size: 24rpx;
+  color: #9E8E7E;
+  text-align: center;
+  line-height: 1.5;
+}
+
+// ===== 悬浮按钮 =====
+.fab {
+  position: fixed;
+  bottom: 160px;
+  right: 32rpx;
+  background: linear-gradient(135deg, #C4956A, #D4A76A);
+  border-radius: 56rpx;
+  padding: 18rpx 32rpx;
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+  box-shadow: 0 8rpx 28rpx rgba(196, 149, 106, 0.4);
+  cursor: pointer;
+  z-index: 100;
+  transition: all 0.2s;
+
+  &:active {
+    transform: scale(0.94);
+    box-shadow: 0 4rpx 16rpx rgba(196, 149, 106, 0.3);
+  }
+}
+
+.fabIcon {
+  font-size: 36rpx;
+  color: #fff;
+  font-weight: 300;
+  line-height: 1;
+}
+
+.fabText {
+  font-size: 26rpx;
+  color: #fff;
+  font-weight: 600;
+}
+
+// ===== 创建弹窗 =====
+.modalOverlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 20000;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.modalCard {
+  width: 100%;
+  max-height: 85vh;
+  background: #fff;
+  border-radius: 32rpx 32rpx 0 0;
+  padding: 36rpx 32rpx calc(36rpx + env(safe-area-inset-bottom));
+  overflow-y: auto;
+}
+
+.modalTitle {
+  font-size: 34rpx;
+  font-weight: 700;
+  color: #2C2419;
+  text-align: center;
+  margin-bottom: 32rpx;
+}
+
+.formGroup {
+  margin-bottom: 28rpx;
+}
+
+.formLabel {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #5D4E37;
+  margin-bottom: 12rpx;
+  display: block;
+}
+
+.formInput {
+  width: 100%;
+  padding: 22rpx 24rpx;
+  background: #F8F4EE;
+  border-radius: 14rpx;
+  font-size: 28rpx;
+  color: #2C2419;
+  border: 2rpx solid transparent;
+  transition: border-color 0.2s;
+
+  &:focus-within {
+    border-color: #C4956A;
+  }
+}
+
+.formTextarea {
+  width: 100%;
+  min-height: 140rpx;
+  padding: 22rpx 24rpx;
+  background: #F8F4EE;
+  border-radius: 14rpx;
+  font-size: 28rpx;
+  color: #2C2419;
+  line-height: 1.5;
+  border: 2rpx solid transparent;
+}
+
+// ===== 类型选择 =====
+.typeGrid {
+  display: flex;
+  gap: 16rpx;
+  flex-wrap: wrap;
+}
+
+.typeOption {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8rpx;
+  padding: 18rpx 24rpx;
+  background: #F8F4EE;
+  border-radius: 14rpx;
+  border: 2rpx solid transparent;
+  cursor: pointer;
+  transition: all 0.15s;
+  flex: 1;
+  min-width: 100rpx;
+}
+
+.typeOptionActive {
+  border-color: #C4956A;
+  background: #FFF5EC;
+}
+
+.typeOptionIcon {
+  font-size: 36rpx;
+}
+
+.typeOptionLabel {
+  font-size: 22rpx;
+  color: #5D4E37;
+  font-weight: 500;
+}
+
+.typeOptionActive .typeOptionLabel {
+  color: #C4956A;
+}
+
+// ===== 加入方式 =====
+.accessRow {
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+}
+
+.accessBtn {
+  padding: 20rpx 24rpx;
+  background: #F8F4EE;
+  border-radius: 14rpx;
+  border: 2rpx solid transparent;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.accessBtnActive {
+  border-color: #C4956A;
+  background: #FFF5EC;
+}
+
+.accessBtnText {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #5D4E37;
+  display: block;
+}
+
+.accessBtnHint {
+  font-size: 22rpx;
+  color: #A89880;
+  margin-top: 4rpx;
+  display: block;
+}
+
+// ===== 弹窗按钮 =====
+.modalActions {
+  display: flex;
+  gap: 16rpx;
+  margin-top: 8rpx;
+}
+
+.modalCancel {
+  flex: 1;
+  padding: 24rpx;
+  background: #F5F0EA;
+  border-radius: 16rpx;
+  text-align: center;
+  cursor: pointer;
+}
+
+.modalCancelText {
+  font-size: 30rpx;
+  color: #7A6B55;
+  font-weight: 500;
+}
+
+.modalConfirm {
+  flex: 2;
+  padding: 24rpx;
+  background: linear-gradient(135deg, #C4956A, #D4A76A);
+  border-radius: 16rpx;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.15s;
+
+  &:active { opacity: 0.85; }
+}
+
+.modalConfirmDisabled {
+  opacity: 0.5;
+}
+
+.modalConfirmText {
+  font-size: 30rpx;
+  color: #fff;
+  font-weight: 600;
 }

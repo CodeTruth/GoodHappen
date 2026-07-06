@@ -3,6 +3,7 @@
 .container {
   min-height: 100vh;
   background: $color-bg-page;
+  padding-bottom: 160px;  // 为底部 Tab 栏留空间
 }
 
 /* 头部 */

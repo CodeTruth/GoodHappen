@@ -1,0 +1,474 @@
+.page {
+  min-height: 100vh;
+  background: #F8F4EE;
+  padding-bottom: 160px;
+}
+
+.list {
+  padding: 24rpx;
+}
+
+// ===== 空状态 =====
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding-top: 200rpx;
+  gap: 24rpx;
+}
+
+.emptyIcon {
+  font-size: 120rpx;
+}
+
+.emptyTitle {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #5D4E37;
+}
+
+.emptyDesc {
+  font-size: 26rpx;
+  color: #9E8E7E;
+  text-align: center;
+  padding: 0 60rpx;
+  line-height: 1.6;
+  white-space: pre-line;
+}
+
+// ===== 卡片 =====
+.card {
+  background: #fff;
+  border-radius: 20rpx;
+  padding: 28rpx;
+  margin-bottom: 24rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.04);
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12rpx;
+}
+
+.cardSource {
+  font-size: 24rpx;
+  font-weight: 600;
+  color: #C4956A;
+}
+
+.cardTime {
+  font-size: 20rpx;
+  color: #A89880;
+}
+
+.cardTitle {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #2C2419;
+  margin-bottom: 8rpx;
+}
+
+.cardDesc {
+  font-size: 24rpx;
+  color: #7A6B55;
+  line-height: 1.5;
+  margin-bottom: 16rpx;
+}
+
+.cardMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+  margin-bottom: 16rpx;
+}
+
+.metaItem {
+  font-size: 22rpx;
+  color: #9E8E7E;
+  background: #F8F4EE;
+  padding: 6rpx 14rpx;
+  border-radius: 8rpx;
+}
+
+// ===== GPS 条 =====
+.gpsBar {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  background: linear-gradient(135deg, #F0F7FF, #E8F0FE);
+  border-radius: 14rpx;
+  padding: 20rpx 24rpx;
+  margin-bottom: 20rpx;
+  cursor: pointer;
+  transition: all 0.15s;
+
+  &:active {
+    opacity: 0.85;
+    transform: scale(0.98);
+  }
+}
+
+.gpsIcon {
+  font-size: 36rpx;
+  flex-shrink: 0;
+}
+
+.gpsInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+  min-width: 0;
+}
+
+.gpsAddress {
+  font-size: 26rpx;
+  font-weight: 500;
+  color: #2C2419;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gpsCoords {
+  font-size: 20rpx;
+  color: #7A6B55;
+  font-family: monospace;
+}
+
+.gpsArrow {
+  font-size: 28rpx;
+  color: #A89880;
+  flex-shrink: 0;
+}
+
+// ===== 文件预览 =====
+.fileGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+  margin-bottom: 20rpx;
+}
+
+.fileItem {
+  width: 160rpx;
+  border-radius: 12rpx;
+  overflow: hidden;
+  background: #F0EDE6;
+  position: relative;
+}
+
+.fileThumb {
+  width: 160rpx;
+  height: 160rpx;
+  display: block;
+}
+
+.fileVideoItem {
+  width: 160rpx;
+  height: 160rpx;
+  border-radius: 12rpx;
+  overflow: hidden;
+  background: #333;
+  position: relative;
+  cursor: pointer;
+
+  .fileLabel {
+    position: absolute;
+    bottom: 4rpx;
+    left: 4rpx;
+    font-size: 18rpx;
+    color: #fff;
+    background: rgba(0,0,0,0.55);
+    padding: 2rpx 10rpx;
+    border-radius: 6rpx;
+  }
+}
+
+.fileVideoPlaceholder {
+  width: 100%;
+  height: 160rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #2a2a2a, #1a1a1a);
+}
+
+.fileVideoIcon {
+  font-size: 48rpx;
+}
+
+.playBadge {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.playBadgeIcon {
+  font-size: 28rpx;
+  color: #fff;
+  margin-left: 4rpx;
+}
+
+.fileAudioItem {
+  width: 160rpx;
+  height: 160rpx;
+  border-radius: 12rpx;
+  background: linear-gradient(135deg, #FFF0E5, #FFE0D0);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8rpx;
+  cursor: pointer;
+  transition: all 0.15s;
+
+  &:active {
+    transform: scale(0.96);
+    opacity: 0.8;
+  }
+}
+
+.audioItemIcon {
+  font-size: 48rpx;
+}
+
+.fileLabel {
+  font-size: 22rpx;
+  color: #7A6B55;
+  font-weight: 500;
+}
+
+// ===== 播放器浮层 =====
+.playerOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.75);
+  z-index: 20000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.playerCard {
+  width: 90vw;
+  max-width: 600px;
+  background: #000;
+  border-radius: 16rpx;
+  overflow: hidden;
+  position: relative;
+}
+
+.audioPlayerCard {
+  width: 90vw;
+  max-width: 500px;
+  background: #fff;
+  border-radius: 24rpx;
+  padding: 40rpx 32rpx;
+  text-align: center;
+  position: relative;
+}
+
+.playerClose {
+  position: absolute;
+  top: 16rpx;
+  right: 16rpx;
+  width: 48rpx;
+  height: 48rpx;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  cursor: pointer;
+
+  .audioPlayerCard & {
+    background: #F0EDE6;
+  }
+}
+
+.playerCloseText {
+  font-size: 28rpx;
+  color: #fff;
+
+  .audioPlayerCard & {
+    color: #5D4E37;
+  }
+}
+
+.videoPlayer {
+  width: 100%;
+  display: block;
+  max-height: 70vh;
+}
+
+.audioPlayerTitle {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #2C2419;
+  margin-bottom: 32rpx;
+}
+
+.audioPlayer {
+  width: 100%;
+  margin-bottom: 8rpx;
+}
+
+// ===== 操作按钮 =====
+.cardActions {
+  display: flex;
+  gap: 16rpx;
+}
+
+.actionBtn {
+  flex: 1;
+  padding: 18rpx;
+  background: linear-gradient(135deg, #C4956A, #D4A76A);
+  border-radius: 12rpx;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.15s;
+
+  &:active {
+    opacity: 0.85;
+    transform: scale(0.97);
+  }
+}
+
+.actionBtnText {
+  font-size: 26rpx;
+  color: #fff;
+  font-weight: 600;
+}
+
+.actionBtnDel {
+  padding: 18rpx 32rpx;
+  background: #F5F0EA;
+  border-radius: 12rpx;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.15s;
+
+  &:active {
+    background: #E8E0D5;
+  }
+}
+
+.actionBtnDelText {
+  font-size: 26rpx;
+  color: #A89880;
+}
+
+// ===== 底部 =====
+.footer {
+  text-align: center;
+  padding: 40rpx 0;
+}
+
+.footerText {
+  font-size: 22rpx;
+  color: #C4B8AA;
+}
+
+// ===== 验证完整性 =====
+.verifyBar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12rpx;
+  margin-bottom: 24rpx;
+  padding: 20rpx;
+  background: #fff;
+  border-radius: 16rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.04);
+}
+
+.verifyBtn {
+  padding: 16rpx 48rpx;
+  background: linear-gradient(135deg, #3498DB, #2980B9);
+  border-radius: 40rpx;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:active {
+    opacity: 0.85;
+    transform: scale(0.96);
+  }
+}
+
+.verifyBtnText {
+  font-size: 28rpx;
+  color: #fff;
+  font-weight: 600;
+}
+
+.verifyOk {
+  font-size: 24rpx;
+  color: #27AE60;
+  font-weight: 500;
+}
+
+.verifyFail {
+  font-size: 24rpx;
+  color: #E74C3C;
+  font-weight: 500;
+}
+
+// ===== 数据完整性条 =====
+.integrityBar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8rpx;
+  margin-bottom: 16rpx;
+  padding: 16rpx;
+  background: linear-gradient(135deg, #F0FAF0, #E8F5E8);
+  border-radius: 12rpx;
+  border-left: 4rpx solid #27AE60;
+}
+
+.integrityItem {
+  display: flex;
+  align-items: center;
+  gap: 6rpx;
+  padding: 4rpx 10rpx;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 8rpx;
+}
+
+.integrityIcon {
+  font-size: 22rpx;
+}
+
+.integrityLabel {
+  font-size: 20rpx;
+  color: #7A6B55;
+}
+
+.integrityValue {
+  font-size: 20rpx;
+  color: #27AE60;
+  font-weight: 600;
+  font-family: monospace;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}

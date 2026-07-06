@@ -6,11 +6,13 @@ import WarmPartnerCard from '@/components/WarmPartnerCard';
 import { getKindnessList } from '@/data/kindness';
 import { WARM_PARTNERS } from '@/data/warm-partners';
 import { RECOMMENDED_CIRCLES } from '@/data/circle-mock';
+import { SHOP_PRODUCTS } from '@/data/shop-products';
 import { useSocialStore } from '@/store/social';
 import { useUserStore } from '@/store/user';
 import { useKindnessStore } from '@/store/kindness';
 import { useCircleStore } from '@/store/circle';
 import { useFortuneStore } from '@/store/fortune';
+import { useCheckinStore } from '@/store/checkin';
 import { Kindness } from '@/types/kindness';
 import styles from './index.module.scss';
 
@@ -35,12 +37,13 @@ const MY_ENTRIES = [
 ];
 
 const DiscoverPage: React.FC = () => {
+  // Tab 页面：设置 tabBar 选中索引
   useEffect(() => {
     try {
       const page = Taro.getCurrentInstance().page;
       if (page && Taro.getTabBar) {
         const tabbar = Taro.getTabBar<{ current: number }>(page);
-        if (tabbar) tabbar.current = 2;
+        if (tabbar) tabbar.current = 1;
       }
     } catch { /* H5 不支持 */ }
   }, []);
@@ -53,15 +56,17 @@ const DiscoverPage: React.FC = () => {
   const [refreshing, setRefreshing] = useState(false);
 
   const { followingIds, isFollowing, loadFromStorage: loadSocial } = useSocialStore();
-  const { userInfo, totalKindness, streakDays } = useUserStore();
+  const { userInfo } = useUserStore();
   const { publishedList: userKindnessList, loadFromStorage: loadKindness } = useKindnessStore();
   const { circles, getCurrentUserCircles, loadFromStorage: loadCircle } = useCircleStore();
   const { totalFortune } = useFortuneStore();
+  const { getUserStreak, loadFromStorage: loadCheckin } = useCheckinStore();
 
   useEffect(() => {
     loadSocial();
     loadKindness();
     loadCircle();
+    loadCheckin();
   }, []);
 
   const handleRefresh = useCallback(() => {
@@ -70,10 +75,11 @@ const DiscoverPage: React.FC = () => {
       loadSocial();
       loadKindness();
       loadCircle();
+      loadCheckin();
       setRefreshing(false);
       Taro.showToast({ title: '已刷新', icon: 'success' });
     }, 800);
-  }, [loadSocial, loadKindness, loadCircle]);
+  }, [loadSocial, loadKindness, loadCircle, loadCheckin]);
 
   // ===== 善行Tab数据 =====
   const ALL_TAGS = ['助人', '环保', '见证', '公益', '邻里互助', '孝亲', '陪伴', '关怀', '工作', '亲子'];
@@ -204,6 +210,41 @@ const DiscoverPage: React.FC = () => {
     </>
   );
 
+  // ===== 渲染：商城Tab =====
+  const renderShopTab = () => (
+    <>
+      <View className={styles.shopHeader}>
+        <View className={styles.shopHeaderTop}>
+          <Text className={styles.shopTitle}>🏪 福气商城</Text>
+          <Text className={styles.shopFortune}>可用福气：{totalFortune}</Text>
+        </View>
+        <Text className={styles.shopSubtitle}>用福气兑换温暖好物，花费可用福气，不影响你的称号</Text>
+      </View>
+
+      <View className={styles.shopGrid}>
+        {SHOP_PRODUCTS.map((product) => (
+          <View key={product.id} className={styles.shopCard}>
+            <View className={styles.shopCardImage}>
+              <Text className={styles.shopCardEmoji}>{product.icon || '🎁'}</Text>
+            </View>
+            <View className={styles.shopCardInfo}>
+              <Text className={styles.shopCardName}>{product.name}</Text>
+              <Text className={styles.shopCardCategory}>{product.category}</Text>
+              <View className={styles.shopCardBottom}>
+                <Text className={styles.shopCardPrice}>{product.price} 福气</Text>
+                <View className={styles.shopCardBtn}>
+                  <Text className={styles.shopCardBtnText}>
+                    {product.price <= totalFortune ? '兑换' : '差' + (product.price - totalFortune) + '福气'}
+                  </Text>
+                </View>
+              </View>
+            </View>
+          </View>
+        ))}
+      </View>
+    </>
+  );
+
   // ===== 渲染：我的Tab =====
   const renderMineTab = () => (
     <>
@@ -211,11 +252,11 @@ const DiscoverPage: React.FC = () => {
       <View className={styles.userCard}>
         <View className={styles.userHeader}>
           <View className={styles.userAvatar}>
-            <Text className={styles.userAvatarText}>{userInfo?.nickname?.[0] || '👤'}</Text>
+            <Text className={styles.userAvatarText}>{userInfo?.name?.[0] || '👤'}</Text>
           </View>
           <View className={styles.userInfo}>
-            <Text className={styles.userName}>{userInfo?.nickname || '访客'}</Text>
-            <Text className={styles.userLevel}>连续善行 {streakDays || 0} 天</Text>
+            <Text className={styles.userName}>{userInfo?.name || '访客'}</Text>
+            <Text className={styles.userLevel}>连续善行 {getUserStreak(userInfo?.id || 'guest') || 7} 天</Text>
           </View>
         </View>
         <View className={styles.userStats}>
@@ -224,7 +265,7 @@ const DiscoverPage: React.FC = () => {
             <Text className={styles.statLabel}>福气值</Text>
           </View>
           <View className={styles.statItem}>
-            <Text className={styles.statValue}>{totalKindness || userKindnessList.length}</Text>
+            <Text className={styles.statValue}>{userInfo?.kindnessCount || userKindnessList.length}</Text>
             <Text className={styles.statLabel}>善行数</Text>
           </View>
           <View className={styles.statItem}>
@@ -280,48 +321,7 @@ const DiscoverPage: React.FC = () => {
         {activeTab === 'mine' && renderMineTab()}
       </ScrollView>
 
-      {/* 底部固定分类Tab */}
-      <View className={styles.bottomTabs}>
-        <View
-          className={`${styles.bottomTabItem} ${activeTab === 'kindness' ? styles.bottomTabActive : ''}`}
-          onClick={() => { setActiveTab('kindness'); setSelectedTag(''); setSelectedRegion(''); setOnlyFollowing(false); }}
-        >
-          <Text className={styles.bottomTabText}>善行</Text>
-          {activeTab === 'kindness' && <View className={styles.bottomTabLine} />}
-        </View>
-
-        <View
-          className={`${styles.bottomTabItem} ${activeTab === 'circle' ? styles.bottomTabActive : ''}`}
-          onClick={() => { setActiveTab('circle'); setSelectedTag(''); setSelectedRegion(''); setOnlyFollowing(false); }}
-        >
-          <Text className={styles.bottomTabText}>善行圈</Text>
-          {activeTab === 'circle' && <View className={styles.bottomTabLine} />}
-        </View>
-
-        {/* 中间大+号：发布记录 */}
-        <View
-          className={styles.publishBtn}
-          onClick={() => Taro.navigateTo({ url: '/pages/record/index' })}
-        >
-          <Text className={styles.publishBtnIcon}>+</Text>
-        </View>
-
-        {/* 商城Tab */}
-        <View
-          className={`${styles.bottomTabItem} ${activeTab === 'shop' ? styles.bottomTabActive : ''}`}
-          onClick={() => Taro.navigateTo({ url: '/pages/shop/index' })}
-        >
-          <Text className={styles.bottomTabText}>商城</Text>
-        </View>
-
-        <View
-          className={`${styles.bottomTabItem} ${activeTab === 'mine' ? styles.bottomTabActive : ''}`}
-          onClick={() => { setActiveTab('mine'); setSelectedTag(''); setSelectedRegion(''); setOnlyFollowing(false); }}
-        >
-          <Text className={styles.bottomTabText}>我的</Text>
-          {activeTab === 'mine' && <View className={styles.bottomTabLine} />}
-        </View>
-      </View>
+      {/* discover 非 tab 页，底部 Tab 由系统级 custom-tab-bar 统一管理，此处不重复渲染 */}
     </View>
   );
 };

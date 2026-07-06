@@ -1,10 +1,11 @@
 export default defineAppConfig({
   pages: [
     'pages/home/index',
-    'pages/record/index',
-    'pages/witness-record/index',
-    'pages/mine/index',
     'pages/discover/index',
+    'pages/record/index',
+    'pages/circle-dashboard/index',
+    'pages/mine/index',
+    'pages/witness-record/index',
     'pages/circle/index',
     'pages/detail/index',
     'pages/circleDetail/index',
@@ -48,11 +49,11 @@ export default defineAppConfig({
     'pages/ai-advisor/index',
     'pages/ai-chat/index',
     'pages/circle-moral-tasks/index',
-    'pages/circle-dashboard/index',
     'pages/student-profile/index',
     'pages/feedback/index',
     'pages/school-pricing/index',
-    'pages/brand-sponsorship/index'
+    'pages/brand-sponsorship/index',
+    'pages/evidence-history/index'
   ],
   window: {
     backgroundTextStyle: 'light',
@@ -72,12 +73,16 @@ export default defineAppConfig({
         text: '首页'
       },
       {
+        pagePath: 'pages/discover/index',
+        text: '发现'
+      },
+      {
         pagePath: 'pages/record/index',
         text: '记录'
       },
       {
-        pagePath: 'pages/discover/index',
-        text: '发现'
+        pagePath: 'pages/circle-dashboard/index',
+        text: '善行圈'
       },
       {
         pagePath: 'pages/mine/index',

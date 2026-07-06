@@ -48,7 +48,10 @@ const WelcomeGuide: React.FC<WelcomeGuideProps> = ({ visible, onClose }) => {
 
   const handleNext = () => {
     if (isLast) {
-      handleSkip();
+      // 小延迟确保 Swiper 动画完成后再关闭
+      setTimeout(() => {
+        handleSkip();
+      }, 150);
     } else {
       setCurrent(current + 1);
     }

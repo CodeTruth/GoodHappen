@@ -15,6 +15,7 @@ $color-text-tertiary: rgba(255, 255, 255, 0.4);
 
 .pageWrapper {
   min-height: 100vh;
+  min-height: 100dvh;
   background: $bg-primary;
 }
 
@@ -471,6 +472,11 @@ $color-text-tertiary: rgba(255, 255, 255, 0.4);
   flex: 1.2;
 }
 
+.actionBtnClose {
+  background: #333;
+  color: #FFFFFF;
+}
+
 .actionBtnIcon {
   font-size: 40rpx;
   margin-bottom: 8rpx;
@@ -727,7 +733,8 @@ $color-text-tertiary: rgba(255, 255, 255, 0.4);
   display: flex;
   gap: 20rpx;
   margin-top: auto;
-  padding-bottom: 40rpx;
+  padding-bottom: 100rpx;
+  padding-bottom: calc(100rpx + env(safe-area-inset-bottom));
 }
 
 .closedBtn {
@@ -916,4 +923,75 @@ $color-text-tertiary: rgba(255, 255, 255, 0.4);
   font-size: 24rpx;
   color: rgba(255, 255, 255, 0.85);
   line-height: 1.7;
+}
+
+// ============================================
+// 未发布的保护记录卡片
+// ============================================
+
+.savedSessionCard {
+  width: 100%;
+  background: rgba(196, 149, 106, 0.1);
+  border: 1rpx solid rgba(196, 149, 106, 0.25);
+  border-radius: 16rpx;
+  padding: 24rpx;
+  margin-bottom: 24rpx;
+}
+
+.savedSessionHeader {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  margin-bottom: 12rpx;
+}
+
+.savedSessionIcon {
+  font-size: 36rpx;
+}
+
+.savedSessionTitle {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.savedSessionTime {
+  font-size: 24rpx;
+  color: rgba(255, 255, 255, 0.6);
+  margin-bottom: 20rpx;
+  display: block;
+}
+
+.savedSessionActions {
+  display: flex;
+  gap: 16rpx;
+}
+
+.savedSessionBtnPrimary {
+  flex: 1;
+  background: linear-gradient(135deg, #C4956A 0%, #A87B52 100%);
+  border-radius: 12rpx;
+  padding: 16rpx 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.15s ease;
+
+  &:active {
+    transform: scale(0.97);
+  }
+}
+
+.savedSessionBtnSecondary {
+  padding: 16rpx 32rpx;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease;
+
+  &:active {
+    background: rgba(255, 255, 255, 0.1);
+  }
 }

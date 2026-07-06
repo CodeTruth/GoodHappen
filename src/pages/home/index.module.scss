@@ -1,11 +1,10 @@
 @use '@/styles/variables.scss' as *;
 
 .page {
-  min-height: 100vh;
   display: flex;
   flex-direction: column;
   background: linear-gradient(180deg, #F8F6F2 0%, #F0EDE6 100%);
-  padding: 40rpx $page-padding calc(#{$page-padding} + 120px);
+  padding: 40rpx $page-padding 200rpx;  // 底部留足空间给 fixed tab-bar（~120px）
 
   @keyframes fadeInUp {
     from { opacity: 0; transform: translateY(30rpx); }
@@ -193,4 +192,210 @@
   font-weight: 600;
   margin-left: 6rpx;
   text-decoration: underline;
+}
+
+// ===== 最近善行列表 =====
+.recentKindness {
+  margin-top: 36rpx;
+  animation: fadeInUp 0.4s ease-out;
+  animation-delay: 0.35s;
+  animation-fill-mode: both;
+}
+
+.recentKindnessHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20rpx;
+}
+
+.recentKindnessTitle {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #5D4E37;
+}
+
+.recentKindnessMore {
+  font-size: 22rpx;
+  color: #C4956A;
+}
+
+.kindnessItem {
+  display: flex;
+  gap: 20rpx;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 16rpx;
+  padding: 24rpx;
+  margin-bottom: 16rpx;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:active {
+    transform: scale(0.98);
+    opacity: 0.9;
+  }
+}
+
+.kindnessItemAvatar {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: #F0EDE6;
+  overflow: hidden;
+}
+
+.kindnessItemContent {
+  flex: 1;
+  min-width: 0;
+}
+
+.kindnessItemHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8rpx;
+}
+
+.kindnessItemName {
+  font-size: 24rpx;
+  font-weight: 600;
+  color: #5D4E37;
+}
+
+.kindnessItemTime {
+  font-size: 20rpx;
+  color: #A89880;
+}
+
+.kindnessItemText {
+  font-size: 24rpx;
+  color: #7A6B55;
+  line-height: 1.6;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.kindnessItemFooter {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  margin-top: 12rpx;
+  gap: 6rpx;
+}
+
+.kindnessItemLikeIcon {
+  font-size: 22rpx;
+}
+
+.kindnessItemLikeCount {
+  font-size: 20rpx;
+  color: #A89880;
+}
+
+.kindnessItemImage {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 12rpx;
+  flex-shrink: 0;
+  background: #F0EDE6;
+  overflow: hidden;
+}
+
+// ===== 页面布局（底部Tab栏） =====
+.pageWrapper {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  padding-bottom: 120px;  // 为底部 fixed tab-bar 留空间
+}
+
+.contentScroll {
+  flex: 1;
+}
+
+// ===== 底部Tab栏（与discover页一致） =====
+.bottomTabs {
+  display: flex;
+  align-items: center;
+  background: #fff;
+  border-top: 1rpx solid $color-border;
+  padding: 12rpx 0 calc(12rpx + env(safe-area-inset-bottom));
+  flex-shrink: 0;
+  box-shadow: 0 -4rpx 20rpx rgba(0, 0, 0, 0.05);
+}
+
+.bottomTabItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8rpx;
+  flex: 1;
+  padding: 8rpx 0;
+  cursor: pointer;
+  position: relative;
+  min-width: 0;
+}
+
+.bottomTabText {
+  font-size: 28rpx;
+  color: #9E8E7E;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.bottomTabActiveItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8rpx;
+  flex: 1;
+  padding: 8rpx 0;
+  cursor: pointer;
+  position: relative;
+  min-width: 0;
+}
+
+.bottomTabTextActive {
+  font-size: 28rpx;
+  color: $color-primary;
+  font-weight: 600;
+}
+
+.bottomTabLine {
+  width: 40rpx;
+  height: 4rpx;
+  border-radius: 2rpx;
+  background: linear-gradient(90deg, $color-primary, $color-primary-light);
+}
+
+.publishBtn {
+  width: 96rpx;
+  height: 96rpx;
+  border-radius: 50%;
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: -8rpx;
+  flex-shrink: 0;
+  box-shadow: 0 6rpx 24rpx rgba(196, 149, 106, 0.5);
+  cursor: pointer;
+  transition: transform 0.15s;
+
+  &:active {
+    transform: scale(0.92);
+  }
+}
+
+.publishBtnIcon {
+  font-size: 56rpx;
+  color: #fff;
+  font-weight: 300;
+  line-height: 1;
 }

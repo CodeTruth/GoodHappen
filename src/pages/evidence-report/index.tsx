@@ -3,6 +3,7 @@ import { View, Text, ScrollView } from '@tarojs/components';
 import Taro, { useRouter } from '@tarojs/taro';
 import classnames from 'classnames';
 import { useProtectionStore } from '@/store/protection';
+import type { SOSRecord, EvidencePackage, WitnessMatch } from '@/services/evidence';
 import {
   EvidenceReport,
   ReportTarget,
@@ -12,6 +13,116 @@ import {
   copyReportToClipboard,
 } from '@/services/evidence-report';
 import styles from './index.module.scss';
+
+// ===== 演示模式的模拟数据 =====
+const DEMO_SOS_ID = 'demo_sos_001';
+const DEMO_RECORD_ID = 'demo_record_001';
+const now = new Date();
+const fiveMinAgo = new Date(now.getTime() - 5 * 60 * 1000).toISOString();
+const tenMinAgo = new Date(now.getTime() - 10 * 60 * 1000).toISOString();
+const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000).toISOString();
+
+const DEMO_SOS_RECORD: SOSRecord = {
+  id: DEMO_SOS_ID,
+  evidencePackageId: 'demo_evidence_001',
+  recordId: DEMO_RECORD_ID,
+  triggeredAt: fiveMinAgo,
+  location: {
+    latitude: 39.9042,
+    longitude: 116.4074,
+    address: '北京市东城区王府井大街138号',
+    accuracy: 10,
+  },
+  description: '在王府井大街帮助摔倒老人后，被对方家属指责是撞人者，老人家属要求赔偿。已开启保护模式全程录像存证。',
+  status: 'evidence_locked',
+  witnessMatchCount: 3,
+};
+
+const DEMO_EVIDENCE_PACKAGE: EvidencePackage = {
+  recordId: DEMO_RECORD_ID,
+  timestamp: oneHourAgo,
+  gps: {
+    latitude: 39.9042,
+    longitude: 116.4074,
+    address: '北京市东城区王府井大街138号',
+    accuracy: 10,
+  },
+  content: '在王府井大街看到一位老人摔倒在路上，立即上前搀扶并拨打120急救电话。老人意识清醒，表示只是走路不慎跌倒。随后老人家属赶到，情绪激动，指责是我撞倒了老人，要求赔偿医疗费用。已全程录像记录。',
+  mediaUrls: [
+    { type: 'video' as const, url: 'demo_video_001.mp4', createdAt: oneHourAgo },
+    { type: 'audio' as const, url: 'demo_audio_001.mp3', createdAt: oneHourAgo },
+    { type: 'image' as const, url: 'demo_photo_001.jpg', createdAt: oneHourAgo },
+    { type: 'image' as const, url: 'demo_photo_002.jpg', createdAt: oneHourAgo },
+  ],
+  hash: 'sha256:a1b2c3d4e5f6...demo_hash',
+  preExisting: true,
+  sealedAt: fiveMinAgo,
+  eventTimestamp: tenMinAgo,
+  eventGps: {
+    latitude: 39.9042,
+    longitude: 116.4074,
+    address: '北京市东城区王府井大街138号',
+    accuracy: 10,
+  },
+  metadataSource: 'manual',
+};
+
+const DEMO_WITNESS_MATCH: WitnessMatch = {
+  id: 'demo_witness_match_001',
+  sosRecordId: DEMO_SOS_ID,
+  primaryRecordId: DEMO_RECORD_ID,
+  witnessRecordIds: ['demo_witness_001', 'demo_witness_002', 'demo_witness_003'],
+  timeDiffMinutes: 2,
+  gpsRadiusMeters: 50,
+  descriptionMatchScore: 0.92,
+  evidenceChainFormed: true,
+  createdAt: fiveMinAgo,
+};
+
+const DEMO_WITNESS_RECORDS = [
+  {
+    id: 'demo_witness_001',
+    witnessUserId: 'witness_user_001',
+    witnessUserName: '路人甲',
+    witnessUserAvatar: '',
+    recordId: DEMO_RECORD_ID,
+    timestamp: fiveMinAgo,
+    gps: { latitude: 39.9043, longitude: 116.4075, address: '北京市东城区王府井大街136号', accuracy: 15 },
+    description: '我看到一位年轻人在扶摔倒的老人，老人当时自己跌倒的，年轻人没有碰到他。老人家属来了之后开始吵架。',
+    matched: true,
+    notified: true,
+    badgeGranted: true,
+    metadataSource: 'manual' as const,
+  },
+  {
+    id: 'demo_witness_002',
+    witnessUserId: 'witness_user_002',
+    witnessUserName: '商铺店主',
+    witnessUserAvatar: '',
+    recordId: DEMO_RECORD_ID,
+    timestamp: fiveMinAgo,
+    gps: { latitude: 39.9041, longitude: 116.4073, address: '北京市东城区王府井大街140号', accuracy: 20 },
+    description: '我在店门口看到全过程，是老人自己走路不稳摔倒的，年轻人是好心帮忙。我可以提供店门口的监控录像。',
+    matched: true,
+    notified: true,
+    badgeGranted: true,
+    metadataSource: 'manual' as const,
+  },
+  {
+    id: 'demo_witness_003',
+    witnessUserId: 'witness_user_003',
+    witnessUserName: '外卖小哥',
+    witnessUserAvatar: '',
+    recordId: DEMO_RECORD_ID,
+    timestamp: fiveMinAgo,
+    gps: { latitude: 39.9044, longitude: 116.4076, address: '北京市东城区王府井大街135号', accuracy: 15 },
+    description: '我骑车经过时看到老人已经倒在地上，一个年轻人正蹲在旁边扶他。年轻人并没有碰到老人。',
+    matched: true,
+    notified: false,
+    badgeGranted: false,
+    metadataSource: 'manual' as const,
+  },
+];
 
 /**
  * 证据报告预览页面
@@ -50,24 +161,25 @@ const EvidenceReportPage: React.FC = () => {
   const [report, setReport] = useState<EvidenceReport | null>(null);
   const [copying, setCopying] = useState(false);
 
-  // 查找当前 SOS 记录
+  // 查找当前 SOS 记录（无 ID 时使用演示数据）
   const sosRecord = useMemo(() => {
-    if (!sosRecordId) return undefined;
-    return sosRecords.find((s) => s.id === sosRecordId);
+    if (!sosRecordId) return DEMO_SOS_RECORD;
+    return sosRecords.find((s) => s.id === sosRecordId) || undefined;
   }, [sosRecords, sosRecordId]);
 
   // 查找证据包
   const evidencePackage = useMemo(() => {
+    if (!sosRecordId) return DEMO_EVIDENCE_PACKAGE;
     if (!sosRecord) return undefined;
     // 优先使用 store 方法，否则在 evidencePackages 中查找
     const pkg = getEvidenceByRecordId(sosRecord.recordId);
     if (pkg) return pkg;
     return evidencePackages.find((p) => p.recordId === sosRecord.recordId);
-  }, [sosRecord, getEvidenceByRecordId, evidencePackages]);
+  }, [sosRecord, getEvidenceByRecordId, evidencePackages, sosRecordId]);
 
   // 查找见证匹配
   const witnessMatch = useMemo(() => {
-    if (!sosRecordId) return undefined;
+    if (!sosRecordId) return DEMO_WITNESS_MATCH;
     const match = getWitnessMatchBySos(sosRecordId);
     if (match) return match;
     return witnessMatches.find((m) => m.sosRecordId === sosRecordId);
@@ -91,7 +203,7 @@ const EvidenceReportPage: React.FC = () => {
       sosRecord,
       evidencePackage,
       witnessMatch,
-      witnessRecords,
+      sosRecordId ? witnessRecords : DEMO_WITNESS_RECORDS,
       collectionRequest,
       target,
       '善行者'
@@ -167,15 +279,8 @@ const EvidenceReportPage: React.FC = () => {
     }
   };
 
-  if (!sosRecordId) {
-    return (
-      <View className={styles.emptyContainer}>
-        <Text className={styles.emptyIcon}>📄</Text>
-        <Text className={styles.emptyTitle}>缺少记录ID</Text>
-        <Text className={styles.emptyDesc}>请从求助记录页面进入查看证据报告</Text>
-      </View>
-    );
-  }
+  // 演示模式标识
+  const isDemo = !sosRecordId;
 
   if (!sosRecord || !evidencePackage) {
     return (
@@ -197,7 +302,7 @@ const EvidenceReportPage: React.FC = () => {
       <ScrollView className={styles.container} scrollY enableBackToTop>
         {/* 头部 */}
         <View className={styles.header}>
-          <Text className={styles.headerTitle}>证据报告</Text>
+          <Text className={styles.headerTitle}>证据报告 {isDemo && '（演示数据）'}</Text>
           <Text className={styles.headerSubtitle}>
             {template.name} · {template.title}
           </Text>

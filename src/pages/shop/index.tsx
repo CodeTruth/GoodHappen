@@ -55,6 +55,17 @@ const categoryDescriptions: Record<ProductCategory, string> = {
 const getProducts = (): Product[] => SHOP_PRODUCTS as Product[];
 
 const ShopPage: React.FC = () => {
+  // Tab 页面：设置 tabBar 选中索引
+  useEffect(() => {
+    try {
+      const page = Taro.getCurrentInstance().page;
+      if (page && Taro.getTabBar) {
+        const tabbar = Taro.getTabBar<{ current: number }>(page);
+        if (tabbar) tabbar.current = 3;
+      }
+    } catch { /* H5 不支持 */ }
+  }, []);
+
   const { availableFortune, currentTitle, streak, loadFromStorage } = useFortuneStore();
   const { redeem, getRedemptions, getProductRedeemedCount, loadFromStorage: loadShop } = useShopStore();
 

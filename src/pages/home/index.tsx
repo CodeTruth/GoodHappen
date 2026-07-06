@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { View, Text } from '@tarojs/components';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { View, Text, Image, ScrollView } from '@tarojs/components';
 import Taro from '@tarojs/taro';
 import { useUserStore } from '@/store/user';
 import { useKindnessStore } from '@/store/kindness';
 import { useNotificationStore } from '@/store/notification';
 import { useAnalyticsStore } from '@/store/analytics';
+import { getKindnessList } from '@/data/kindness';
 import WelcomeGuide from '@/components/WelcomeGuide';
 import styles from './index.module.scss';
 
@@ -76,7 +77,7 @@ const HomePage: React.FC = () => {
   });
 
   const { loadFromStorage: loadUser } = useUserStore();
-  const { loadFromStorage: loadKindness } = useKindnessStore();
+  const { publishedList, loadFromStorage: loadKindness } = useKindnessStore();
   const { loadFromStorage: loadNotification, loadMockData: loadMockNotification, cleanupExpired } = useNotificationStore();
   const {
     loadFromStorage: loadAnalytics,
@@ -116,11 +117,12 @@ const HomePage: React.FC = () => {
     return () => clearInterval(timer);
   }, [getRealtimeActiveCount]);
 
+  const growthTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+
   useEffect(() => {
     STATS_CONFIG.forEach(config => {
       const scheduleGrowth = () => {
-        const interval = config.growthInterval + Math.random() * 3000;
-        setTimeout(() => {
+        const timer = setTimeout(() => {
           setDisplayedStats(prev => {
             const current = prev[config.key] || 0;
             const increment = Math.floor(Math.random() * 3) + 1;
@@ -128,18 +130,52 @@ const HomePage: React.FC = () => {
             return { ...prev, [config.key]: newValue };
           });
           scheduleGrowth();
-        }, interval);
+        }, config.growthInterval + Math.random() * 3000);
+        growthTimersRef.current.push(timer);
       };
       scheduleGrowth();
     });
+    return () => {
+      growthTimersRef.current.forEach(t => clearTimeout(t));
+      growthTimersRef.current = [];
+    };
   }, []);
 
   const handleAction = (action: typeof HOME_ACTIONS[0]) => {
     Taro.navigateTo({ url: action.page });
   };
 
+  // 获取最近善行列表（合并种子数据和用户发布的数据）
+  const recentKindnessList = useMemo(() => {
+    const mockList = getKindnessList();
+    const mockIds = new Set(mockList.map(k => k.id));
+    const merged = [...publishedList.filter(k => !mockIds.has(k.id)), ...mockList];
+    return merged
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .slice(0, 5);
+  }, [publishedList]);
+
+  const formatTime = (dateStr: string) => {
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    if (diffMins < 60) return `${diffMins}分钟前`;
+    const diffHours = Math.floor(diffMins / 60);
+    if (diffHours < 24) return `${diffHours}小时前`;
+    const diffDays = Math.floor(diffHours / 24);
+    if (diffDays < 7) return `${diffDays}天前`;
+    return `${date.getMonth() + 1}/${date.getDate()}`;
+  };
+
   return (
-    <View className={styles.page}>
+    <View className={styles.pageWrapper}>
+      <ScrollView
+        className={styles.contentScroll}
+        scrollY
+        enableBackToTop
+      >
+      <View className={styles.page}>
       <WelcomeGuide visible={showWelcome} onClose={() => setShowWelcome(false)} />
 
       <View className={styles.statsSection}>
@@ -184,14 +220,8 @@ const HomePage: React.FC = () => {
         ))}
       </View>
 
-      <View className={styles.footer}>
-        <Text className={styles.footerText}>
-          看看别人做了什么好事
-          <Text className={styles.footerLink} onClick={() => Taro.switchTab({ url: '/pages/discover/index' })}>
-            去发现
-          </Text>
-        </Text>
       </View>
+      </ScrollView>
     </View>
   );
 };
