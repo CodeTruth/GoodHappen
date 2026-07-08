@@ -76,7 +76,7 @@ class CustomTabBar extends Component<CustomTabBarProps, CustomTabBarState> {
   checkRoute() {
     const curPages = Taro.getCurrentPages()
     if (curPages.length > 0) {
-      const route = curPages[curPages.length - 1].route || ''
+      const route = (curPages[curPages.length - 1].route || '').replace(/^\//, '')
       const isTab = TAB_PATHS.some(p => route === p)
       if (!isTab && !this.state.hidden) {
         this.setState({ hidden: true })

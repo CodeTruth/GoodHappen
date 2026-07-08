@@ -372,46 +372,46 @@ const HomePage: React.FC = () => {
 
   // 点击卡片
   const handleWheelCardClick = (index: number) => {
-    if (isAnimating) return;
-    if (index !== highlightedIndex) {
-      // 旋转到该卡片：计算需要旋转的角度差
-      const targetRotation = -index * 90;
-      const currentSnapped = Math.round(rotation / 90) * 90;
-      let diff = targetRotation - currentSnapped;
-      // 选择最短路径
-      if (diff > 180) diff -= 360;
-      if (diff < -180) diff += 360;
-      setIsAnimating(true);
-      const snapped = currentSnapped + diff;
-      // 用 requestAnimationFrame 做平滑旋转动画
-      const startRot = currentSnapped;
-      const totalDelta = snapped - startRot;
-      const duration = 400; // ms
-      const startTime = Date.now();
-
-      const animateRotate = () => {
-        const elapsed = Date.now() - startTime;
-        const progress = Math.min(elapsed / duration, 1);
-        // ease-out 缓动
-        const eased = 1 - Math.pow(1 - progress, 3);
-        const cur = startRot + totalDelta * eased;
-        setRotation(cur);
-        currentRotationRef.current = cur;
-
-        if (progress < 1) {
-          animFrameRef.current = requestAnimationFrame(animateRotate);
-        } else {
-          setRotation(snapped);
-          currentRotationRef.current = snapped;
-          setHighlightedIndex(index);
-          setTimeout(() => setIsAnimating(false), 350);
-        }
-      };
-      animFrameRef.current = requestAnimationFrame(animateRotate);
+    // 高亮卡片直接跳转，不受 isAnimating 影响（避免 touch 事件拦截 click）
+    if (index === highlightedIndex) {
+      Taro.navigateTo({ url: WHEEL_ITEMS[index].url });
       return;
     }
-    // 高亮卡片直接跳转
-    Taro.navigateTo({ url: WHEEL_ITEMS[index].url });
+    // 点击非高亮卡片：取消当前动画，旋转到该卡片
+    if (animFrameRef.current) {
+      cancelAnimationFrame(animFrameRef.current);
+      animFrameRef.current = 0;
+    }
+    setIsAnimating(true);
+    const targetRotation = -index * 90;
+    const currentSnapped = Math.round(rotation / 90) * 90;
+    let diff = targetRotation - currentSnapped;
+    if (diff > 180) diff -= 360;
+    if (diff < -180) diff += 360;
+    const snapped = currentSnapped + diff;
+    const startRot = currentSnapped;
+    const totalDelta = snapped - startRot;
+    const duration = 400;
+    const startTime = Date.now();
+
+    const animateRotate = () => {
+      const elapsed = Date.now() - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      const cur = startRot + totalDelta * eased;
+      setRotation(cur);
+      currentRotationRef.current = cur;
+
+      if (progress < 1) {
+        animFrameRef.current = requestAnimationFrame(animateRotate);
+      } else {
+        setRotation(snapped);
+        currentRotationRef.current = snapped;
+        setHighlightedIndex(index);
+        setTimeout(() => setIsAnimating(false), 350);
+      }
+    };
+    animFrameRef.current = requestAnimationFrame(animateRotate);
   };
 
   // 组件卸载清理
