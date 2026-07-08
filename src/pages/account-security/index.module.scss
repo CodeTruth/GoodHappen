@@ -4,7 +4,7 @@
   min-height: 100vh;
   background: $color-bg-page;
   padding: $spacing-md $page-padding;
-  padding-bottom: $spacing-xl;
+  padding-bottom: calc(100rpx + env(safe-area-inset-bottom));
 }
 
 .section {

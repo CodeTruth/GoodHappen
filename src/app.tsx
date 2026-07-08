@@ -32,17 +32,51 @@ function getTabIndexFromPath(): number {
   return -1;  // 非 tab 页面不高亮任何 tab
 }
 
+/** 需要隐藏 Tab 栏的页面（善行顾问等全屏页面） */
+const HIDDEN_TAB_PAGES = ['pages/ai-advisor/index'];
+
 function App(props: { children: React.ReactNode }) {
   const [tabIndex, setTabIndex] = useState(0);
+  const [hideTab, setHideTab] = useState(false);
 
-  // 路由变化时更新选中 Tab
-  useEffect(() => {
+  // 路由变化时更新选中 Tab 和 Tab 栏显示状态
+  const updateRoute = () => {
     setTabIndex(getTabIndexFromPath());
-
+    // 优先用 Taro.getCurrentPages() 判断路由，更可靠
+    try {
+      const curPages = Taro.getCurrentPages();
+      if (curPages.length > 0) {
+        const route = curPages[curPages.length - 1].route || '';
+        const shouldHide = HIDDEN_TAB_PAGES.some(p => route.includes(p));
+        setHideTab(shouldHide);
+        return;
+      }
+    } catch { /* ignore */ }
+    // fallback：H5 hash
     if (typeof window !== 'undefined') {
-      const onHashChange = () => setTabIndex(getTabIndexFromPath());
+      const hash = window.location.hash;
+      const shouldHide = HIDDEN_TAB_PAGES.some(p => hash.includes(p));
+      setHideTab(shouldHide);
+    }
+  };
+
+  useEffect(() => {
+    updateRoute();
+    if (typeof window !== 'undefined') {
+      const onHashChange = () => updateRoute();
+      const onPopState = () => updateRoute();
       window.addEventListener('hashchange', onHashChange);
-      return () => window.removeEventListener('hashchange', onHashChange);
+      window.addEventListener('popstate', onPopState);
+      // Taro H5 用 pushState 也会触发 DOM 变化，用 MutationObserver 监听 hash 变化
+      const observer = new MutationObserver(onHashChange);
+      // 直接轮询检测：Taro H5 的 navigateTo 不一定触发 popstate/hashchange
+      const pollId = setInterval(updateRoute, 300);
+      return () => {
+        window.removeEventListener('hashchange', onHashChange);
+        window.removeEventListener('popstate', onPopState);
+        observer.disconnect();
+        clearInterval(pollId);
+      };
     }
   }, []);
 
@@ -76,12 +110,10 @@ function App(props: { children: React.ReactNode }) {
     };
   }, []);
 
-  const isTabPage = tabIndex >= 0;
-
   return (
-    <View style={{ minHeight: '100vh', paddingBottom: isTabPage ? '120px' : '0', position: 'relative' }}>
+    <View style={{ minHeight: '100vh', paddingBottom: hideTab ? '0' : '120px', position: 'relative' }}>
       {props.children}
-      {isTabPage && <CustomTabBar current={tabIndex} />}
+      {!hideTab && <CustomTabBar current={tabIndex >= 0 ? tabIndex : 0} />}
     </View>
   );
 }

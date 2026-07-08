@@ -1,0 +1,134 @@
+$bg: #FAF7F2;
+$text-primary: #2D241A;
+$text-secondary: #8B7A6A;
+$text-tertiary: #B8A99A;
+
+.page {
+  min-height: 100vh;
+  background: $bg;
+  padding-bottom: calc(40rpx + env(safe-area-inset-bottom));
+}
+
+.topBar {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  padding: 20rpx 32rpx;
+  padding-top: calc(20rpx + env(safe-area-inset-top));
+  background: #FFFFFF;
+  border-bottom: 1rpx solid rgba(0,0,0,0.06);
+}
+
+.backBtn {
+  font-size: 36rpx;
+  color: $text-primary;
+  font-weight: 600;
+  padding: 4rpx 8rpx;
+}
+
+.topInfo {
+  display: flex;
+  flex-direction: column;
+}
+
+.topTitle {
+  font-size: 34rpx;
+  font-weight: 800;
+  color: $text-primary;
+}
+
+.topSubtitle {
+  font-size: 22rpx;
+  color: #C4956A;
+  font-weight: 500;
+}
+
+.introCard {
+  margin: 24rpx 32rpx;
+  padding: 28rpx 32rpx;
+  background: linear-gradient(135deg, rgba(196,149,106,0.1) 0%, rgba(196,149,106,0.05) 100%);
+  border: 1rpx solid rgba(196,149,106,0.2);
+  border-radius: 24rpx;
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.introIcon {
+  font-size: 48rpx;
+  flex-shrink: 0;
+}
+
+.introText {
+  font-size: 26rpx;
+  color: $text-secondary;
+  line-height: 1.6;
+}
+
+.cardGrid {
+  padding: 0 32rpx;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20rpx;
+}
+
+.card {
+  padding: 28rpx 24rpx;
+  border-radius: 24rpx;
+  border: 1rpx solid;
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+
+  &:active {
+    transform: scale(0.97);
+    opacity: 0.85;
+  }
+}
+
+.cardIconWrap {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 20rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cardIcon {
+  font-size: 40rpx;
+  line-height: 1;
+}
+
+.cardTitle {
+  font-size: 28rpx;
+  font-weight: 700;
+}
+
+.cardDesc {
+  font-size: 22rpx;
+  color: $text-tertiary;
+  line-height: 1.4;
+}
+
+.cardArrow {
+  position: absolute;
+  top: 24rpx;
+  right: 20rpx;
+  font-size: 28rpx;
+  font-weight: 600;
+}
+
+.footerTip {
+  padding: 48rpx 32rpx 24rpx;
+  text-align: center;
+}
+
+.footerTipText {
+  font-size: 24rpx;
+  color: $text-tertiary;
+  line-height: 1.5;
+}

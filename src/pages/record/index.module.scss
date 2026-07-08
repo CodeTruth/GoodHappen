@@ -8,7 +8,7 @@
   min-height: 100vh;
   background: $color-bg-page;
   padding: $page-padding;
-  padding-bottom: calc(#{$page-padding} + 120px); // 涓鸿嚜瀹氫箟 tabBar 鐣欏嚭绌洪棿
+  padding-bottom: calc(#{$page-padding} + 120px + env(safe-area-inset-bottom));
 }
 
 .header {

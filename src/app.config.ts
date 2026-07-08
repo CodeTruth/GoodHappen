@@ -47,6 +47,7 @@ export default defineAppConfig({
     'pages/charity-tasks/index',
     'pages/claim-flow/index',
     'pages/ai-advisor/index',
+    'pages/kindness-guard/index',
     'pages/ai-chat/index',
     'pages/circle-moral-tasks/index',
     'pages/student-profile/index',

@@ -3,7 +3,7 @@
 .container {
   min-height: 100vh;
   background: $color-bg-page;
-  padding-bottom: 160px;  // 为底部 Tab 栏留空间
+  padding-bottom: calc(160px + env(safe-area-inset-bottom));
 }
 
 // Tab切换栏

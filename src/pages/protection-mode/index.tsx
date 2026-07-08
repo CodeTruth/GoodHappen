@@ -43,6 +43,10 @@ export default function ProtectionModePage() {
   ]);
   const [sosCountdown, setSosCountdown] = useState(0);
 
+  // AI风险提示（基于当前时间+GPS自动计算）
+  const [aiRiskTip, setAiRiskTip] = useState('');
+  const [aiRiskLevel, setAiRiskLevel] = useState('');
+
   // 从 userStore 读取紧急联系人
   const { userInfo } = useUserStore();
   const emergencyContacts: EmergencyContact[] = useMemo(() => {
@@ -98,6 +102,48 @@ export default function ProtectionModePage() {
         // 忽略解析错误
       }
     }
+  }, []);
+
+  // AI风险自动评估（基于时间和位置）
+  useEffect(() => {
+    const hour = new Date().getHours();
+    const isNight = hour >= 22 || hour < 5;
+    const isLateNight = hour >= 0 && hour < 5;
+
+    const coordType = process.env.TARO_ENV === 'h5' ? 'wgs84' as const : 'gcj02' as const;
+    Taro.getLocation({ type: coordType }).then((loc) => {
+      const scenario = [
+        isLateNight ? '凌晨，周围无人，非常偏僻' : isNight ? '夜间，周围人少' : '',
+        loc.latitude < 30 ? '南方城市' : '北方城市',
+      ].filter(Boolean).join('，') || '白天，正常环境';
+
+      const result = quickAssess(scenario);
+      const level = result.adviceLevel;
+      setAiRiskLevel(level);
+
+      const tips: Record<string, string> = {
+        A: '当前环境安全，可以放心行善',
+        B: '有一定风险，保护模式已为您全程存证',
+        C: '建议联系附近热心人一起行动更安全',
+        D: '建议同时拨打专业求助电话',
+        E: '环境风险较高，请优先确保自身安全',
+      };
+      setAiRiskTip(tips[level] || tips.B);
+    }).catch(() => {
+      // GPS失败，仅基于时间
+      const scenario = isLateNight ? '凌晨，周围无人' : isNight ? '夜间，周围人少' : '白天';
+      const result = quickAssess(scenario);
+      setAiRiskLevel(result.adviceLevel);
+
+      const tips: Record<string, string> = {
+        A: '当前环境安全，可以放心行善',
+        B: '有一定风险，保护模式已为您全程存证',
+        C: '建议联系附近热心人一起行动更安全',
+        D: '建议同时拨打专业求助电话',
+        E: '环境风险较高，请优先确保自身安全',
+      };
+      setAiRiskTip(tips[result.adviceLevel] || tips.B);
+    });
   }, []);
 
   useEffect(() => {
@@ -324,17 +370,7 @@ export default function ProtectionModePage() {
       Taro.showToast({ title: '请先设置紧急联系人', icon: 'none' });
       return;
     }
-    Taro.showModal({
-      title: '善行保护模式',
-      content: '启动后将自动录像、录音、GPS追踪，全程存证。确认开启？',
-      confirmText: '确认开启',
-      confirmColor: '#4CAF50',
-      success: (res) => {
-        if (res.confirm) {
-          createSession('phone', emergencyContacts);
-        }
-      },
-    });
+    createSession('phone', emergencyContacts);
   }, [emergencyContacts, isDemo, handleStartDemo]);
 
   /** 拍照取证 */
@@ -661,48 +697,33 @@ export default function ProtectionModePage() {
   const status = session?.status || 'idle';
 
   // ============================================
-  // 渲染：idle 状态
+  // 渲染：idle 状态 — 三角形环绕中心按钮
   // ============================================
   const renderIdle = () => (
     <View className={styles.idleSection}>
-      {isDemo && (
-        <View className={styles.demoBadge}>
-          <Text className={styles.demoBadgeIcon}>🎮</Text>
-          <Text className={styles.demoBadgeText}>演示模式 - 自动演示保护流程</Text>
-        </View>
-      )}
-      <Text className={styles.shieldIcon}>{'\u{1F6E1}\uFE0F'}</Text>
-      <Text className={styles.mainTitle}>善行保护模式</Text>
-      <Text className={styles.subtitle}>做任何事前先保护好自己</Text>
+      {/* 上半 — 标题信息 */}
+      <View className={styles.idleTop}>
+        {isDemo && (
+          <View className={styles.demoBadge}>
+            <Text className={styles.demoBadgeIcon}>🎮</Text>
+            <Text className={styles.demoBadgeText}>演示模式 - 自动演示保护流程</Text>
+          </View>
+        )}
 
-      {sourceScene && (
-        <View className={styles.sceneHintCard}>
-          <Text className={styles.sceneHintLabel}>🤖 AI顾问识别的场景</Text>
-          <Text className={styles.sceneHintText}>{sourceScene}</Text>
-        </View>
-      )}
+        <Text className={styles.shieldIcon}>{'\u{1F6E1}\uFE0F'}</Text>
+        <Text className={styles.mainTitle}>善行保护模式</Text>
+        <Text className={styles.subtitle}>全程录像录音，GPS实时追踪，一键SOS求助</Text>
 
-      <View className={styles.descCard}>
-        <Text className={styles.descText}>
-          {isDemo
-            ? '演示模式下将模拟完整的保护流程：初始化 → 保护中 → 自动结束'
-            : '启动后系统将自动录像、录音、GPS追踪，全程存证'
-          }
-        </Text>
+        {sourceScene && (
+          <View className={styles.sceneHintCard}>
+            <Text className={styles.sceneHintLabel}>🤖 AI顾问识别的场景</Text>
+            <Text className={styles.sceneHintText}>{sourceScene}</Text>
+          </View>
+        )}
       </View>
 
-      {/* 紧急联系人提示 - 演示模式下隐藏 */}
-      {!isDemo && emergencyContacts.length === 0 && (
-        <View className={styles.contactHint} onClick={() => Taro.navigateTo({ url: '/pages/profile-edit/index' })}>
-          <Text className={styles.contactHintIcon}>⚠️</Text>
-          <View className={styles.contactHintText}>
-            <Text className={styles.contactHintTitle}>请设置紧急联系人</Text>
-            <Text className={styles.contactHintDesc}>保护模式需要至少一位紧急联系人才能启动 →</Text>
-          </View>
-        </View>
-      )}
-
-      <View className={styles.circleBtnWrap}>
+      {/* 中心按钮 — 绝对居中 */}
+      <View className={styles.centerBtnWrap}>
         <View className={styles.circleBtnIdle} onClick={handleStart}>
           <Text className={styles.circleBtnIdleIcon}>{'\u{1F6E1}\uFE0F'}</Text>
           <Text className={styles.circleBtnIdleText}>
@@ -711,24 +732,36 @@ export default function ProtectionModePage() {
         </View>
       </View>
 
-      <Text className={styles.btnHint}>
-        {isDemo
-          ? '演示模式自动进行中，请稍候...'
-          : sourceFrom === 'advisor' ? 'AI顾问建议：此场景需先保护再行善' : '点击即开始全程录像+录音+GPS定位'
-        }
-      </Text>
+      {/* 下半 — 提示与入口 */}
+      <View className={styles.idleBottom}>
+        <Text className={styles.btnHint}>
+          {isDemo
+            ? '演示模式自动进行中，请稍候...'
+            : '点击开启AI全程守护，安心做好事'
+          }
+        </Text>
 
-      {/* 定时安全确认入口 - 演示模式下隐藏 */}
-      {!isDemo && (
-        <View className={styles.safetyCheckEntry} onClick={() => Taro.navigateTo({ url: '/pages/safety-check/index' })}>
-          <Text className={styles.safetyCheckIcon}>⏱️</Text>
-          <View className={styles.safetyCheckText}>
-            <Text className={styles.safetyCheckTitle}>定时安全确认</Text>
-            <Text className={styles.safetyCheckDesc}>设置预计完成时间，超时自动SOS</Text>
+        {!isDemo && emergencyContacts.length === 0 && (
+          <View className={styles.contactHint} onClick={() => Taro.navigateTo({ url: '/pages/profile-edit/index' })}>
+            <Text className={styles.contactHintIcon}>⚠️</Text>
+            <View className={styles.contactHintText}>
+              <Text className={styles.contactHintTitle}>请设置紧急联系人</Text>
+              <Text className={styles.contactHintDesc}>保护模式需要至少一位紧急联系人才能启动 →</Text>
+            </View>
           </View>
-          <Text className={styles.safetyCheckArrow}>→</Text>
-        </View>
-      )}
+        )}
+
+        {!isDemo && (
+          <View className={styles.safetyCheckEntry} onClick={() => Taro.navigateTo({ url: '/pages/safety-check/index' })}>
+            <Text className={styles.safetyCheckIcon}>⏱️</Text>
+            <View className={styles.safetyCheckText}>
+              <Text className={styles.safetyCheckTitle}>定时安全确认</Text>
+              <Text className={styles.safetyCheckDesc}>设置预计完成时间，超时自动SOS</Text>
+            </View>
+            <Text className={styles.safetyCheckArrow}>→</Text>
+          </View>
+        )}
+      </View>
     </View>
   );
 
@@ -839,6 +872,14 @@ export default function ProtectionModePage() {
             <Text className={styles.activeLabel}>保护中 · 点击结束</Text>
           </View>
         </View>
+
+        {/* AI风险提示 */}
+        {aiRiskTip && (
+          <View className={styles.aiRiskBanner}>
+            <Text className={styles.aiRiskIcon}>🤖</Text>
+            <Text className={styles.aiRiskText}>{aiRiskTip}</Text>
+          </View>
+        )}
 
         <View className={styles.dataGrid}>
           <View className={styles.dataCard}>

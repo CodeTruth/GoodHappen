@@ -106,6 +106,14 @@ interface AnalyticsState {
   getMAU: () => number;
   // 获取最近N天的善行发布量趋势
   getKindnessTrend: (days: number) => { date: string; count: number }[];
+  // 获取平台累计善行总数
+  getTotalKindnessCount: () => number;
+  // 获取今日用户本人善行数
+  getTodayKindnessCount: () => number;
+  // 获取今日活跃用户数
+  getTodayActiveUsers: () => number;
+  // 获取实时活跃善行用户数（模拟）
+  getRealtimeActiveCount: () => number;
   // 更新温暖指标
   updateWarmthMetrics: (metrics: Partial<WarmthMetrics>) => void;
   // 归档当日计数器到dailyMetrics（跨天时调用）
@@ -310,20 +318,10 @@ export const useAnalyticsStore = create<AnalyticsState>((set, get) => ({
     return todayMetric.dau || 3842;
   },
 
-  // 获取已保护善行人数（模拟）
-  getProtectedUsersCount: () => {
+  // 获取今日用户本人善行数
+  getTodayKindnessCount: () => {
     const state = get();
-    const base = 2156;
-    const additional = state.dailyMetrics.reduce((sum, m) => sum + Math.floor(m.kindnessCount * 0.02), 0);
-    return base + additional;
-  },
-
-  // 获取被见证/认可次数（模拟）
-  getWitnessedCount: () => {
-    const state = get();
-    const base = 45238;
-    const additional = state.dailyMetrics.reduce((sum, m) => sum + Math.floor(m.kindnessCount * 0.35), 0);
-    return base + additional;
+    return state.todayCounters.kindnessPublished;
   },
 
   // 获取实时在线行善人数（模拟随机波动）

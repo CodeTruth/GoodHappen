@@ -10,3 +10,41 @@ page {
   color: $color-text-primary;
   background-color: $color-bg-page;
 }
+
+// ============================================
+// 全局通用页面容器类 —— 彻底解决 Tab 栏遮挡问题
+// ============================================
+// 所有页面根容器统一使用以下类名之一，不再需要手动计算 padding-bottom
+
+// 【Tab 页面专用】带 Tab 栏的页面（home / discover / record / circle-dashboard / mine）
+// 用法：<View className="pageWithTabBar">...</View>
+.pageWithTabBar {
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding-bottom: calc(120px + env(safe-area-inset-bottom));
+  box-sizing: border-box;
+}
+
+// 【非 Tab 页面专用】不带 Tab 栏的页面
+// 用法：<View className="pageWithoutTabBar">...</View>
+.pageWithoutTabBar {
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding-bottom: calc(40rpx + env(safe-area-inset-bottom));
+  box-sizing: border-box;
+}
+
+// 【固定底部操作栏】底部有固定按钮/操作栏的页面
+// 用法：<View className="fixedBottomBar">...</View>
+.fixedBottomBar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 100;
+  padding: 16rpx 32rpx;
+  padding-bottom: calc(16rpx + env(safe-area-inset-bottom));
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  box-shadow: 0 -4rpx 20rpx rgba(0, 0, 0, 0.08);
+}

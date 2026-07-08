@@ -95,8 +95,9 @@ export default function WitnessRecordPage() {
 
   // ===== 获取GPS位置 =====
   useEffect(() => {
+    const coordType = process.env.TARO_ENV === 'h5' ? 'wgs84' as const : 'gcj02' as const;
     Taro.getLocation({
-      type: 'gcj02',
+      type: coordType,
       success: (res) => {
         setLocation({
           lat: res.latitude,
@@ -276,16 +277,8 @@ export default function WitnessRecordPage() {
     if (publishing) return;
     setPublishing(true);
 
-    // 预先把视频 blob 转成 base64 data URL（object URL 刷新后失效，无法持久化）
-    let videoDataUrl = '';
-    if (videoBlobRef.current && videoBlobRef.current.size > 0) {
-      try {
-        Taro.showToast({ title: '正在处理视频...', icon: 'loading', duration: 10000 });
-        videoDataUrl = await blobToDataUrl(videoBlobRef.current);
-      } catch (e) {
-        console.warn('[WitnessRecord] Video blob to dataUrl failed:', e);
-      }
-    }
+    // 先把视频 blob 引用保存下来（延迟转 dataUrl，避免阻塞发布流程）
+    const videoBlob = videoBlobRef.current;
 
     const newKindness = {
       id: `witness_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
@@ -308,70 +301,76 @@ export default function WitnessRecordPage() {
       isMock: false,
     };
 
+    // 先发布（不阻塞），证据异步保存
+    addPublished(newKindness);
+    addFortune(15, 'witness');
+
+    // 异步保存到证据历史（视频转换放在后台，不阻塞返回）
+    saveToHistoryAsync(newKindness, videoBlob);
+
+    Taro.showToast({
+      title: '见证发布成功！+15福气',
+      icon: 'success',
+      duration: 1500,
+    });
+
+    // 快速返回首页
     setTimeout(() => {
-      addPublished(newKindness);
-      addFortune(15, 'witness');
+      Taro.switchTab({ url: '/pages/home/index' });
+    }, 1500);
+  };
 
-      // 保存到证据历史
-      try {
-        const files: any[] = [];
-        photos.forEach((p, i) => {
-          files.push({
-            id: `witness_photo_${i}_${Date.now()}`,
-            type: 'photo' as const,
-            dataUrl: p,
-            size: p.length || 0,
-            createdAt: new Date().toISOString(),
-          });
-        });
-        if (videoDataUrl) {
-          files.push({
-            id: `witness_video_${Date.now()}`,
-            type: 'video' as const,
-            dataUrl: videoDataUrl,
-            size: videoDataUrl.length,
-            createdAt: new Date().toISOString(),
-          });
-        }
-        useEvidenceHistoryStore.getState().addRecord({
-          id: newKindness.id,
-          source: 'witness',
-          title: `扇形见证 · ${new Date().toLocaleString('zh-CN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}`,
-          description: description || location?.address || '见证记录',
-          startedAt: new Date().toISOString(),
-          closedAt: new Date().toISOString(),
-          duration: recordTime,
-          gps: location?.address ? {
-            latitude: location.lat,
-            longitude: location.lng,
-            address: location.address,
-          } : undefined,
-          files,
-        });
-      } catch (e) {
-        console.warn('[WitnessRecord] Failed to save to evidence history:', e);
-      }
-
-      Taro.showToast({
-        title: '见证发布成功！+15福气',
-        icon: 'success',
-        duration: 2000,
+  // 异步保存证据（视频转换在后台进行，超时兜底）
+  const saveToHistoryAsync = (kindness: any, videoBlob: Blob | null) => {
+    const files: any[] = [];
+    photos.forEach((p, i) => {
+      files.push({
+        id: `witness_photo_${i}_${Date.now()}`,
+        type: 'photo' as const,
+        dataUrl: p,
+        size: p.length || 0,
+        createdAt: new Date().toISOString(),
       });
+    });
 
-      // 发布成功后提示证据保存位置
-      setTimeout(() => {
-        Taro.showToast({
-          title: '证据已保存，可在「我的-证据历史」中查看',
-          icon: 'none',
-          duration: 2500,
+    useEvidenceHistoryStore.getState().addRecord({
+      id: kindness.id,
+      source: 'witness',
+      title: `善行见证 · ${new Date().toLocaleString('zh-CN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}`,
+      description: kindness.content || location?.address || '见证记录',
+      startedAt: new Date().toISOString(),
+      closedAt: new Date().toISOString(),
+      duration: recordTime,
+      gps: location?.address ? {
+        latitude: location.lat,
+        longitude: location.lng,
+        address: location.address,
+      } : undefined,
+      files,
+    });
+
+    // 视频转换异步进行，超时 15 秒兜底
+    if (videoBlob && videoBlob.size > 0) {
+      const timeout = new Promise<string>((_, reject) =>
+        setTimeout(() => reject(new Error('timeout')), 15000)
+      );
+      Promise.race([blobToDataUrl(videoBlob), timeout])
+        .then((videoDataUrl) => {
+          useEvidenceHistoryStore.getState().updateRecord(kindness.id, {
+            files: [...files, {
+              id: `witness_video_${Date.now()}`,
+              type: 'video' as const,
+              dataUrl: videoDataUrl,
+              size: videoDataUrl.length,
+              createdAt: new Date().toISOString(),
+            }],
+          });
+        })
+        .catch(() => {
+          // 视频转换失败或超时，静默处理，不影响已发布的见证
+          console.warn('[WitnessRecord] Video conversion failed or timed out, video not saved to evidence history');
         });
-      }, 2200);
-
-      // 跳转延迟到证据提示显示完毕后
-      setTimeout(() => {
-        Taro.switchTab({ url: '/pages/home/index' });
-      }, 5000);
-    }, 800);
+    }
   };
 
   // ===== 返回 =====
@@ -481,13 +480,13 @@ export default function WitnessRecordPage() {
               </View>
             )}
 
-            {/* 完成按钮 */}
+            {/* 发布按钮 */}
             <View
               className={`${styles.finishBtn} ${(photos.length > 0 || videoUrl) ? styles.finishBtnActive : ''}`}
               onClick={openPublish}
             >
               <Text className={styles.finishBtnText}>
-                完成{photos.length > 0 || videoUrl ? `(${photos.length + (videoUrl ? 1 : 0)})` : ''}
+                发布{photos.length > 0 || videoUrl ? `(${photos.length + (videoUrl ? 1 : 0)})` : ''}
               </Text>
             </View>
           </View>
@@ -497,26 +496,59 @@ export default function WitnessRecordPage() {
           </Text>
         </View>
       ) : (
-        /* ===== 发布面板 ===== */
+        /* ===== 发布界面 ===== */
         <View className={styles.publishPanel}>
-          <View className={styles.publishHeader}>
-            <Text className={styles.publishTitle}>补充描述（可选）</Text>
-            <Text className={styles.publishClose} onClick={() => setShowPublish(false)}>✕</Text>
-          </View>
+          {/* 已拍摄的内容 */}
+          {(photos.length > 0 || videoUrl) && (
+            <ScrollView className={styles.publishMedia} scrollX>
+              {photos.map((photo, idx) => (
+                <View key={idx} className={styles.publishMediaItem}>
+                  <Image className={styles.publishMediaImg} src={photo} mode="aspectFill" />
+                  <Text className={styles.publishMediaRemove} onClick={() => removePhoto(idx)}>×</Text>
+                </View>
+              ))}
+              {videoUrl && (
+                <View className={styles.publishMediaItem}>
+                  <View className={styles.publishMediaVideo}>
+                    <Text className={styles.publishMediaVideoIcon}>▶</Text>
+                    <Text className={styles.publishMediaVideoTime}>{formatRecordTime(recordTime)}</Text>
+                  </View>
+                  <Text className={styles.publishMediaRemove} onClick={removeVideo}>×</Text>
+                </View>
+              )}
+            </ScrollView>
+          )}
+
+          {/* 描述输入 */}
           <Textarea
             className={styles.publishInput}
-            placeholder="简要描述你看到的温暖场景..."
+            placeholder="描述你看到的好事，让温暖被更多人知道..."
             value={description}
             onInput={(e) => setDescription(e.detail.value)}
             maxlength={200}
           />
-          <View
-            className={styles.publishBtn}
-            onClick={handlePublish}
-          >
-            <Text className={styles.publishBtnText}>
-              {publishing ? '发布中...' : '发布见证'}
+
+          {/* 位置信息 */}
+          <View className={styles.publishLocation}>
+            <Text className={styles.publishLocationIcon}>📍</Text>
+            <Text className={styles.publishLocationText}>
+              {location?.address || '正在获取位置...'}
             </Text>
+          </View>
+
+          {/* 操作按钮 */}
+          <View className={styles.publishActions}>
+            <View className={styles.publishCancel} onClick={() => setShowPublish(false)}>
+              <Text className={styles.publishCancelText}>继续拍摄</Text>
+            </View>
+            <View
+              className={`${styles.publishSubmitBtn} ${publishing ? styles.publishing : ''}`}
+              onClick={handlePublish}
+            >
+              <Text className={styles.publishSubmitText}>
+                {publishing ? '发布中...' : '发布见证'}
+              </Text>
+            </View>
           </View>
         </View>
       )}

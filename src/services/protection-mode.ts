@@ -230,8 +230,9 @@ async function _initDeviceResources(sessionId: string, deviceType: DeviceType) {
  */
 async function _initGPS(sessionId: string): Promise<void> {
   return new Promise((resolve) => {
+    const coordType = process.env.TARO_ENV === 'h5' ? 'wgs84' as const : 'gcj02' as const;
     Taro.getLocation({
-      type: 'gcj02',
+      type: coordType,
       success: (res) => {
         if (_currentSession?.id === sessionId) {
           _currentSession = {
@@ -529,8 +530,9 @@ function _startTracking() {
       return;
     }
     if (_currentSession.status === 'active' || _currentSession.status === 'sos') {
+      const coordType = process.env.TARO_ENV === 'h5' ? 'wgs84' as const : 'gcj02' as const;
       Taro.getLocation({
-        type: 'gcj02',
+        type: coordType,
         success: (res) => {
           if (_currentSession && (_currentSession.status === 'active' || _currentSession.status === 'sos')) {
             _currentSession = {

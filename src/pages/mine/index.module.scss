@@ -7,7 +7,7 @@
 .container {
   min-height: 100vh;
   background: $color-bg-page;
-  padding-bottom: 120px; // 为自定义 tabBar 留出空间
+  padding-bottom: calc(120px + env(safe-area-inset-bottom));
 }
 
 .header {

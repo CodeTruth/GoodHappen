@@ -259,7 +259,8 @@ export const calculateDescriptionMatch = (desc1: string, desc2: string): number 
  */
 export const getCurrentGPS = async (): Promise<GPSInfo> => {
   try {
-    const res = await Taro.getLocation({ type: 'gcj02' });
+    const coordType = process.env.TARO_ENV === 'h5' ? 'wgs84' as const : 'gcj02' as const;
+    const res = await Taro.getLocation({ type: coordType });
     return {
       latitude: res.latitude,
       longitude: res.longitude,

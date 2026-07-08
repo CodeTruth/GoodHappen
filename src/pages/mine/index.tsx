@@ -136,6 +136,7 @@ const MinePage: React.FC = () => {
   ];
 
   const protectionItems = [
+    { icon: '🤖', text: '善行顾问', action: () => Taro.navigateTo({ url: '/pages/ai-advisor/index' }) },
     { icon: '📂', text: '证据历史', action: () => Taro.navigateTo({ url: '/pages/evidence-history/index' }) },
     { icon: '⚖️', text: '法律援助', action: () => Taro.navigateTo({ url: '/pages/legal-aid/index' }) },
     { icon: '📸', text: '善行见证', action: () => Taro.navigateTo({ url: '/pages/witness-network/index' }) },

@@ -64,6 +64,52 @@ $transition-base: 0.25s ease;
 $transition-slow: 0.35s ease;
 
 // ============================================
+// Tab 栏 & 安全区域（新增）
+// ============================================
+// Tab 栏固定高度（与 custom-tab-bar/index.scss 保持一致）
+$tab-bar-height: 120px;
+// Tab 页面底部需要留出的总空间 = Tab栏 + 系统手势条
+$tab-bar-safe-bottom: calc(120px + env(safe-area-inset-bottom));
+// 非 Tab 页面底部安全区域（仅系统手势条）
+$safe-area-bottom: env(safe-area-inset-bottom);
+
+// ============================================
+// 页面容器 Mixin（新增）—— 解决 Tab 栏遮挡问题的统一方案
+// ============================================
+
+// Tab 页面根容器 mixin：自动处理 Tab 栏 + 安全区域的底部 padding
+// 用法：在 .container { @include page-with-tab-bar; }
+@mixin page-with-tab-bar {
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding-bottom: $tab-bar-safe-bottom;
+  box-sizing: border-box;
+}
+
+// 非 Tab 页面根容器 mixin：仅处理系统安全区域
+// 用法：在 .container { @include page-without-tab-bar; }
+@mixin page-without-tab-bar {
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding-bottom: calc(40rpx + #{$safe-area-bottom});
+  box-sizing: border-box;
+}
+
+// 固定底部按钮/操作栏 mixin：保证固定定位元素不被系统手势条遮挡
+// 用法：.bottomBar { @include fixed-bottom-bar; }
+@mixin fixed-bottom-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 100;
+  padding-bottom: calc(16rpx + env(safe-area-inset-bottom));
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  box-shadow: 0 -4rpx 20rpx rgba(0, 0, 0, 0.08);
+}
+
+// ============================================
 // 常用 Mixin
 // ============================================
 // 单行文本省略

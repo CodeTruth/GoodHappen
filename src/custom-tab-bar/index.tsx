@@ -51,13 +51,38 @@ interface CustomTabBarProps {
 
 interface CustomTabBarState {
   selected: number
+  hidden: boolean
 }
+
+const TAB_PATHS = TAB_LIST.map(t => t.pagePath)
 
 class CustomTabBar extends Component<CustomTabBarProps, CustomTabBarState> {
   constructor(props: CustomTabBarProps) {
     super(props)
     this.state = {
-      selected: props.current || 0
+      selected: props.current || 0,
+      hidden: false
+    }
+  }
+
+  componentDidMount() {
+    this.checkRoute()
+  }
+
+  componentDidUpdate() {
+    this.checkRoute()
+  }
+
+  checkRoute() {
+    const curPages = Taro.getCurrentPages()
+    if (curPages.length > 0) {
+      const route = curPages[curPages.length - 1].route || ''
+      const isTab = TAB_PATHS.some(p => route === p)
+      if (!isTab && !this.state.hidden) {
+        this.setState({ hidden: true })
+      } else if (isTab && this.state.hidden) {
+        this.setState({ hidden: false })
+      }
     }
   }
 
@@ -76,7 +101,9 @@ class CustomTabBar extends Component<CustomTabBarProps, CustomTabBarState> {
   }
 
   render() {
-    const { selected } = this.state
+    const { selected, hidden } = this.state
+
+    if (hidden) return null
 
     return (
       <View className='custom-tab-bar'>

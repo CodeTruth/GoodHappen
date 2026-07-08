@@ -3,7 +3,7 @@
   background: #F8F4EE;
   display: flex;
   flex-direction: column;
-  padding-bottom: 140px;
+  padding-bottom: calc(100rpx + env(safe-area-inset-bottom));
 }
 
 // ===== 头部 =====
