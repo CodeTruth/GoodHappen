@@ -430,7 +430,7 @@ const HomePage: React.FC = () => {
           {/* 顶部信息区：Slogan + 实时人数 + 统计数据 */}
           <View className={styles.headerBar}>
             <View className={styles.headerTop}>
-              <Text className={styles.headerSlogan}>让每一次善行都被守护</Text>
+              <Text className={styles.headerSlogan}>放心行善，身后有光</Text>
               <View className={styles.headerLive}>
                 <View className={styles.liveDot} />
                 <Text className={styles.liveText}>当前 {realtimeCount} 人正在行善</Text>
@@ -438,18 +438,24 @@ const HomePage: React.FC = () => {
             </View>
             <View className={styles.headerStats}>
               <View className={styles.headerStatItem}>
+                <Text className={styles.headerStatIcon}>🌍</Text>
                 <Text className={styles.headerStatValue}>{formatNumber(displayedStats.total)}</Text>
-                <Text className={styles.headerStatLabel}>我的累计善行</Text>
+                <Text className={styles.headerStatLabel}>全网善行</Text>
+                <Text className={styles.headerStatSub}>人正在传递温暖</Text>
               </View>
               <View className={styles.headerStatDivider} />
               <View className={styles.headerStatItem}>
+                <Text className={styles.headerStatIcon}>📅</Text>
                 <Text className={styles.headerStatValue}>{formatNumber(displayedStats.today)}</Text>
-                <Text className={styles.headerStatLabel}>我的今日善行</Text>
+                <Text className={styles.headerStatLabel}>本日行善</Text>
+                <Text className={styles.headerStatSub}>次善行记录</Text>
               </View>
               <View className={styles.headerStatDivider} />
               <View className={styles.headerStatItem}>
+                <Text className={styles.headerStatIcon}>✨</Text>
                 <Text className={styles.headerStatValue}>{formatNumber(displayedStats.fortune)}</Text>
-                <Text className={styles.headerStatLabel}>我的福气值</Text>
+                <Text className={styles.headerStatLabel}>福气值</Text>
+                <Text className={styles.headerStatSub}>Lv.{Math.floor(displayedStats.fortune / 100) + 1}</Text>
               </View>
             </View>
           </View>

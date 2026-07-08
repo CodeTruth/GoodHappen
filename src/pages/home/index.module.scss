@@ -104,45 +104,65 @@
 // 统计条
 .headerStats {
   display: flex;
-  align-items: center;
-  background: rgba(255, 255, 255, 0.55);
-  backdrop-filter: blur(20px);
-  border-radius: 20rpx;
-  padding: 28rpx 24rpx;
-  border: 1rpx solid rgba(255, 255, 255, 0.7);
+  align-items: stretch;
+  background: linear-gradient(135deg, rgba(255,255,255,0.7) 0%, rgba(255,250,245,0.65) 100%);
+  backdrop-filter: blur(24px);
+  border-radius: 28rpx;
+  padding: 32rpx 20rpx;
+  border: 1.5rpx solid rgba(255, 255, 255, 0.8);
   box-shadow:
-    0 1rpx 4rpx rgba(0, 0, 0, 0.03),
-    0 4rpx 16rpx rgba(0, 0, 0, 0.04);
+    0 2rpx 8rpx rgba(0, 0, 0, 0.04),
+    0 8rpx 24rpx rgba(196, 149, 106, 0.08);
+  animation: fadeInScale 0.6s ease-out 0.1s both;
 }
 
 .headerStatItem {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4rpx;
+  gap: 8rpx;
   flex: 1;
+  position: relative;
+}
+
+.headerStatIcon {
+  font-size: 32rpx;
+  line-height: 1;
+  margin-bottom: 2rpx;
 }
 
 .headerStatValue {
-  font-size: 48rpx;
+  font-size: 44rpx;
   font-weight: 900;
-  color: #2D241A;
   font-feature-settings: 'tnum';
-  line-height: 1;
+  line-height: 1.1;
   font-variant-numeric: tabular-nums;
+  background: linear-gradient(135deg, #C4956A 0%, #B8860B 50%, #D4A356 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .headerStatLabel {
-  font-size: 24rpx;
+  font-size: 22rpx;
   color: #9A8B7A;
   font-weight: 500;
+  letter-spacing: 1rpx;
+}
+
+.headerStatSub {
+  font-size: 18rpx;
+  color: #C4956A;
+  font-weight: 600;
+  margin-top: -2rpx;
 }
 
 .headerStatDivider {
-  width: 2rpx;
-  height: 40rpx;
+  width: 1rpx;
+  align-self: center;
+  height: 60rpx;
   border-radius: 1rpx;
-  background: linear-gradient(180deg, transparent, rgba(0,0,0,0.06) 40%, rgba(0,0,0,0.06) 60%, transparent);
+  background: linear-gradient(180deg, transparent, rgba(196,149,106,0.25) 30%, rgba(196,149,106,0.35) 50%, rgba(196,149,106,0.25) 70%, transparent);
 }
 
 // ===== 善行守护转盘 =====
