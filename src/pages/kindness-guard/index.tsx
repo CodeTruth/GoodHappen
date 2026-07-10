@@ -440,12 +440,6 @@ export default function KindnessGuardPage() {
     );
   }, [publishedList, userInfo, evidencePackages]);
 
-  useEffect(() => {
-    if (allRecords.length > 0 && !selectedKindness) {
-      setShowKindnessCards(true);
-    }
-  }, [allRecords, selectedKindness]);
-
   // ===== 欢迎消息 =====
   useEffect(() => {
     const intro = `🛡️ 别怕，平台永远站在善行者这边。\n\n` +
