@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import Taro from '@tarojs/taro';
+import { CHALLENGES } from '@/data/challenge-data';
 
 const STORAGE_KEY = 'haoshi_challenge_store';
 
@@ -366,10 +367,35 @@ export const useChallengeStore = create<ChallengeState>((set, get) => ({
       if (data) {
         const parsed = JSON.parse(data);
         set({
-          themeChallenges: parsed.themeChallenges || [],
+          themeChallenges: parsed.themeChallenges && parsed.themeChallenges.length > 0
+            ? parsed.themeChallenges
+            : CHALLENGES.filter(c => c.status === 'active').map(c => ({
+                id: c.id,
+                title: c.title,
+                description: c.desc,
+                icon: c.emoji,
+                targetDays: c.targetDays,
+                startDate: c.startDate,
+                badge: c.reward,
+                participantCount: c.participants,
+              })),
           personalChallenges: parsed.personalChallenges || [],
           teamChallenges: parsed.teamChallenges || [],
           currentUserId: parsed.currentUserId || 'currentUser',
+        });
+      } else {
+        // 首次加载，从 challenge-data 初始化 themeChallenges
+        set({
+          themeChallenges: CHALLENGES.filter(c => c.status === 'active').map(c => ({
+            id: c.id,
+            title: c.title,
+            description: c.desc,
+            icon: c.emoji,
+            targetDays: c.targetDays,
+            startDate: c.startDate,
+            badge: c.reward,
+            participantCount: c.participants,
+          })),
         });
       }
     } catch (e) {

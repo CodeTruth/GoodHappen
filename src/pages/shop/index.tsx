@@ -26,6 +26,8 @@ interface Product {
   requiredTitleLevel?: number;
   milestone?: string;
   requireStorySelected?: boolean;
+  redeemType?: string;
+  offlineMerchant?: string;
 }
 
 const categoryLabels: Record<ProductCategory, string> = {
@@ -85,16 +87,21 @@ const ShopPage: React.FC = () => {
   // 分类筛选
   const filteredProducts = useMemo(() => {
     if (activeCategory === 'all') return allProducts;
+    if (activeCategory === 'offline') return allProducts.filter(p => p.redeemType === 'offline');
     return allProducts.filter(p => p.category === activeCategory);
   }, [allProducts, activeCategory]);
 
   // 分类标签
-  const categoryTabs: { key: ProductCategory | 'all'; label: string }[] = [
+  const categoryTabs: { key: ProductCategory | 'all' | 'offline'; label: string }[] = [
     { key: 'all', label: '全部' },
+    { key: 'offline', label: '线下兑换' },
+    { key: 'charity', label: '公益捐赠' },
+    { key: 'food', label: '美食饮品' },
+    { key: 'culture', label: '文创周边' },
+    { key: 'daily', label: '日常好物' },
+    { key: 'experience', label: '体验服务' },
     { key: 'virtual', label: '虚拟权益' },
-    { key: 'brand', label: '品牌权益' },
     { key: 'milestone', label: '里程碑' },
-    { key: 'annual', label: '温暖年鉴' },
   ];
 
   // 点击商品打开详情
@@ -208,8 +215,12 @@ const ShopPage: React.FC = () => {
                 <View className={styles.productHeader}>
                   <Text className={styles.productIcon}>{product.icon}</Text>
                   <Text className={styles.productName}>{product.name}</Text>
+                  {product.redeemType === 'offline' && (
+                    <Text className={styles.offlineTag}>到店</Text>
+                  )}
                 </View>
                 <Text className={styles.productDesc}>{product.description}</Text>
+                {product.offlineMerchant && <Text className={styles.offlineMerchant}>{product.offlineMerchant}</Text>}
                 <View className={styles.productFooter}>
                   <View className={styles.priceTag}>
                     <Text className={styles.priceValue}>{product.price}</Text>
@@ -295,10 +306,30 @@ const ShopPage: React.FC = () => {
                   <Text className={styles.infoLabel}>所需福气</Text>
                   <Text className={styles.infoValue}>{selectedProduct.price} 福气</Text>
                 </View>
-                <View className={styles.infoRow}>
-                  <Text className={styles.infoLabel}>资格要求</Text>
-                  <Text className={styles.infoValue}>{categoryDescriptions[selectedProduct.category]}</Text>
-                </View>
+                {selectedProduct.redeemType === 'offline' && (
+                  <View className={styles.infoRow}>
+                    <Text className={styles.infoLabel}>兑换方式</Text>
+                    <Text className={styles.infoValue} style={{ color: '#2563EB' }}>📍 线下到店核销</Text>
+                  </View>
+                )}
+                {selectedProduct.redeemType === 'offline' && selectedProduct.offlineMerchant && (
+                  <View className={styles.infoRow}>
+                    <Text className={styles.infoLabel}>合作商户</Text>
+                    <Text className={styles.infoValue}>{selectedProduct.offlineMerchant}</Text>
+                  </View>
+                )}
+                {selectedProduct.redeemType === 'offline' && selectedProduct.offlineBranch && (
+                  <View className={styles.infoRow}>
+                    <Text className={styles.infoLabel}>适用门店</Text>
+                    <Text className={styles.infoValue}>{selectedProduct.offlineBranch}</Text>
+                  </View>
+                )}
+                {selectedProduct.redeemType === 'offline' && selectedProduct.offlineExpiry && (
+                  <View className={styles.infoRow}>
+                    <Text className={styles.infoLabel}>福气码有效期</Text>
+                    <Text className={styles.infoValue}>{selectedProduct.offlineExpiry}</Text>
+                  </View>
+                )}
                 {selectedProduct.limitPerUser && selectedProduct.limitPerUser > 0 && (
                   <View className={styles.infoRow}>
                     <Text className={styles.infoLabel}>限领次数</Text>

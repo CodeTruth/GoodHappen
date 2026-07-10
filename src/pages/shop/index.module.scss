@@ -140,6 +140,24 @@
   font-weight: $font-weight-semibold;
   color: $color-text-primary;
   @include text-ellipsis;
+  flex: 1;
+}
+
+.offlineTag {
+  font-size: 10px;
+  color: #2563EB;
+  background: #DBEAFE;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+.offlineMerchant {
+  font-size: $font-size-xs;
+  color: #2563EB;
+  margin-bottom: 2px;
+  display: block;
 }
 
 .productDesc {

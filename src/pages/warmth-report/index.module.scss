@@ -1,0 +1,32 @@
+.page { min-height: 100vh; background: #F9FAFB; }
+.header { display: flex; flex-direction: row; align-items: center; justify-content: space-between; padding: 12px 16px; background: #FFFFFF; border-bottom: 1px solid #E5E7EB; }
+.backBtn { width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-size: 18px; color: #78716C; }
+.headerTitle { font-size: 17px; font-weight: 600; color: #1F2937; }
+.body { height: calc(100vh - 50px); padding: 0 16px; }
+
+.scoreSection { background: linear-gradient(135deg, #1F2937 0%, #374151 100%); border-radius: 16px; padding: 28px 20px; text-align: center; margin-top: 16px; }
+.scoreLabel { font-size: 14px; color: #9CA3AF; display: block; margin-bottom: 8px; }
+.scoreValue { font-size: 56px; font-weight: 700; display: block; line-height: 1.1; }
+.scoreLevel { font-size: 16px; font-weight: 500; color: #F59E0B; display: block; margin-top: 6px; }
+.scoreDesc { font-size: 12px; color: #6B7280; display: block; margin-top: 10px; }
+
+.monthTitle { font-size: 18px; font-weight: 600; color: #1F2937; display: block; margin: 20px 0 12px; }
+
+.statsGrid { display: flex; flex-direction: row; flex-wrap: wrap; gap: 10px; }
+.statCard { width: calc(50% - 5px); background: #FFFFFF; border-radius: 12px; padding: 16px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+.statNum { font-size: 28px; font-weight: 700; color: #C4956A; display: block; }
+.statLabel { font-size: 13px; color: #78716C; margin-top: 4px; display: block; }
+
+.section { margin-top: 20px; }
+.sectionTitle { font-size: 16px; font-weight: 600; color: #1F2937; display: block; margin-bottom: 10px; }
+
+.tagCloud { display: flex; flex-direction: row; flex-wrap: wrap; gap: 8px; }
+.tagItem { background: #FFF7ED; border-radius: 16px; padding: 5px 12px; display: flex; flex-direction: row; align-items: center; gap: 4px; }
+.tagText { font-size: 13px; color: #C4956A; font-weight: 500; }
+.tagCount { font-size: 11px; color: #F59E0B; }
+
+.explainCard { background: #FFFFFF; border-radius: 12px; padding: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+.explainRow { display: flex; flex-direction: row; align-items: center; gap: 8px; margin-bottom: 8px; }
+.explainDot { font-size: 8px; color: #C4956A; }
+.explainText { font-size: 13px; color: #4B5563; }
+.explainNote { font-size: 12px; color: #9CA3AF; margin-top: 12px; display: block; font-style: italic; }

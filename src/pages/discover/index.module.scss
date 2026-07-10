@@ -1,343 +1,571 @@
-@use '@/styles/variables.scss' as *;
-
-// ===== 动画 =====
-@keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(20rpx); }
-  to   { opacity: 1; transform: translateY(0); }
+.page {
+  min-height: 100vh;
+  background: #F9FAFB;
 }
 
-@keyframes fadeInScale {
-  from { opacity: 0; transform: scale(0.95); }
-  to   { opacity: 1; transform: scale(1); }
-}
-
-// ===== 页面 =====
-.pageWrapper {
+.scrollView {
   height: 100vh;
-  height: 100dvh;
+}
+
+// ============================================
+// 连续天数进度条
+// ============================================
+
+.streakSection {
+  background: linear-gradient(135deg, #FFF7ED 0%, #FEF2F2 100%);
+  padding: 52rpx 40rpx 44rpx;
+  border-bottom: 1px solid #FEE2E2;
+}
+
+.streakHeader {
   display: flex;
-  flex-direction: column;
-  background:
-    linear-gradient(180deg, rgba(248,244,238,0.9) 0%, rgba(250,246,240,0.85) 50%, rgba(248,244,238,0.9) 100%),
-    url('@/assets/home-bg.jpg') center / cover no-repeat;
-  background-color: $color-bg-page;
-  position: relative;
-  overflow: hidden;
-
-  &::before {
-    content: '';
-    position: absolute;
-    top: -100rpx;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 500rpx;
-    height: 350rpx;
-    border-radius: 50%;
-    background: radial-gradient(circle, rgba(196,149,106,0.06) 0%, transparent 70%);
-    pointer-events: none;
-    z-index: 0;
-  }
-}
-
-// ===== 搜索栏 =====
-.searchBar {
-  display: flex;
-  align-items: center;
-  gap: $spacing-sm;
-  margin: 20rpx $spacing-lg 16rpx;
-  padding: 16rpx 24rpx;
-  background: rgba(255,255,255,0.75);
-  backdrop-filter: blur(16px);
-  border-radius: $radius-round;
-  border: 1.5rpx solid rgba(196,149,106,0.15);
-  box-shadow: 0 2rpx 12rpx rgba(0,0,0,0.04);
-  cursor: pointer;
-  flex-shrink: 0;
-  position: relative;
-  z-index: 1;
-  transition: all 0.25s ease;
-
-  &:active {
-    background: rgba(255,255,255,0.9);
-    box-shadow: 0 4rpx 16rpx rgba(0,0,0,0.06);
-    transform: scale(0.99);
-  }
-}
-
-.searchIcon {
-  font-size: 28rpx;
-  color: $color-text-tertiary;
-}
-
-.searchPlaceholder {
-  font-size: $font-size-sm;
-  color: $color-text-tertiary;
-  flex: 1;
-}
-
-// ===== 善行广场引导 =====
-.squareGuide {
-  margin: 0 $spacing-lg 12rpx;
-  padding: 12rpx 20rpx;
-  background: rgba(196,149,106,0.06);
-  border-radius: $radius-md;
-  border: 1rpx solid rgba(196,149,106,0.08);
-  cursor: pointer;
-  text-align: center;
-  transition: all 0.2s ease;
-
-  &:active {
-    background: rgba(196,149,106,0.1);
-    transform: scale(0.99);
-  }
-}
-
-.squareGuideText {
-  font-size: 24rpx;
-  color: $color-text-secondary;
-}
-
-// ===== 顶部 Tab 切换器 =====
-.topTabs {
-  display: flex;
-  align-items: center;
-  gap: 8rpx;
-  padding: 0 $spacing-lg;
-  margin-bottom: 16rpx;
-  flex-shrink: 0;
-  position: relative;
-  z-index: 1;
-}
-
-.topTabItem {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 12rpx 24rpx;
-  border-radius: $radius-round;
-  cursor: pointer;
-  transition: all 0.25s ease;
-  position: relative;
-
-  &:active {
-    opacity: 0.8;
-  }
-}
-
-.topTabText {
-  font-size: $font-size-sm;
-  color: $color-text-tertiary;
-  font-weight: $font-weight-medium;
-  transition: all 0.25s ease;
-}
-
-.topTabActive {
-  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
-  box-shadow: 0 4rpx 16rpx rgba(196,149,106,0.3);
-
-  .topTabText {
-    color: $color-text-white;
-    font-weight: $font-weight-semibold;
-  }
-}
-
-// ===== 内容滚动区域 =====
-.contentScroll {
-  flex: 1;
-  padding: 0 $spacing-lg;
-  padding-bottom: calc(120px + env(safe-area-inset-bottom));
-  position: relative;
-  z-index: 1;
-}
-
-// ===== 筛选栏 =====
-.filterBar {
-  margin-bottom: $spacing-md;
-  animation: fadeInUp 0.5s ease-out 0.1s both;
-}
-
-.tagFilter {
-  white-space: nowrap;
-  margin-bottom: $spacing-sm;
-}
-
-.tagFilterInner {
-  display: inline-flex;
-  gap: 12rpx;
-}
-
-.filterTag {
-  display: inline-block;
-  font-size: $font-size-xs;
-  color: $color-text-secondary;
-  background: rgba(255,255,255,0.6);
-  border-radius: $radius-round;
-  padding: 10rpx 20rpx;
-  white-space: nowrap;
-  transition: all 0.25s ease;
-  cursor: pointer;
-  border: 1rpx solid rgba(196,149,106,0.1);
-
-  &:active {
-    opacity: 0.8;
-  }
-
-  &.filterTagActive {
-    background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
-    color: $color-text-white;
-    font-weight: $font-weight-medium;
-    border-color: transparent;
-    box-shadow: 0 2rpx 8rpx rgba(196,149,106,0.25);
-  }
-}
-
-.filterActions {
-  display: flex;
+  flex-direction: row;
   align-items: center;
   justify-content: space-between;
-  gap: $spacing-md;
+  margin-bottom: 28rpx;
 }
 
-.regionPicker {
+.streakLeft {
   display: flex;
+  flex-direction: row;
   align-items: center;
-  gap: $spacing-xs;
-  background: rgba(255,255,255,0.6);
-  border-radius: $radius-round;
-  padding: 10rpx 20rpx;
-  cursor: pointer;
-  border: 1rpx solid rgba(196,149,106,0.1);
-  transition: all 0.25s ease;
-
-  &:active {
-    opacity: 0.8;
-  }
+  gap: 28rpx;
 }
 
-.regionPickerText {
-  font-size: $font-size-xs;
-  color: $color-text-secondary;
+.streakFire {
+  font-size: 80rpx;
+  line-height: 1;
 }
 
-.regionPickerArrow {
-  font-size: $font-size-xs;
-  color: $color-text-tertiary;
-}
-
-.followToggle {
+.streakInfo {
   display: flex;
-  align-items: center;
-  gap: $spacing-xs;
+  flex-direction: column;
+  gap: 6rpx;
 }
 
-.followToggleText {
-  font-size: $font-size-xs;
-  color: $color-text-secondary;
+.streakCount {
+  font-size: 32rpx;
+  color: #1F2937;
+  font-weight: 500;
+  line-height: 1.3;
 }
 
-.regionDropdown {
-  display: flex;
-  flex-wrap: wrap;
-  gap: $spacing-xs;
-  margin-top: $spacing-sm;
-  padding-top: $spacing-sm;
-  border-top: 1rpx solid $color-divider;
+.streakNum {
+  font-size: 52rpx;
+  font-weight: 700;
+  color: #EA580C;
 }
 
-.regionOption {
-  display: inline-block;
-  font-size: $font-size-xs;
-  color: $color-text-secondary;
-  background: rgba(255,255,255,0.6);
-  border-radius: $radius-sm;
-  padding: 8rpx 16rpx;
-  white-space: nowrap;
-  cursor: pointer;
-  border: 1rpx solid rgba(196,149,106,0.1);
-  transition: all 0.2s ease;
-
-  &:active {
-    opacity: 0.8;
-  }
-
-  &.regionOptionActive {
-    background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
-    color: $color-text-white;
-    border-color: transparent;
-  }
+.streakToday {
+  font-size: 28rpx;
+  color: #78716C;
 }
 
-// ===== 温暖伙伴 =====
-.warmPartnerSection {
-  margin-bottom: $spacing-md;
-  animation: fadeInUp 0.5s ease-out 0.15s both;
+.streakBar {
+  width: 100%;
+  height: 14rpx;
+  background: rgba(234, 88, 12, 0.15);
+  border-radius: 7rpx;
+  overflow: hidden;
+}
+
+.streakBarFill {
+  height: 100%;
+  background: linear-gradient(90deg, #F97316, #EA580C);
+  border-radius: 7rpx;
+  transition: width 0.5s ease;
+}
+
+.streakTip {
+  display: block;
+  margin-top: 20rpx;
+  font-size: 28rpx;
+  color: #EA580C;
+  text-align: center;
+}
+
+// ============================================
+// 分区标题
+// ============================================
+
+.section {
+  padding: 44rpx 36rpx 8rpx;
 }
 
 .sectionHeader {
-  margin-bottom: $spacing-sm;
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+  gap: 16rpx;
+  margin-bottom: 16rpx;
 }
 
 .sectionTitle {
-  font-size: $font-size-md;
-  font-weight: $font-weight-semibold;
-  color: $color-text-primary;
+  font-size: 38rpx;
+  font-weight: 600;
+  color: #1F2937;
 }
 
 .sectionSubtitle {
-  font-size: $font-size-xs;
-  color: $color-text-tertiary;
-  margin-top: 4rpx;
+  font-size: 28rpx;
+  color: #9CA3AF;
+}
+
+.sectionDesc {
+  display: block;
+  font-size: 28rpx;
+  color: #78716C;
+  line-height: 1.6;
+  margin-bottom: 24rpx;
+}
+
+.highlight {
+  color: #EA580C;
+  font-weight: 500;
 }
 
 // ============================================
-// 本周温暖挑战
+// 善行盲盒
 // ============================================
-.challengeSection {
-  margin-bottom: 32rpx;
-  animation: fadeInUp 0.4s ease-out 0.05s both;
+
+.blindBoxRow {
+  display: flex;
+  flex-direction: row;
+  gap: 28rpx;
+  justify-content: center;
 }
+
+.blindBox {
+  width: 210rpx;
+  height: 280rpx;
+  background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);
+  border-radius: 28rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14rpx;
+  box-shadow: 0 4rpx 16rpx rgba(251, 191, 36, 0.25);
+  cursor: pointer;
+  transition: all 0.3s;
+  border: 4rpx dashed #F59E0B;
+}
+
+.blindBox:active {
+  transform: scale(0.95);
+}
+
+.blindBoxOpened {
+  background: linear-gradient(135deg, #D1FAE5 0%, #A7F3D0 100%);
+  border: 4rpx solid #10B981;
+}
+
+.blindBoxEmoji {
+  font-size: 80rpx;
+  line-height: 1;
+}
+
+.blindBoxLabel {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #92400E;
+}
+
+.blindBoxOpened .blindBoxLabel {
+  color: #065F46;
+}
+
+.blindBoxAction {
+  background: #059669;
+  border-radius: 24rpx;
+  padding: 8rpx 24rpx;
+  margin-top: 8rpx;
+}
+
+.blindBoxActionText {
+  font-size: 24rpx;
+  color: #FFFFFF;
+  font-weight: 600;
+}
+
+// ============================================
+// 善行接力
+// ============================================
+
+.relayChain {
+  background: #FFFFFF;
+  border-radius: 24rpx;
+  padding: 36rpx;
+  margin-bottom: 28rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.06);
+}
+
+.relayLinks {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.relayLink {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 24rpx;
+  padding: 18rpx 0;
+  position: relative;
+}
+
+.relayAvatar {
+  width: 84rpx;
+  height: 84rpx;
+  border-radius: 50%;
+  background: #F3F4F6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 42rpx;
+}
+
+.relayAvatarNext {
+  background: #DBEAFE;
+  border: 4rpx dashed #3B82F6;
+}
+
+.relayBody {
+  flex: 1;
+  min-width: 0;
+}
+
+.relayHeader {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12rpx;
+  margin-bottom: 6rpx;
+}
+
+.relayName {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #1F2937;
+}
+
+.relayRelation {
+  font-size: 24rpx;
+  color: #9CA3AF;
+  background: #F3F4F6;
+  padding: 4rpx 12rpx;
+  border-radius: 8rpx;
+}
+
+.relayContent {
+  font-size: 28rpx;
+  color: #4B5563;
+  line-height: 1.5;
+  display: block;
+}
+
+.relayTime {
+  font-size: 24rpx;
+  color: #9CA3AF;
+  margin-top: 4rpx;
+  display: block;
+}
+
+.relayArrow {
+  font-size: 36rpx;
+  color: #D1D5DB;
+  text-align: center;
+  margin-left: 42rpx;
+  line-height: 1;
+}
+
+.relayAction {
+  margin-top: 24rpx;
+  background: linear-gradient(135deg, #3B82F6, #2563EB);
+  border-radius: 44rpx;
+  padding: 24rpx;
+  text-align: center;
+  cursor: pointer;
+}
+
+.relayAction:active {
+  opacity: 0.9;
+}
+
+.relayActionText {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #FFFFFF;
+}
+
+// ============================================
+// 温暖时光机
+// ============================================
+
+.timeMachineCard {
+  background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 50%, #FEF9C3 100%);
+  border-radius: 24rpx;
+  padding: 36rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.06);
+  cursor: pointer;
+  border-left: 8rpx solid #F59E0B;
+}
+
+.timeMachineCard:active {
+  opacity: 0.9;
+}
+
+.timeMachineBadge {
+  display: inline-block;
+  background: rgba(245, 158, 11, 0.15);
+  border-radius: 12rpx;
+  padding: 6rpx 18rpx;
+  margin-bottom: 16rpx;
+}
+
+.timeMachineBadgeText {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #92400E;
+}
+
+.timeMachineContent {
+  font-size: 32rpx;
+  color: #1F2937;
+  line-height: 1.6;
+  display: block;
+  margin-bottom: 20rpx;
+  font-weight: 500;
+}
+
+.timeMachineMeta {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 20rpx;
+  margin-bottom: 20rpx;
+}
+
+.timeMachineDate {
+  font-size: 26rpx;
+  color: #78716C;
+}
+
+.timeMachineTag {
+  font-size: 24rpx;
+  color: #059669;
+  background: #D1FAE5;
+  padding: 4rpx 14rpx;
+  border-radius: 8rpx;
+}
+
+.timeMachinePrompt {
+  font-size: 28rpx;
+  color: #92400E;
+  font-style: italic;
+  display: block;
+}
+
+.timeMachineEmpty {
+  background: #F3F4F6;
+  border-radius: 24rpx;
+  padding: 52rpx 36rpx;
+  text-align: center;
+}
+
+.timeMachineEmptyText {
+  font-size: 30rpx;
+  color: #78716C;
+  display: block;
+  margin-bottom: 12rpx;
+}
+
+.timeMachineEmptySub {
+  font-size: 28rpx;
+  color: #9CA3AF;
+  display: block;
+}
+
+// ============================================
+// 任务卡片
+// ============================================
+
+.taskList {
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+}
+
+.taskCard {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  background: #FFFFFF;
+  border-radius: 24rpx;
+  padding: 32rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.06);
+  gap: 28rpx;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.taskCard:active {
+  transform: scale(0.98);
+  opacity: 0.9;
+}
+
+.taskCardSelfCare {
+  border-left: 6rpx solid #10B981;
+}
+
+.taskCardOrg {
+  border-left: 6rpx solid #2563EB;
+  background: linear-gradient(135deg, #FFFFFF 0%, #EFF6FF 100%);
+}
+
+.taskCardEmoji {
+  width: 96rpx;
+  height: 96rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #F3F4F6;
+  border-radius: 24rpx;
+  flex-shrink: 0;
+}
+
+.taskCardEmoji Text {
+  font-size: 52rpx;
+}
+
+.taskCardBody {
+  flex: 1;
+  min-width: 0;
+}
+
+.taskCardHeader {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12rpx;
+  margin-bottom: 8rpx;
+}
+
+.taskCardTitle {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #1F2937;
+}
+
+.taskBadge {
+  font-size: 22rpx;
+  color: #059669;
+  background: #D1FAE5;
+  padding: 4rpx 14rpx;
+  border-radius: 8rpx;
+  font-weight: 500;
+}
+
+.taskBadgeOrg {
+  display: flex;
+  align-items: center;
+  background: #DBEAFE;
+  border-radius: 8rpx;
+  padding: 4rpx 14rpx;
+}
+
+.taskBadgeOrgText {
+  font-size: 22rpx;
+  color: #2563EB;
+  font-weight: 500;
+}
+
+.taskCardOrgName {
+  font-size: 26rpx;
+  color: #2563EB;
+  font-weight: 500;
+  margin-bottom: 6rpx;
+  display: block;
+}
+
+.taskCardDesc {
+  font-size: 28rpx;
+  color: #78716C;
+  line-height: 1.5;
+  display: block;
+  margin-bottom: 12rpx;
+}
+
+.taskCardMeta {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 20rpx;
+}
+
+.taskCardDifficulty {
+  font-size: 24rpx;
+  color: #9CA3AF;
+}
+
+.taskCardFortune {
+  font-size: 24rpx;
+  color: #F97316;
+  font-weight: 500;
+}
+
+.taskCardParticipants {
+  font-size: 24rpx;
+  color: #9CA3AF;
+}
+
+.taskCardAction {
+  width: 128rpx;
+  height: 68rpx;
+  background: #F3F4F6;
+  border-radius: 34rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.taskCardActionText {
+  font-size: 28rpx;
+  font-weight: 500;
+  color: #1F2937;
+}
+
+// ============================================
+// 善行挑战赛
+// ============================================
 
 .challengeList {
   display: flex;
   flex-direction: column;
-  gap: 16rpx;
+  gap: 24rpx;
 }
 
 .challengeCard {
-  display: flex;
-  align-items: center;
-  gap: 20rpx;
-  background: linear-gradient(135deg, rgba(255,255,255,0.85) 0%, rgba(255,252,248,0.8) 100%);
-  border-radius: 20rpx;
-  padding: 24rpx;
-  border: 1.5rpx solid rgba(196,149,106,0.12);
-  box-shadow: 0 2rpx 12rpx rgba(0,0,0,0.04);
-  backdrop-filter: blur(8px);
-  transition: all 0.2s ease;
-
-  &:active {
-    transform: scale(0.98);
-  }
-
-  &.challengeCardDone {
-    opacity: 0.6;
-    border-color: rgba(76,175,80,0.2);
-  }
+  background: #FFFFFF;
+  border-radius: 24rpx;
+  padding: 36rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.06);
+  border-left: 8rpx solid #F59E0B;
 }
 
-.challengeLeft {
-  width: 88rpx;
-  height: 88rpx;
-  border-radius: 20rpx;
-  background: linear-gradient(135deg, rgba(196,149,106,0.1) 0%, rgba(196,149,106,0.04) 100%);
+.challengeHeader {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 28rpx;
 }
 
 .challengeEmoji {
-  font-size: 44rpx;
+  font-size: 76rpx;
+  line-height: 1;
 }
 
 .challengeBody {
@@ -346,651 +574,89 @@
 }
 
 .challengeTitle {
-  font-size: $font-size-md;
-  font-weight: $font-weight-semibold;
-  color: $color-text-primary;
-  margin-bottom: 6rpx;
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #1F2937;
+  display: block;
+  margin-bottom: 8rpx;
 }
 
 .challengeDesc {
-  font-size: $font-size-xs;
-  color: $color-text-secondary;
-  margin-bottom: 10rpx;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  font-size: 28rpx;
+  color: #78716C;
+  line-height: 1.5;
+  display: block;
 }
 
-.challengeMeta {
+.challengeFooter {
   display: flex;
+  flex-direction: row;
   align-items: center;
-  gap: 16rpx;
+  justify-content: space-between;
+  margin-top: 24rpx;
+  padding-top: 24rpx;
+  border-top: 1px solid #F3F4F6;
+}
+
+.challengeOrg {
+  font-size: 26rpx;
+  color: #9CA3AF;
 }
 
 .challengeParticipants {
-  font-size: 22rpx;
-  color: $color-text-tertiary;
-}
-
-.challengeFortune {
-  font-size: 22rpx;
-  color: $color-primary;
-  font-weight: $font-weight-semibold;
-  background: rgba(196,149,106,0.08);
-  padding: 4rpx 12rpx;
-  border-radius: 8rpx;
-}
-
-.challengeBtn {
-  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
-  border-radius: 32rpx;
-  padding: 14rpx 28rpx;
-  flex-shrink: 0;
-  box-shadow: 0 4rpx 16rpx rgba(196,149,106,0.3);
-  transition: transform 0.15s;
-
-  &:active {
-    transform: scale(0.92);
-  }
-
-  &.challengeBtnDone {
-    background: linear-gradient(135deg, #4CAF50 0%, #66BB6A 100%);
-    box-shadow: 0 4rpx 16rpx rgba(76,175,80,0.3);
-  }
-}
-
-.challengeBtnText {
-  font-size: $font-size-xs;
-  color: #fff;
-  font-weight: $font-weight-semibold;
-  white-space: nowrap;
-}
-
-// ============================================
-// 附近需要帮忙
-// ============================================
-.helpSection {
-  margin-bottom: 32rpx;
-  animation: fadeInUp 0.4s ease-out 0.15s both;
-}
-
-.helpList {
-  display: flex;
-  flex-direction: column;
-  gap: 16rpx;
-}
-
-.helpCard {
-  display: flex;
-  align-items: center;
-  gap: 20rpx;
-  background: linear-gradient(135deg, rgba(255,255,255,0.85) 0%, rgba(255,252,248,0.8) 100%);
-  border-radius: 20rpx;
-  padding: 24rpx;
-  border: 1.5rpx solid rgba(196,149,106,0.12);
-  box-shadow: 0 2rpx 12rpx rgba(0,0,0,0.04);
-  backdrop-filter: blur(8px);
-  cursor: pointer;
-  transition: all 0.2s ease;
-
-  &:active {
-    transform: scale(0.98);
-    background: rgba(255,255,255,0.95);
-  }
-}
-
-.helpCardLeft {
-  width: 80rpx;
-  height: 80rpx;
-  border-radius: 18rpx;
-  background: linear-gradient(135deg, rgba(34,197,94,0.1) 0%, rgba(34,197,94,0.04) 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.helpEmoji {
-  font-size: 40rpx;
-}
-
-.helpCardBody {
-  flex: 1;
-  min-width: 0;
-}
-
-.helpTitle {
-  font-size: $font-size-md;
-  font-weight: $font-weight-semibold;
-  color: $color-text-primary;
-  margin-bottom: 6rpx;
-}
-
-.helpDesc {
-  font-size: $font-size-xs;
-  color: $color-text-secondary;
-  margin-bottom: 10rpx;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.helpMeta {
-  display: flex;
-  align-items: center;
-  gap: 16rpx;
-}
-
-.helpDistance {
-  font-size: 22rpx;
-  color: $color-text-tertiary;
-}
-
-.helpTime {
-  font-size: 22rpx;
-  color: $color-text-tertiary;
-}
-
-.helpActionBtn {
-  background: linear-gradient(135deg, #22C55E 0%, #16A34A 100%);
-  border-radius: 32rpx;
-  padding: 14rpx 28rpx;
-  flex-shrink: 0;
-  box-shadow: 0 4rpx 16rpx rgba(34,197,94,0.3);
-  transition: transform 0.15s;
-
-  &:active {
-    transform: scale(0.92);
-  }
-}
-
-.helpActionText {
-  font-size: $font-size-xs;
-  color: #fff;
-  font-weight: $font-weight-semibold;
-  white-space: nowrap;
-}
-
-// ============================================
-// 善行广场（折叠）
-// ============================================
-.squareSection {
-  margin-bottom: 32rpx;
-  animation: fadeInUp 0.4s ease-out 0.25s both;
-}
-
-.squareHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  cursor: pointer;
-  padding: 12rpx 0;
-}
-
-.squareToggle {
-  display: flex;
-  align-items: center;
-  gap: 8rpx;
-}
-
-.squareToggleText {
-  font-size: $font-size-xs;
-  color: $color-text-tertiary;
-}
-
-.squareToggleArrow {
-  font-size: 20rpx;
-  color: $color-text-tertiary;
-}
-
-// ===== 善行列表 =====
-.kindnessList {
-  padding-bottom: $spacing-xl;
-  animation: fadeInUp 0.5s ease-out 0.2s both;
-}
-
-.empty {
-  text-align: center;
-  padding: $spacing-xl 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: $spacing-sm;
-}
-
-.emptyIcon {
-  font-size: 80rpx;
-}
-
-.emptyText {
-  font-size: $font-size-md;
-  color: $color-text-tertiary;
-  line-height: $line-height-loose;
-}
-
-.loadMore {
-  padding: 32rpx 0;
-  text-align: center;
-}
-
-.loadMoreText {
-  font-size: $font-size-xs;
-  color: $color-text-tertiary;
+  font-size: 26rpx;
+  color: #F59E0B;
   font-weight: 500;
 }
 
-// ===== 善行圈Tab =====
-.circleSection {
-  margin-bottom: $spacing-lg;
-  animation: fadeInUp 0.5s ease-out 0.1s both;
+.challengeMeta {
+  margin-top: 16rpx;
 }
 
-.circleCard {
+.challengeReward {
+  font-size: 26rpx;
+  color: #78716C;
+  background: #FFF7ED;
+  padding: 8rpx 18rpx;
+  border-radius: 8rpx;
+}
+
+// ============================================
+// 更多网格
+// ============================================
+
+.moreGrid {
   display: flex;
-  align-items: center;
-  gap: $spacing-md;
-  background: linear-gradient(135deg, rgba(255,255,255,0.8) 0%, rgba(255,252,248,0.75) 100%);
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 24rpx;
+}
+
+.moreCard {
+  width: calc(50% - 12rpx);
+  background: #FFFFFF;
   border-radius: 24rpx;
-  padding: $spacing-md;
-  margin-bottom: $spacing-sm;
-  border: 1.5rpx solid rgba(196,149,106,0.1);
-  box-shadow: 0 2rpx 12rpx rgba(0,0,0,0.04);
+  padding: 36rpx 28rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.06);
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 24rpx;
   cursor: pointer;
-  transition: all 0.25s ease;
-  backdrop-filter: blur(8px);
-
-  &:active {
-    background: rgba(255,255,255,0.95);
-    transform: scale(0.98);
-    box-shadow: 0 4rpx 16rpx rgba(0,0,0,0.06);
-  }
 }
 
-.circleIconWrap {
-  width: 88rpx;
-  height: 88rpx;
-  border-radius: 20rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
+.moreCard:active {
+  transform: scale(0.98);
+  opacity: 0.9;
 }
 
-.circleIcon {
-  font-size: 40rpx;
-}
-
-.circleInfo {
-  flex: 1;
-  min-width: 0;
-}
-
-.circleName {
-  font-size: $font-size-md;
-  font-weight: $font-weight-semibold;
-  color: $color-text-primary;
-  margin-bottom: 4rpx;
-}
-
-.circleMeta {
-  font-size: $font-size-xs;
-  color: $color-text-tertiary;
-  margin-bottom: 4rpx;
-}
-
-.circleDesc {
-  font-size: $font-size-xs;
-  color: $color-text-secondary;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.circleArrow {
-  font-size: $font-size-md;
-  color: $color-text-tertiary;
-}
-
-.createCircleBtn {
-  background: linear-gradient(135deg, rgba(255,255,255,0.7) 0%, rgba(255,252,248,0.65) 100%);
-  border-radius: 24rpx;
-  padding: $spacing-md;
-  text-align: center;
-  border: 2rpx dashed rgba(196,149,106,0.25);
-  cursor: pointer;
-  margin-top: $spacing-sm;
-  backdrop-filter: blur(8px);
-  transition: all 0.25s ease;
-
-  &:active {
-    background: rgba(255,255,255,0.9);
-    border-color: rgba(196,149,106,0.4);
-  }
-}
-
-.createCircleText {
-  font-size: $font-size-sm;
-  color: $color-text-secondary;
-  font-weight: $font-weight-medium;
-}
-
-// ===== 我的Tab =====
-.userCard {
-  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
-  border-radius: 28rpx;
-  padding: $spacing-lg;
-  margin-bottom: $spacing-lg;
-  color: #fff;
-  box-shadow: 0 8rpx 28rpx rgba(196,149,106,0.3);
-  animation: fadeInScale 0.5s ease-out 0.1s both;
-}
-
-.userHeader {
-  display: flex;
-  align-items: center;
-  gap: $spacing-md;
-  margin-bottom: $spacing-lg;
-}
-
-.userAvatar {
-  width: 96rpx;
-  height: 96rpx;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.2);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 2rpx solid rgba(255,255,255,0.3);
-}
-
-.userAvatarText {
-  font-size: 48rpx;
-}
-
-.userInfo {
-  flex: 1;
-}
-
-.userName {
-  font-size: $font-size-lg;
-  font-weight: $font-weight-bold;
-  color: #fff;
-  margin-bottom: 4rpx;
-}
-
-.userLevel {
-  font-size: $font-size-sm;
-  color: rgba(255, 255, 255, 0.85);
-}
-
-.userStats {
-  display: flex;
-  justify-content: space-around;
-}
-
-.statItem {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4rpx;
-}
-
-.statValue {
-  font-size: 40rpx;
-  font-weight: $font-weight-bold;
-  color: #fff;
-}
-
-.statLabel {
-  font-size: $font-size-xs;
-  color: rgba(255, 255, 255, 0.8);
-}
-
-// 我的功能入口
-.myGrid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: $spacing-md;
-  margin-bottom: $spacing-lg;
-  animation: fadeInUp 0.5s ease-out 0.2s both;
-}
-
-.myItem {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8rpx;
-  padding: $spacing-sm 0;
-  cursor: pointer;
-  transition: all 0.2s ease;
-
-  &:active {
-    opacity: 0.7;
-    transform: scale(0.95);
-  }
-}
-
-.myIconWrap {
-  width: 96rpx;
-  height: 96rpx;
-  border-radius: 24rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
-}
-
-.myIcon {
-  font-size: 44rpx;
-}
-
-.myLabel {
-  font-size: 22rpx;
-  color: $color-text-secondary;
-  font-weight: $font-weight-medium;
-}
-
-// 最近善行
-.recentSection {
-  margin-bottom: $spacing-lg;
-  animation: fadeInUp 0.5s ease-out 0.3s both;
-}
-
-// ===== 底部固定分类Tab =====
-.bottomTabs {
-  display: flex;
-  align-items: center;
-  background: rgba(255,255,255,0.9);
-  backdrop-filter: blur(20px);
-  border-top: 1rpx solid $color-border;
-  padding: 12rpx 0 calc(12rpx + env(safe-area-inset-bottom));
-  flex-shrink: 0;
-  box-shadow: 0 -4rpx 20rpx rgba(0, 0, 0, 0.05);
-}
-
-.bottomTabItem {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 8rpx;
-  flex: 1;
-  padding: 8rpx 0;
-  cursor: pointer;
-  position: relative;
-  min-width: 0;
-}
-
-.bottomTabText {
-  font-size: 30rpx;
-  color: $color-text-tertiary;
-  font-weight: $font-weight-medium;
-  transition: color 0.2s;
-}
-
-.bottomTabActive {
-  .bottomTabText {
-    color: $color-primary;
-    font-weight: $font-weight-semibold;
-  }
-}
-
-.bottomTabLine {
-  width: 40rpx;
-  height: 4rpx;
-  border-radius: 2rpx;
-  background: linear-gradient(90deg, $color-primary, $color-primary-light);
-}
-
-// 中间大+号发布按钮
-.publishBtn {
-  width: 96rpx;
-  height: 96rpx;
-  border-radius: 50%;
-  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-top: -8rpx;
-  flex-shrink: 0;
-  box-shadow: 0 6rpx 24rpx rgba(196, 149, 106, 0.5);
-  cursor: pointer;
-  transition: transform 0.15s;
-
-  &:active {
-    transform: scale(0.92);
-  }
-}
-
-.publishBtnIcon {
-  font-size: 56rpx;
-  color: #fff;
-  font-weight: 300;
+.moreIcon {
+  font-size: 60rpx;
   line-height: 1;
 }
 
-// ============================================
-// 商城Tab
-// ============================================
-
-.shopHeader {
-  padding: $spacing-lg;
-  background: linear-gradient(135deg, rgba(196, 149, 106, 0.08) 0%, rgba(196, 149, 106, 0.02) 100%);
-  border-radius: 24rpx;
-  margin-bottom: $spacing-lg;
-  animation: fadeInUp 0.5s ease-out 0.1s both;
-}
-
-.shopHeaderTop {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: $spacing-sm;
-}
-
-.shopTitle {
-  font-size: $font-size-xl;
-  font-weight: $font-weight-bold;
-  color: $color-text-primary;
-}
-
-.shopFortune {
-  font-size: $font-size-sm;
-  color: $color-primary;
-  font-weight: $font-weight-semibold;
-  background: rgba(196, 149, 106, 0.1);
-  padding: 8rpx 20rpx;
-  border-radius: $radius-round;
-}
-
-.shopSubtitle {
-  font-size: $font-size-xs;
-  color: $color-text-tertiary;
-}
-
-.shopGrid {
-  display: flex;
-  flex-direction: column;
-  gap: $spacing-md;
-  padding-bottom: 200rpx;
-}
-
-.shopCard {
-  display: flex;
-  gap: $spacing-md;
-  background: linear-gradient(135deg, rgba(255,255,255,0.8) 0%, rgba(255,252,248,0.75) 100%);
-  border-radius: 24rpx;
-  padding: $spacing-md;
-  box-shadow: 0 2rpx 12rpx rgba(0,0,0,0.04);
-  border: 1.5rpx solid rgba(196,149,106,0.08);
-  backdrop-filter: blur(8px);
-}
-
-.shopCardImage {
-  width: 140rpx;
-  height: 140rpx;
-  background: linear-gradient(135deg, rgba(196,149,106,0.06) 0%, rgba(196,149,106,0.02) 100%);
-  border-radius: 20rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.shopCardEmoji {
-  font-size: 56rpx;
-}
-
-.shopCardInfo {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  min-width: 0;
-}
-
-.shopCardName {
-  font-size: $font-size-md;
-  font-weight: $font-weight-semibold;
-  color: $color-text-primary;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.shopCardCategory {
-  font-size: $font-size-xs;
-  color: $color-text-tertiary;
-  margin-top: 4rpx;
-}
-
-.shopCardBottom {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 8rpx;
-}
-
-.shopCardPrice {
-  font-size: $font-size-sm;
-  font-weight: $font-weight-bold;
-  color: $color-primary;
-}
-
-.shopCardBtn {
-  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
-  border-radius: $radius-round;
-  padding: 8rpx 24rpx;
-  transition: transform 0.15s;
-  box-shadow: 0 2rpx 8rpx rgba(196,149,106,0.2);
-
-  &:active {
-    transform: scale(0.95);
-  }
-}
-
-.shopCardBtnText {
-  font-size: $font-size-xs;
-  color: #fff;
-  font-weight: $font-weight-medium;
+.moreLabel {
+  font-size: 30rpx;
+  font-weight: 500;
+  color: #1F2937;
 }

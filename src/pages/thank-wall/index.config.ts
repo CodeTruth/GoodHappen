@@ -1,0 +1,1 @@
+export default { navigationBarTitleText: '匿名感谢墙' } as Taro.Config;

@@ -14,11 +14,11 @@ const WarmthMapPage: React.FC = () => {
   const provinceList = PROVINCE_WARMTH_DATA;
   const [selectedProvince, setSelectedProvince] = useState<ProvinceWarmth | null>(null);
 
-  // 构建地图网格（6列 x 5行）
+  // 构建地图网格（6列 x 6行）
   const mapGrid = useMemo(() => {
-    // 创建 5x6 的网格
+    // 创建 6x6 的网格
     const grid: (ProvinceWarmth | null)[][] = [];
-    for (let row = 1; row <= 5; row++) {
+    for (let row = 1; row <= 6; row++) {
       const rowData: (ProvinceWarmth | null)[] = [];
       for (let col = 1; col <= 6; col++) {
         const province = provinceList.find(

@@ -1,0 +1,1 @@
+export default { navigationBarTitleText: '给未来的信' } as Taro.Config;

@@ -1,0 +1,1 @@
+export default { navigationBarTitleText: '温暖报告' } as Taro.Config;

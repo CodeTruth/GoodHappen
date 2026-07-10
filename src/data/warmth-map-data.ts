@@ -393,7 +393,7 @@ export const PROVINCE_WARMTH_DATA: ProvinceWarmthData[] = [
     participantCount: 4800,
     monthlyFortune: 48000,
     kindnessCount: 1800,
-    gridArea: { row: 3, col: 6 },
+    gridArea: { row: 1, col: 1 },
     typeDistribution: [
       { type: '志愿', percentage: 35 },
       { type: '捐赠', percentage: 25 },
@@ -637,7 +637,7 @@ export const PROVINCE_WARMTH_DATA: ProvinceWarmthData[] = [
     participantCount: 5000,
     monthlyFortune: 50000,
     kindnessCount: 2000,
-    gridArea: { row: 5, col: 3 },
+    gridArea: { row: 6, col: 1 },
     typeDistribution: [
       { type: '志愿', percentage: 30 },
       { type: '捐赠', percentage: 25 },
@@ -664,7 +664,7 @@ export const PROVINCE_WARMTH_DATA: ProvinceWarmthData[] = [
     participantCount: 600,
     monthlyFortune: 4800,
     kindnessCount: 180,
-    gridArea: { row: 5, col: 3 },
+    gridArea: { row: 1, col: 5 },
     typeDistribution: [
       { type: '环保', percentage: 45 },
       { type: '助人', percentage: 25 },
@@ -686,7 +686,7 @@ export const PROVINCE_WARMTH_DATA: ProvinceWarmthData[] = [
     participantCount: 1100,
     monthlyFortune: 9000,
     kindnessCount: 310,
-    gridArea: { row: 5, col: 3 },
+    gridArea: { row: 1, col: 6 },
     typeDistribution: [
       { type: '捐赠', percentage: 35 },
       { type: '志愿', percentage: 30 },
@@ -708,7 +708,7 @@ export const PROVINCE_WARMTH_DATA: ProvinceWarmthData[] = [
     participantCount: 350,
     monthlyFortune: 3200,
     kindnessCount: 110,
-    gridArea: { row: 5, col: 3 },
+    gridArea: { row: 6, col: 2 },
     typeDistribution: [
       { type: '捐赠', percentage: 35 },
       { type: '关怀', percentage: 30 },
@@ -779,7 +779,7 @@ export const PROVINCE_WARMTH_DATA: ProvinceWarmthData[] = [
     participantCount: 2400,
     monthlyFortune: 18000,
     kindnessCount: 680,
-    gridArea: { row: 5, col: 5 },
+    gridArea: { row: 6, col: 3 },
     typeDistribution: [
       { type: '助人', percentage: 30 },
       { type: '环保', percentage: 30 },
@@ -833,7 +833,7 @@ export const PROVINCE_WARMTH_DATA: ProvinceWarmthData[] = [
     participantCount: 800,
     monthlyFortune: 6800,
     kindnessCount: 250,
-    gridArea: { row: 5, col: 6 },
+    gridArea: { row: 6, col: 4 },
     typeDistribution: [
       { type: '环保', percentage: 35 },
       { type: '助人', percentage: 30 },

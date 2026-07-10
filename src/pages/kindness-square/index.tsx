@@ -24,8 +24,10 @@ const KindnessSquarePage: React.FC = () => {
     setRefreshing(true);
     loadSocial();
     loadKindness();
-    setRefreshing(false);
-    Taro.showToast({ title: '已刷新', icon: 'success' });
+    setTimeout(() => {
+      setRefreshing(false);
+      Taro.showToast({ title: '已刷新', icon: 'success' });
+    }, 500);
   }, [loadSocial, loadKindness]);
 
   const ALL_TAGS = ['助人', '环保', '见证', '公益', '邻里互助', '孝亲', '陪伴', '关怀', '工作', '亲子'];
@@ -45,6 +47,11 @@ const KindnessSquarePage: React.FC = () => {
 
   const [displayCount, setDisplayCount] = useState(5);
   const [hasMore, setHasMore] = useState(true);
+
+  useEffect(() => {
+    setDisplayCount(5);
+    setHasMore(true);
+  }, [selectedTag, onlyFollowing]);
 
   const handleScrollToLower = useCallback(() => {
     if (!hasMore) return;

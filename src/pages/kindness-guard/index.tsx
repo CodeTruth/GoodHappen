@@ -845,6 +845,7 @@ export default function KindnessGuardPage() {
   const sendText = useCallback(() => {
     const text = inputText.trim();
     if (!text) return;
+    if (messagesRef.current.some(m => m.isLoading)) return;
     setMessages(prev => [...prev, {
       id: `u_${Date.now()}`, role: 'user', content: text, timestamp: new Date().toISOString(),
     }]);

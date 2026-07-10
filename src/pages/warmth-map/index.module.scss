@@ -61,10 +61,11 @@
 .mapGrid {
   display: grid;
   grid-template-columns: repeat(6, 1fr);
-  grid-template-rows: repeat(5, 1fr);
+  grid-template-rows: repeat(6, 1fr);
+  grid-auto-flow: dense;
   gap: $spacing-xs;
   width: 100%;
-  height: 560rpx;
+  height: 660rpx;
   background: $color-bg-card;
   border-radius: $radius-lg;
   padding: $spacing-md;
@@ -275,23 +276,23 @@
 
 /* 温暖等级颜色 */
 .level1 {
-  background: rgba(255, 107, 107, 0.15);
+  background: #E8F4F8;
 }
 
 .level2 {
-  background: rgba(255, 107, 107, 0.30);
+  background: #B8DFF0;
 }
 
 .level3 {
-  background: rgba(255, 107, 107, 0.50);
+  background: #7CC5E5;
 }
 
 .level4 {
-  background: rgba(255, 107, 107, 0.70);
+  background: #4AAFDA;
 }
 
 .level5 {
-  background: rgba(255, 107, 107, 0.90);
+  background: #28A4D8;
 }
 
 /* 省份文字颜色（浅色背景用深色文字） */
