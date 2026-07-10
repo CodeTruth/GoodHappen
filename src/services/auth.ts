@@ -215,7 +215,7 @@ export const requireLogin = (_redirectUrl?: string): boolean => {
 export const guestAutoLogin = (): LoginResult => {
   const token = generateMockToken('guest');
   const userInfo: UserInfo = {
-    id: `guest_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+    id: 'currentUser',
     name: '温暖体验官',
     avatar: DEFAULT_AVATAR,
     bio: '好事发生，让每一件善行都被看见',

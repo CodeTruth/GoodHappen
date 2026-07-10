@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { View, Text, ScrollView } from '@tarojs/components';
 import Taro from '@tarojs/taro';
 import { useUserStore } from '@/store/user';
@@ -51,54 +51,59 @@ const HomePage: React.FC = () => {
     getRealtimeActiveCount,
   } = useAnalyticsStore();
 
+  // 分步加载 Store — 首屏优先加载关键数据
   useEffect(() => {
+    // 第1批：关键数据，立即加载
     loadUser();
-    loadKindness();
-    loadNotification();
-    loadMockNotification();
-    cleanupExpired();
     loadAnalytics();
 
-    const welcomeShown = Taro.getStorageSync('haoshi_welcome_shown');
-    if (!welcomeShown) setShowWelcome(true);
+    // 第2批：非关键数据，延迟加载
+    const t1 = setTimeout(() => {
+      loadKindness();
+    }, 200);
+    const t2 = setTimeout(() => {
+      loadNotification();
+      loadMockNotification();
+      cleanupExpired();
+    }, 500);
 
+    // 初始化统计数据
     setRealtimeCount(getRealtimeActiveCount());
     setDisplayedStats({
       total: getTotalKindnessCount() || 128643,
       today: getTodayKindnessCount() || 12,
       fortune: useFortuneStore.getState().availableFortune || 280,
     });
+
+    const welcomeShown = Taro.getStorageSync('haoshi_welcome_shown');
+    if (!welcomeShown) setShowWelcome(true);
+
+    return () => { clearTimeout(t1); clearTimeout(t2); };
   }, []);
 
+  // 实时人数更新（长间隔，不影响性能）
   useEffect(() => {
     const timer = setInterval(() => {
       setRealtimeCount(getRealtimeActiveCount());
-    }, 10000);
+    }, 30000); // 从10秒改为30秒
     return () => clearInterval(timer);
   }, [getRealtimeActiveCount]);
 
-  const growthTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+  // 数字增长动画 — 改用合并更新，减少渲染次数
+  const growthTimersRef = useRef<ReturnType<typeof setInterval>[]>([]);
   useEffect(() => {
-    const configs = [
-      { key: 'total', interval: 3000 },
-      { key: 'today', interval: 12000 },
-      { key: 'fortune', interval: 15000 },
-    ];
-    configs.forEach((config) => {
-      const grow = () => {
-        const t = setTimeout(() => {
-          setDisplayedStats((prev) => ({
-            ...prev,
-            [config.key]: prev[config.key as keyof typeof prev] + (Math.floor(Math.random() * 3) + 1),
-          }));
-          grow();
-        }, config.interval + Math.random() * 3000);
-        growthTimersRef.current.push(t);
-      };
-      grow();
-    });
+    // 改为每次整体更新，减少单属性setState次数
+    const interval = setInterval(() => {
+      setDisplayedStats((prev) => ({
+        total: prev.total + (Math.floor(Math.random() * 3) + 1),
+        today: prev.today + (Math.random() > 0.6 ? 1 : 0),
+        fortune: prev.fortune + (Math.floor(Math.random() * 2) + 1),
+      }));
+    }, 8000);
+    growthTimersRef.current.push(interval as any);
     return () => {
-      growthTimersRef.current.forEach(clearTimeout);
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      growthTimersRef.current.forEach((t: any) => clearInterval(t));
       growthTimersRef.current = [];
     };
   }, []);
@@ -178,14 +183,15 @@ const HomePage: React.FC = () => {
   const [highlightedIndex, setHighlightedIndex] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
   const wheelContainerRef = useRef<any>(null);
-  const wheelRotateRef = useRef<any>(null);
-  const cardRefs = useRef<(any | null)[]>([]);
+  const wheelRotateRef = useRef<HTMLDivElement>(null);
+  const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
   const touchStartAngleRef = useRef(0);
   const rotationAtTouchStartRef = useRef(0);
   const velocityHistoryRef = useRef<{ time: number; angle: number }[]>([]);
   const animFrameRef = useRef<number>(0);
   const velocityRef = useRef(0);
   const currentRotationRef = useRef(0);
+  const isTouchingRef = useRef(false);
 
   // 用 translateX/Y 定位（不用 rotate），保证卡片内容始终正向
   const CARD_POSITIONS = [
@@ -195,35 +201,43 @@ const HomePage: React.FC = () => {
     'translateX(-100px)',   // i=3 左方
   ];
 
-  // 统一更新转盘 transform
-  const updateWheelTransform = (rot: number, highlightIdx: number) => {
-    if (typeof document === 'undefined') return;
-    const rotateEl = document.querySelector('[class*="wheelRotate"]') as HTMLElement | null;
-    if (rotateEl) rotateEl.style.transform = `rotate(${rot}deg)`;
-    const cards = document.querySelectorAll('[class*="wheelCard___R_QDI"]') as NodeListOf<HTMLElement>;
+  // 统一更新转盘 transform — 用 ref 替代 querySelector
+  const updateWheelTransform = useCallback((rot: number, highlightIdx: number) => {
+    const rotateEl = wheelRotateRef.current;
+    if (!rotateEl) return;
+    rotateEl.style.transform = `rotate(${rot}deg)`;
+
+    const cards = cardRefs.current;
     cards.forEach((card, i) => {
+      if (!card) return;
       const isActive = highlightIdx === i;
       const scale = isActive ? 1.15 : 0.9;
       card.style.transform = `${CARD_POSITIONS[i]} rotate(${-rot}deg) scale(${scale})`;
     });
-  };
+  }, []);
 
-  // 控制 transition：拖拽时关闭，snap/点击时开启
-  const setWheelTransition = (enable: boolean) => {
-    if (typeof document === 'undefined') return;
-    const rotateEl = document.querySelector('[class*="wheelRotate"]') as HTMLElement | null;
-    const cards = document.querySelectorAll('[class*="wheelCard___R_QDI"]') as NodeListOf<HTMLElement>;
+  // 控制 transition
+  const setWheelTransition = useCallback((enable: boolean) => {
+    const rotateEl = wheelRotateRef.current;
+    if (!rotateEl) return;
     const transition = enable ? 'transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)' : 'none';
-    if (rotateEl) rotateEl.style.transition = transition;
-    cards.forEach(card => card.style.transition = transition);
-  };
+    rotateEl.style.transition = transition;
+    const cards = cardRefs.current;
+    cards.forEach(card => {
+      if (card) card.style.transition = transition;
+    });
+  }, []);
 
   useEffect(() => {
     updateWheelTransform(rotation, highlightedIndex);
-  }, [rotation, highlightedIndex]);
+  }, [rotation, highlightedIndex, updateWheelTransform]);
+
+  // touchmove 节流：只在 requestAnimationFrame 中更新，避免过度渲染
+  const touchMovePendingRef = useRef(false);
+  const lastTouchMoveRef = useRef<{ clientX: number; clientY: number } | null>(null);
 
   // 计算触摸点相对圆心的角度
-  const getAngleFromCenter = (clientX: number, clientY: number) => {
+  const getAngleFromCenter = useCallback((clientX: number, clientY: number) => {
     if (wheelContainerRef.current) {
       const rect = wheelContainerRef.current.getBoundingClientRect();
       const centerX = rect.left + rect.width / 2;
@@ -231,14 +245,33 @@ const HomePage: React.FC = () => {
       return Math.atan2(clientY - centerY, clientX - centerX) * (180 / Math.PI);
     }
     return 0;
-  };
+  }, []);
 
   // 规范化角度到 [-180, 180]
-  const normalizeDelta = (delta: number) => {
+  const normalizeDelta = useCallback((delta: number) => {
     if (delta > 180) delta -= 360;
     if (delta < -180) delta += 360;
     return delta;
-  };
+  }, []);
+
+  // 节流后的触摸移动处理
+  const processTouchMove = useCallback(() => {
+    touchMovePendingRef.current = false;
+    const touch = lastTouchMoveRef.current;
+    if (!touch) return;
+    lastTouchMoveRef.current = null;
+
+    const currentAngle = getAngleFromCenter(touch.clientX, touch.clientY);
+    const delta = normalizeDelta(currentAngle - touchStartAngleRef.current);
+    const newRotation = rotationAtTouchStartRef.current + delta;
+    setRotation(newRotation);
+    currentRotationRef.current = newRotation;
+    const now = Date.now();
+    velocityHistoryRef.current.push({ time: now, angle: newRotation });
+    if (velocityHistoryRef.current.length > 5) {
+      velocityHistoryRef.current.shift();
+    }
+  }, [getAngleFromCenter, normalizeDelta]);
 
   // touchstart: 记录起始角度和当前旋转角度
   const handleTouchStart = (e: any) => {
@@ -247,6 +280,7 @@ const HomePage: React.FC = () => {
       animFrameRef.current = 0;
     }
     setIsAnimating(true);
+    isTouchingRef.current = true;
     setWheelTransition(false); // 拖拽时关闭 transition，避免滞后
     const touch = e.touches[0];
     touchStartAngleRef.current = getAngleFromCenter(touch.clientX, touch.clientY);
@@ -255,24 +289,35 @@ const HomePage: React.FC = () => {
     velocityRef.current = 0;
   };
 
-  // touchmove: 计算角度差，更新旋转
+  // touchmove: 节流处理，不直接更新 state
   const handleTouchMove = (e: any) => {
+    e.preventDefault();
     const touch = e.touches[0];
-    const currentAngle = getAngleFromCenter(touch.clientX, touch.clientY);
-    const delta = normalizeDelta(currentAngle - touchStartAngleRef.current);
-    const newRotation = rotationAtTouchStartRef.current + delta;
-    setRotation(newRotation);
-    currentRotationRef.current = newRotation;
-    // 记录角速度历史（最近5个点）
-    const now = Date.now();
-    velocityHistoryRef.current.push({ time: now, angle: newRotation });
-    if (velocityHistoryRef.current.length > 5) {
-      velocityHistoryRef.current.shift();
+    lastTouchMoveRef.current = { clientX: touch.clientX, clientY: touch.clientY };
+    if (!touchMovePendingRef.current) {
+      touchMovePendingRef.current = true;
+      requestAnimationFrame(processTouchMove);
     }
   };
 
   // touchend: 计算惯性，开始动画
   const handleTouchEnd = () => {
+    isTouchingRef.current = false;
+    // 处理残留的 touchmove
+    if (touchMovePendingRef.current) {
+      touchMovePendingRef.current = false;
+      const touch = lastTouchMoveRef.current;
+      if (touch) {
+        const currentAngle = getAngleFromCenter(touch.clientX, touch.clientY);
+        const delta = normalizeDelta(currentAngle - touchStartAngleRef.current);
+        const newRotation = rotationAtTouchStartRef.current + delta;
+        currentRotationRef.current = newRotation;
+        const now = Date.now();
+        velocityHistoryRef.current.push({ time: now, angle: newRotation });
+        if (velocityHistoryRef.current.length > 5) velocityHistoryRef.current.shift();
+      }
+    }
+    lastTouchMoveRef.current = null;
     const history = velocityHistoryRef.current;
     if (history.length >= 2) {
       const first = history[0];
@@ -292,6 +337,7 @@ const HomePage: React.FC = () => {
       animFrameRef.current = 0;
     }
     setIsAnimating(true);
+    isTouchingRef.current = true;
     setWheelTransition(false); // 拖拽时关闭 transition
     touchStartAngleRef.current = getAngleFromCenter(e.clientX, e.clientY);
     rotationAtTouchStartRef.current = rotation;
@@ -299,20 +345,30 @@ const HomePage: React.FC = () => {
     velocityRef.current = 0;
     // 绑定 mousemove 和 mouseup 到 window
     const onMouseMove = (ev: any) => {
-      const currentAngle = getAngleFromCenter(ev.clientX, ev.clientY);
-      const delta = normalizeDelta(currentAngle - touchStartAngleRef.current);
-      const newRotation = rotationAtTouchStartRef.current + delta;
-      setRotation(newRotation);
-      currentRotationRef.current = newRotation;
-      const now = Date.now();
-      velocityHistoryRef.current.push({ time: now, angle: newRotation });
-      if (velocityHistoryRef.current.length > 5) {
-        velocityHistoryRef.current.shift();
+      lastTouchMoveRef.current = { clientX: ev.clientX, clientY: ev.clientY };
+      if (!touchMovePendingRef.current) {
+        touchMovePendingRef.current = true;
+        requestAnimationFrame(processTouchMove);
       }
     };
     const onMouseUp = () => {
       window.removeEventListener('mousemove', onMouseMove);
       window.removeEventListener('mouseup', onMouseUp);
+      isTouchingRef.current = false;
+      if (touchMovePendingRef.current) {
+        touchMovePendingRef.current = false;
+        const touch = lastTouchMoveRef.current;
+        if (touch) {
+          const currentAngle = getAngleFromCenter(touch.clientX, touch.clientY);
+          const delta = normalizeDelta(currentAngle - touchStartAngleRef.current);
+          const newRotation = rotationAtTouchStartRef.current + delta;
+          currentRotationRef.current = newRotation;
+          const now = Date.now();
+          velocityHistoryRef.current.push({ time: now, angle: newRotation });
+          if (velocityHistoryRef.current.length > 5) velocityHistoryRef.current.shift();
+        }
+      }
+      lastTouchMoveRef.current = null;
       const history = velocityHistoryRef.current;
       if (history.length >= 2) {
         const first = history[0];
@@ -370,48 +426,9 @@ const HomePage: React.FC = () => {
     setTimeout(() => setIsAnimating(false), 450);
   };
 
-  // 点击卡片
+  // 点击卡片 — 直接跳转，不再旋转
   const handleWheelCardClick = (index: number) => {
-    // 高亮卡片直接跳转，不受 isAnimating 影响（避免 touch 事件拦截 click）
-    if (index === highlightedIndex) {
-      Taro.navigateTo({ url: WHEEL_ITEMS[index].url });
-      return;
-    }
-    // 点击非高亮卡片：取消当前动画，旋转到该卡片
-    if (animFrameRef.current) {
-      cancelAnimationFrame(animFrameRef.current);
-      animFrameRef.current = 0;
-    }
-    setIsAnimating(true);
-    const targetRotation = -index * 90;
-    const currentSnapped = Math.round(rotation / 90) * 90;
-    let diff = targetRotation - currentSnapped;
-    if (diff > 180) diff -= 360;
-    if (diff < -180) diff += 360;
-    const snapped = currentSnapped + diff;
-    const startRot = currentSnapped;
-    const totalDelta = snapped - startRot;
-    const duration = 400;
-    const startTime = Date.now();
-
-    const animateRotate = () => {
-      const elapsed = Date.now() - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-      const eased = 1 - Math.pow(1 - progress, 3);
-      const cur = startRot + totalDelta * eased;
-      setRotation(cur);
-      currentRotationRef.current = cur;
-
-      if (progress < 1) {
-        animFrameRef.current = requestAnimationFrame(animateRotate);
-      } else {
-        setRotation(snapped);
-        currentRotationRef.current = snapped;
-        setHighlightedIndex(index);
-        setTimeout(() => setIsAnimating(false), 350);
-      }
-    };
-    animFrameRef.current = requestAnimationFrame(animateRotate);
+    Taro.navigateTo({ url: WHEEL_ITEMS[index].url });
   };
 
   // 组件卸载清理
@@ -441,7 +458,7 @@ const HomePage: React.FC = () => {
                 <Text className={styles.headerStatIcon}>🌍</Text>
                 <Text className={styles.headerStatValue}>{formatNumber(displayedStats.total)}</Text>
                 <Text className={styles.headerStatLabel}>全网善行</Text>
-                <Text className={styles.headerStatSub}>人正在传递温暖</Text>
+                <Text className={styles.headerStatSub}>次温暖传递</Text>
               </View>
               <View className={styles.headerStatDivider} />
               <View className={styles.headerStatItem}>
@@ -494,7 +511,7 @@ const HomePage: React.FC = () => {
                     key={i}
                     className={`${styles.wheelCard} ${isActive ? styles.wheelCardActive : ''}`}
                     ref={(el) => { cardRefs.current[i] = el }}
-                    style={{ background: item.gradient }}
+                    style={{ background: item.gradient } as React.CSSProperties}
                     onClick={() => handleWheelCardClick(i)}
                   >
                     <span className={styles.wheelCardIcon}>{item.icon}</span>
@@ -505,44 +522,12 @@ const HomePage: React.FC = () => {
               })}
             </div>
 
-            {/* 中心善字（不旋转） */}
+            {/* 中心星光（不旋转） */}
             <div className={styles.wheelCenter}>
-              <span className={styles.wheelCenterText}>善</span>
+              <span className={styles.wheelCenterText}>✨</span>
             </div>
           </View>
 
-          {/* ===== SOS 紧急求助面板 ===== */}
-          <View className={styles.sosSection}>
-            <View className={styles.sosGrid}>
-              <View className={styles.sosItem} onClick={() => handleSOS('police')}>
-                <View className={`${styles.sosIconWrap} ${styles.sosIconRed}`}>
-                  <Text className={styles.sosItemIcon}>🚔</Text>
-                </View>
-                <Text className={styles.sosItemLabel}>报警 110</Text>
-              </View>
-
-              <View className={styles.sosItem} onClick={() => handleSOS('ambulance')}>
-                <View className={`${styles.sosIconWrap} ${styles.sosIconRed}`}>
-                  <Text className={styles.sosItemIcon}>🚑</Text>
-                </View>
-                <Text className={styles.sosItemLabel}>急救 120</Text>
-              </View>
-
-              <View className={styles.sosItem} onClick={() => handleSOS('contact')}>
-                <View className={`${styles.sosIconWrap} ${styles.sosIconOrange}`}>
-                  <Text className={styles.sosItemIcon}>👤</Text>
-                </View>
-                <Text className={styles.sosItemLabel}>紧急联系人</Text>
-              </View>
-
-              <View className={styles.sosItem} onClick={() => handleSOS('nearby')}>
-                <View className={`${styles.sosIconWrap} ${styles.sosIconOrange}`}>
-                  <Text className={styles.sosItemIcon}>📍</Text>
-                </View>
-                <Text className={styles.sosItemLabel}>附近求助</Text>
-              </View>
-            </View>
-          </View>
         </View>
       </ScrollView>
     </View>

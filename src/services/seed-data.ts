@@ -8,6 +8,7 @@ import {
   SEED_USERS,
   SEED_KINDNESS_LIST,
   SEED_CIRCLE,
+  SEED_CIRCLES_EXTRA,
   SEED_CHECKINS,
   SEED_FORTUNE_RECORDS,
 } from '@/data/seed-data';
@@ -18,8 +19,9 @@ import { useCircleStore } from '@/store/circle';
 import { useCheckinStore } from '@/store/checkin';
 import { useFortuneStore } from '@/store/fortune';
 import { useInteractionStore } from '@/store/interaction';
+import { useUserStore } from '@/store/user';
 
-const SEED_LOADED_KEY = 'haoshi_seed_loaded_v2';
+const SEED_LOADED_KEY = 'haoshi_seed_loaded_v5';
 
 /** 检查种子数据是否已加载过 */
 export const isSeedLoaded = (): boolean => {
@@ -182,6 +184,73 @@ export const loadSeedData = async (): Promise<void> => {
       });
       useCircleStore.getState().saveToStorage();
     }
+
+    // 2b. 注入额外善行圈（社区+企业）
+    SEED_CIRCLES_EXTRA.forEach((sc) => {
+      if (!existingCircleIds.has(sc.id)) {
+        // 为每个圈子分配不同的成员
+        const memberOffset = sc.type === 'community' ? 51 : 75;
+        const memberCount = Math.min(sc.memberCount, SEED_USERS.length - memberOffset);
+        const members = SEED_USERS.slice(memberOffset, memberOffset + memberCount).map((u, idx) => ({
+          id: `cm_${sc.id}_${u.id}`,
+          userId: u.id,
+          userName: u.name,
+          userAvatar: u.avatar,
+          role: u.id === sc.creatorId ? 'admin' as const : idx < 3 ? 'groupLeader' as const : 'member' as const,
+          joinedAt: sc.createdAt,
+          memberNumber: idx + 1,
+          lastCheckinDate: undefined,
+          isRealName: false,
+          kindnessCount: Math.floor(Math.random() * 8) + 1,
+        }));
+
+        const circleStore = useCircleStore.getState();
+        useCircleStore.setState({
+          circles: [
+            ...circleStore.circles,
+            {
+              id: sc.id,
+              name: sc.name,
+              type: sc.type === 'community' ? 'community' as const : sc.type === 'enterprise' ? 'company' as const : 'class' as const,
+              accessType: 'open' as const,
+              description: sc.description,
+              adminId: sc.creatorId,
+              createdAt: sc.createdAt,
+              classCode: sc.type === 'community' ? 'STAR2025' : 'WARM2025',
+              requireRealName: false,
+              members,
+            },
+          ],
+        });
+        useCircleStore.getState().saveToStorage();
+      }
+    });
+
+    // 2c. 将当前用户（体验官）加入所有圈子
+    const allCircleIds = [SEED_CIRCLE.id, ...SEED_CIRCLES_EXTRA.map(c => c.id)];
+    const currentUserStore = useUserStore.getState();
+    const currentUserId = currentUserStore.userInfo?.id || 'guest_user';
+    const currentUserName = currentUserStore.userInfo?.nickname || '温暖体验官';
+    const currentUserAvatar = currentUserStore.userInfo?.avatar || '';
+    const updatedCircles = useCircleStore.getState().circles.map(circle => {
+      if (!allCircleIds.includes(circle.id)) return circle;
+      if (circle.members.some(m => m.userId === currentUserId)) return circle;
+      return {
+        ...circle,
+        members: [...circle.members, {
+          id: `cm_${circle.id}_${currentUserId}`,
+          userId: currentUserId,
+          userName: currentUserName,
+          userAvatar: currentUserAvatar,
+          role: 'member' as const,
+          joinedAt: new Date().toISOString(),
+          memberNumber: circle.members.length + 1,
+          isRealName: false,
+        }],
+      };
+    });
+    useCircleStore.setState({ circles: updatedCircles });
+    useCircleStore.getState().saveToStorage();
 
     // 3. 注入签到记录
     const cis = useCheckinStore.getState();

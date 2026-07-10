@@ -79,6 +79,7 @@ const KindnessCard: React.FC<KindnessCardProps> = ({ kindness, onClick, showComm
           src={displayAvatar}
           className={styles.avatar}
           mode="aspectFill"
+          lazyLoad
         />
         <View className={styles.userInfo}>
           <Text className={styles.userName}>{displayName}</Text>
@@ -119,6 +120,7 @@ const KindnessCard: React.FC<KindnessCardProps> = ({ kindness, onClick, showComm
               src={img}
               className={styles.image}
               mode="aspectFill"
+              lazyLoad
             />
           ))}
         </View>

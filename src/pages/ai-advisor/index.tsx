@@ -12,7 +12,8 @@ import {
   type FullAnalysisContext,
 } from '@/services/ai-kindness-advisor'
 import { useUserStore } from '@/store/user'
-import styles from './index.module.scss'
+import { deepseekChat } from '@/services/ai';
+import styles from './index.module.scss';
 
 // ============================================
 // 类型定义
@@ -216,6 +217,9 @@ function extractFromVoice(desc: string): any {
 
 export default function AIAdvisorPage() {
   const [messages, setMessages] = useState<ChatMessage[]>([])
+  const messagesRef = useRef<ChatMessage[]>([]);
+  // messagesRef 与 messages 保持同步
+  useEffect(() => { messagesRef.current = messages; }, [messages]);
   const [inputText, setInputText] = useState('')
   const [gpsInfo, setGpsInfo] = useState<{ latitude: number; longitude: number; address: string } | null>(null)
   const [showScenePicker, setShowScenePicker] = useState(false)
@@ -223,6 +227,8 @@ export default function AIAdvisorPage() {
   const [photos, setPhotos] = useState<string[]>([])
   const [isRecording, setIsRecording] = useState(false)
   const [recordTime, setRecordTime] = useState(0)
+  const [inputMode, setInputMode] = useState<'text' | 'voice'>('text') // text=文字, voice=语音
+  const [isPressing, setIsPressing] = useState(false) // 正在按住说话
   const [showCamera, setShowCamera] = useState(false)
   const [cameraMode, setCameraMode] = useState<'photo' | 'video'>('photo')
   const [conversationPhase, setConversationPhase] = useState(0) // 0=初始, 1=追问, 2=评估后
@@ -421,188 +427,111 @@ export default function AIAdvisorPage() {
   }, [gpsInfo, userInfo])
 
   // ===== 苏格拉底式引导对话核心 =====
-  const processUserMessage = useCallback((text: string) => {
-    const phase = conversationPhaseRef.current
-    const info = { ...gatheredInfoRef.current }
+  // ===== AI 对话（真实大模型） =====
+  const processUserMessage = useCallback(async (text: string) => {
+    // 构建对话历史
+    const history = messagesRef.current
+      .filter(m => m.role !== 'system' && !m.isLoading)
+      .slice(-10) // 取最近10条，控制上下文长度
+      .map(m => ({
+        role: m.role === 'ai' ? 'assistant' : 'user' as 'assistant' | 'user',
+        content: m.content || '',
+      }));
 
-    if (phase === 0) {
-      // 初始阶段：识别场景，生成追问
-      const sceneType = guessActionType(text)
-      const updatedInfo = { ...info, scene: text, sceneType }
-      setGatheredInfo(updatedInfo)
-      gatheredInfoRef.current = updatedInfo
+    // 系统提示词 —— 善行顾问专属规则
+    const systemMsg = {
+      role: 'system' as const,
+      content: `【角色定位】
+你是"善善"，一个专注于"行善安全评估"的AI顾问。你的唯一使命是：帮助用户在行善之前识别风险、制定安全方案、降低意外代价。你不是通用AI助手，不回答与行善安全无关的问题。
 
-      // 判断是否为低风险场景且信息已足够，直接评估
-      const isLowRisk = ['lost_found', 'direction', 'daily_help'].includes(sceneType)
-      if (isLowRisk) {
-        const followUp = generateFollowUpQuestions(sceneType, text)
-        setConversationPhase(1)
-        conversationPhaseRef.current = 1
+【核心职责】
+1. 根据用户描述的场景，评估风险等级（A/B/C/D/E），并给出对应的安全建议
+2. 结合时间、地点、环境、对方状态等维度做具体分析
+3. 推荐适用的保护措施（开启善行保护/邀请同伴/联系机构等）
+4. 给出可执行的行动清单，让用户知道"第一步做什么"
 
-        const loadingMsg: ChatMessage = {
-          id: `ai_loading_${Date.now()}`,
+【风险等级定义】
+- A（可以安全帮助）：环境安全、风险可控、适合直接行动
+- B（开启保护后帮助）：有一定风险，建议先开启保护模式存证再帮助
+- C（找同伴一起帮助）：独自行动有风险，建议联系周围人一起
+- D（求助专业机构）：超出个人能力范围，联系专业力量
+- E（保持距离报警）：危险系数极高，优先确保自身安全并报警
+
+【输出格式】
+每次回复必须包含以下部分（用换行分隔）：
+1. 【风险等级】X级 —— 一句话判断（如"B级 —— 夜间独自前往偏僻区域有一定风险"）
+2. 【安全建议】2-3条具体、可操作的建议（如"①开启善行保护模式全程存证 ②告知家人你的去向和预计返回时间"）
+3. 【推荐措施】根据等级推荐：A级→直接行动；B级→开启保护模式；C级→邀请同伴；D级→联系机构；E级→保持距离报警
+4. 【补充提问】如果信息不足，只问1个最关键的问题（如"对方目前情绪状态如何？"），不要连环追问
+
+【绝对边界】
+- 只回答与"行善安全"相关的问题（助人、见义勇为、志愿服务、救援、公益行动等）
+- 对以下话题礼貌拒绝："这个问题超出了我的专业范围，我是专门帮你评估行善风险的顾问。如果你计划做一件善事，我可以帮你分析。"
+  * 闲聊、天气、美食、旅游等生活话题
+  * 编程、数学、写作、翻译等工具性请求
+  * 医疗诊断、法律咨询等专业领域（可引导用户去专业渠道）
+  * 政治、宗教、意识形态讨论
+  * 任何与行善安全无关的问题
+
+【对话风格】
+- 专业但不冷漠，温暖但不说教
+- 不夸大风险制造恐慌，也不淡化风险让人盲目行动
+- 用"建议"而非"命令"，让用户有自主决策的空间
+- 承认不确定性："根据你提供的信息，我建议...如果情况有变化，请重新评估"
+
+【信息利用】
+- 自动读取当前时间和用户GPS位置（已提供）
+- 夜间（22:00-05:00）自动提高风险权重
+- 偏僻/无人区域自动提高风险权重
+- 对方人数多/有攻击性时自动提高风险权重
+
+当前时间：${new Date().toLocaleString('zh-CN', { hour12: false })}
+用户位置：${gpsInfo.address || '未获取'}
+用户年龄：${userInfo?.age || '未知'}`,
+    };
+
+    // 显示"正在思考..."状态
+    const loadingMsg: ChatMessage = {
+      id: `ai_loading_${Date.now()}`,
+      role: 'ai',
+      type: 'text',
+      content: '正在思考...',
+      timestamp: new Date().toISOString(),
+      isLoading: true,
+    };
+    setMessages(prev => [...prev, loadingMsg]);
+
+    try {
+      const reply = await deepseekChat([systemMsg, ...history, { role: 'user', content: text }]);
+
+      setMessages(prev => {
+        const filtered = prev.filter(m => !m.isLoading);
+        return [...filtered, {
+          id: `ai_reply_${Date.now()}`,
           role: 'ai',
           type: 'text',
-          content: '正在分析...',
+          content: reply,
           timestamp: new Date().toISOString(),
-          isLoading: true,
-        }
-        setMessages(prev => [...prev, loadingMsg])
-        setTimeout(() => {
-          // 低风险场景直接给出结果
-          setMessages(prev => {
-            const filtered = prev.filter(m => !m.isLoading)
-            return [...filtered, {
-              id: `ai_followup_${Date.now()}`,
-              role: 'ai',
-              type: 'text',
-              content: followUp,
-              timestamp: new Date().toISOString(),
-            }]
-          })
-          // 直接进入评估
-          const combinedDesc = updatedInfo.scene || text
-          doAssess(combinedDesc)
-          setConversationPhase(2)
-          conversationPhaseRef.current = 2
-        }, 800)
-      } else {
-        // 中高风险场景，先追问
-        const followUp = generateFollowUpQuestions(sceneType, text)
-        setConversationPhase(1)
-        conversationPhaseRef.current = 1
+        }];
+      });
+    } catch (err) {
+      // AI 调用失败，回退到模板回复
+      console.warn('[AI] deepseekChat 调用失败，使用兜底模板:', err);
+      const sceneType = guessActionType(text);
+      const fallback = getSceneAcknowledgment(sceneType) + '\n\n' + generateFollowUpQuestions(sceneType, text);
 
-        const loadingMsg: ChatMessage = {
-          id: `ai_loading_${Date.now()}`,
+      setMessages(prev => {
+        const filtered = prev.filter(m => !m.isLoading);
+        return [...filtered, {
+          id: `ai_fallback_${Date.now()}`,
           role: 'ai',
           type: 'text',
-          content: '正在分析...',
+          content: fallback,
           timestamp: new Date().toISOString(),
-          isLoading: true,
-        }
-        setMessages(prev => [...prev, loadingMsg])
-        setTimeout(() => {
-          setMessages(prev => {
-            const filtered = prev.filter(m => !m.isLoading)
-            return [...filtered, {
-              id: `ai_followup_${Date.now()}`,
-              role: 'ai',
-              type: 'text',
-              content: followUp,
-              timestamp: new Date().toISOString(),
-            }]
-          })
-        }, 800)
-      }
-    } else if (phase === 1) {
-      // 追问阶段：收集补充信息，判断是否可以评估
-      const updatedInfo = { ...info, latestReply: text }
-      if (!info.userReply1) {
-        updatedInfo.userReply1 = text
-      } else {
-        updatedInfo.userReply2 = text
-      }
-      setGatheredInfo(updatedInfo)
-      gatheredInfoRef.current = updatedInfo
-
-      // 合并所有已收集的文本，判断信息维度
-      const allText = [updatedInfo.scene || '', updatedInfo.latestReply || '', updatedInfo.userReply1 || ''].join(' ')
-      const hasTime = /早|晚|夜|凌晨|上午|下午|中午|白天|早上|傍晚|深夜|上午|下午/.test(allText)
-      const hasEnv = /人多|人少|偏僻|热闹|繁华|周围|旁边|室内|室外|商场|路边|地铁|公园|小区/.test(allText)
-      const dimensionCount = [hasTime, hasEnv].filter(Boolean).length
-
-      // 如果场景描述中本身已包含足够信息（如场景描述已经有时间+环境），直接评估
-      const sceneDescAlone = updatedInfo.scene || ''
-      const sceneHasTime = /早|晚|夜|凌晨|上午|下午|中午|白天/.test(sceneDescAlone)
-      const sceneHasEnv = /人多|人少|偏僻|热闹|繁华|周围|旁边|室内|室外|商场|路边/.test(sceneDescAlone)
-      const sceneDimensionCount = [sceneHasTime, sceneHasEnv].filter(Boolean).length
-
-      if (sceneDimensionCount >= 2 || dimensionCount >= 2 || updatedInfo.userReply2) {
-        // 信息足够，执行评估
-        const loadingMsg: ChatMessage = {
-          id: `ai_loading_${Date.now()}`,
-          role: 'ai',
-          type: 'text',
-          content: '正在综合评估...',
-          timestamp: new Date().toISOString(),
-          isLoading: true,
-        }
-        setMessages(prev => [...prev, loadingMsg])
-
-        const tip = generateSafetyTip(updatedInfo.scene || '', text)
-        setConversationPhase(2)
-        conversationPhaseRef.current = 2
-        setTimeout(() => {
-          // 先给安全提示
-          setMessages(prev => {
-            const filtered = prev.filter(m => !m.isLoading)
-            return [...filtered, {
-              id: `ai_tip_${Date.now()}`,
-              role: 'ai',
-              type: 'text',
-              content: tip,
-              timestamp: new Date().toISOString(),
-            }]
-          })
-          // 然后执行评估
-          const combinedDesc = `${updatedInfo.scene || ''} ${updatedInfo.latestReply || ''} ${updatedInfo.userReply1 || ''}`.trim()
-          doAssess(combinedDesc)
-        }, 800)
-      } else {
-        // 信息不够，继续追问
-        const tip = generateSafetyTip(updatedInfo.scene || '', text)
-        const nextQuestion = generateNextFollowUp(updatedInfo.scene || '', updatedInfo)
-
-        const loadingMsg: ChatMessage = {
-          id: `ai_loading_${Date.now()}`,
-          role: 'ai',
-          type: 'text',
-          content: '正在分析...',
-          timestamp: new Date().toISOString(),
-          isLoading: true,
-        }
-        setMessages(prev => [...prev, loadingMsg])
-        setTimeout(() => {
-          setMessages(prev => {
-            const filtered = prev.filter(m => !m.isLoading)
-            return [...filtered, {
-              id: `ai_followup_${Date.now()}`,
-              role: 'ai',
-              type: 'text',
-              content: `${tip}\n\n${nextQuestion}`,
-              timestamp: new Date().toISOString(),
-            }]
-          })
-        }, 800)
-      }
-    } else {
-      // phase === 2：评估后自由交流
-      const sceneDesc = info.scene || ''
-      const reply = generatePostAssessmentAdvice(sceneDesc, text)
-
-      const loadingMsg: ChatMessage = {
-        id: `ai_loading_${Date.now()}`,
-        role: 'ai',
-        type: 'text',
-        content: '正在分析...',
-        timestamp: new Date().toISOString(),
-        isLoading: true,
-      }
-      setMessages(prev => [...prev, loadingMsg])
-      setTimeout(() => {
-        setMessages(prev => {
-          const filtered = prev.filter(m => !m.isLoading)
-          return [...filtered, {
-            id: `ai_post_${Date.now()}`,
-            role: 'ai',
-            type: 'text',
-            content: reply,
-            timestamp: new Date().toISOString(),
-          }]
-        })
-      }, 600)
+        }];
+      });
     }
-  }, [doAssess])
+  }, []);
 
   // ===== 发送文字消息 =====
   const sendText = useCallback(() => {
@@ -753,13 +682,16 @@ export default function AIAdvisorPage() {
         const url = URL.createObjectURL(blob)
         sendMedia('audio', [], '[语音消息]', { videoUrl: url })
         stream.getTracks().forEach(t => t.stop())
+        setIsPressing(false)
       }
       mr.start()
       setIsRecording(true)
       setRecordTime(0)
+      setIsPressing(true)
       recordTimerRef.current = setInterval(() => setRecordTime(t => t + 1), 1000)
     } catch {
       Taro.showToast({ title: '无法访问麦克风', icon: 'none' })
+      setIsPressing(false)
     }
   }, [sendMedia])
 
@@ -769,7 +701,19 @@ export default function AIAdvisorPage() {
     }
     if (recordTimerRef.current) clearInterval(recordTimerRef.current)
     setIsRecording(false)
+    setIsPressing(false)
   }, [])
+
+  // 按住说话 - 开始
+  const handleVoiceStart = useCallback(() => {
+    if (recordTime > 0 && isRecording) return // 已在录音
+    startAudioRecord()
+  }, [startAudioRecord, recordTime, isRecording])
+
+  // 按住说话 - 结束
+  const handleVoiceEnd = useCallback(() => {
+    if (isPressing) stopAudioRecord()
+  }, [stopAudioRecord, isPressing])
 
   // ===== 相册选择 =====
   const chooseImage = useCallback(() => {
@@ -979,9 +923,17 @@ export default function AIAdvisorPage() {
       {/* 顶部栏 */}
       <View className={styles.topBar}>
         <Text className={styles.backBtn} onClick={() => Taro.navigateBack()}>←</Text>
+        <View className={styles.topAvatar}>🤖</View>
         <View className={styles.topInfo}>
           <Text className={styles.topTitle}>善行顾问</Text>
-          <Text className={styles.topStatus}>AI在线 · {gpsInfo?.address || '定位中...'}</Text>
+          <View className={styles.topStatus}>
+            <View className={styles.topStatusDot} />
+            <Text className={styles.topStatusText}>AI在线</Text>
+          </View>
+        </View>
+        <View className={styles.topOnlineBadge}>
+          <Text className={styles.topOnlineIcon}>📡</Text>
+          <Text className={styles.topOnlineText}>{gpsInfo?.address?.slice(0, 8) || '定位中'}</Text>
         </View>
       </View>
 
@@ -1069,26 +1021,55 @@ export default function AIAdvisorPage() {
 
       {/* 底部输入栏 */}
       <View className={styles.inputBar}>
-        <View className={styles.inputBtn} onClick={() => { setShowAttachPicker(!showAttachPicker); setShowScenePicker(false) }}>
-          <Text className={styles.inputBtnIcon}>{showAttachPicker ? '✕' : '➕'}</Text>
+        {/* 语音/文字切换按钮 */}
+        <View className={styles.inputBtn} onClick={() => setInputMode(inputMode === 'text' ? 'voice' : 'text')}>
+          <Text className={styles.inputBtnIcon}>{inputMode === 'text' ? '🎤' : '⌨️'}</Text>
         </View>
-        <View className={styles.inputBtn} onClick={() => { setShowScenePicker(!showScenePicker); setShowAttachPicker(false) }}>
-          <Text className={styles.inputBtnIcon}>{showScenePicker ? '✕' : '📋'}</Text>
-        </View>
-        <View className={styles.inputWrap}>
-          <textarea
-            className={styles.textInput}
-            value={inputText}
-            placeholder="描述情况或选择场景..."
-            placeholderClassName={styles.inputPlaceholder}
-            onChange={(e) => setInputText(e.target.value)}
-            maxLength={200}
-            rows={1}
-          />
-        </View>
-        <View className={`${styles.sendBtn} ${inputText.trim() ? styles.sendBtnActive : ''}`} onClick={sendText}>
-          <Text className={styles.sendBtnIcon}>↑</Text>
-        </View>
+
+        {inputMode === 'text' ? (
+          <>
+            <View className={styles.inputBtn} onClick={() => { setShowAttachPicker(!showAttachPicker); setShowScenePicker(false) }}>
+              <Text className={styles.inputBtnIcon}>{showAttachPicker ? '✕' : '➕'}</Text>
+            </View>
+            <View className={styles.inputBtn} onClick={() => { setShowScenePicker(!showScenePicker); setShowAttachPicker(false) }}>
+              <Text className={styles.inputBtnIcon}>{showScenePicker ? '✕' : '📋'}</Text>
+            </View>
+            <View className={styles.inputWrap}>
+              <textarea
+                className={styles.textInput}
+                value={inputText}
+                placeholder="描述情况或选择场景..."
+                placeholderClassName={styles.inputPlaceholder}
+                onChange={(e) => setInputText(e.target.value)}
+                maxLength={200}
+                rows={1}
+              />
+            </View>
+            <View className={`${styles.sendBtn} ${inputText.trim() ? styles.sendBtnActive : ''}`} onClick={sendText}>
+              <Text className={styles.sendBtnIcon}>↑</Text>
+            </View>
+          </>
+        ) : (
+          /* 语音模式 — 按住说话 */
+          <>
+            <View
+              className={`${styles.voiceBtn} ${isPressing ? styles.voiceBtnPressing : ''}`}
+              onTouchStart={handleVoiceStart}
+              onTouchEnd={handleVoiceEnd}
+              onTouchCancel={handleVoiceEnd}
+              onMouseDown={handleVoiceStart}
+              onMouseUp={handleVoiceEnd}
+              onMouseLeave={handleVoiceEnd}
+            >
+              <Text className={styles.voiceBtnText}>
+                {isPressing ? `${fmtTime(recordTime)} 松开发送` : '按住 说话'}
+              </Text>
+            </View>
+            <View className={styles.inputBtn} onClick={() => { setShowScenePicker(!showScenePicker); setShowAttachPicker(false) }}>
+              <Text className={styles.inputBtnIcon}>{showScenePicker ? '✕' : '📋'}</Text>
+            </View>
+          </>
+        )}
       </View>
     </View>
   )

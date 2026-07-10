@@ -42,6 +42,44 @@ const CirclePage: React.FC = () => {
     migrateRecommendedCircles();
   }, []);
 
+  // 等用户信息和圈子数据都就绪后，自动加入所有圈子
+  useEffect(() => {
+    if (!userInfo?.id) return;
+    let cancelled = false;
+    let attempts = 0;
+    const tryJoin = () => {
+      if (cancelled) return;
+      let state = useCircleStore.getState();
+      // 如果circles为空，手动从storage重载
+      if (state.circles.length === 0) {
+        state.loadFromStorage();
+        state = useCircleStore.getState();
+      }
+      if (state.circles.length === 0 && attempts < 8) {
+        attempts++;
+        setTimeout(tryJoin, 400);
+        return;
+      }
+      const uid = userInfo?.id;
+      if (!uid) return;
+      const needJoin = state.circles.filter(c =>
+        !c.members.some(m => m.userId === uid) && c.adminId !== uid
+      );
+      if (needJoin.length === 0) return;
+      needJoin.forEach(c => {
+        useCircleStore.getState().inviteMember(c.id, {
+          userId: uid,
+          userName: userInfo?.nickname || '善行者',
+          userAvatar: userInfo?.avatar || '',
+          role: 'member' as const,
+        });
+      });
+      loadFromStorage();
+    };
+    setTimeout(tryJoin, 500);
+    return () => { cancelled = true; };
+  }, [userInfo?.id]);
+
   // 把推荐圈子迁移到 store（按名称去重）
   const migrateRecommendedCircles = () => {
     const state = useCircleStore.getState();

@@ -1,134 +1,426 @@
-$bg: #FAF7F2;
+// ============================================
+// 善行守护 — AI对话界面（微信聊天风格）
+// ============================================
+
+$bg: #F8F4EE;
+$primary: #C4956A;
+$primary-light: #D4A76A;
+$primary-dark: #A07850;
+$bubble-ai: #FFFFFF;
+$bubble-user: linear-gradient(135deg, #C4956A 0%, #D4A76A 100%);
 $text-primary: #2D241A;
 $text-secondary: #8B7A6A;
 $text-tertiary: #B8A99A;
 
-.page {
-  min-height: 100vh;
-  background: $bg;
-  padding-bottom: calc(40rpx + env(safe-area-inset-bottom));
+// ===== 动画 =====
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(12rpx); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes typingBounce {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+  30% { transform: translateY(-8rpx); opacity: 1; }
 }
 
+// ===== 页面 =====
+.page {
+  height: 100vh;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: $bg;
+}
+
+// ===== 顶部栏 =====
 .topBar {
   display: flex;
   align-items: center;
   gap: 16rpx;
-  padding: 20rpx 32rpx;
-  padding-top: calc(20rpx + env(safe-area-inset-top));
-  background: #FFFFFF;
-  border-bottom: 1rpx solid rgba(0,0,0,0.06);
+  padding: 16rpx 28rpx;
+  padding-top: calc(16rpx + env(safe-area-inset-top));
+  background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(248,244,238,0.9) 100%);
+  border-bottom: 1rpx solid rgba(196,149,106,0.1);
+  flex-shrink: 0;
+  box-shadow: 0 2rpx 12rpx rgba(196,149,106,0.06);
+  backdrop-filter: blur(16px);
 }
 
 .backBtn {
   font-size: 36rpx;
   color: $text-primary;
   font-weight: 600;
-  padding: 4rpx 8rpx;
-}
-
-.topInfo {
-  display: flex;
-  flex-direction: column;
-}
-
-.topTitle {
-  font-size: 34rpx;
-  font-weight: 800;
-  color: $text-primary;
-}
-
-.topSubtitle {
-  font-size: 22rpx;
-  color: #C4956A;
-  font-weight: 500;
-}
-
-.introCard {
-  margin: 24rpx 32rpx;
-  padding: 28rpx 32rpx;
-  background: linear-gradient(135deg, rgba(196,149,106,0.1) 0%, rgba(196,149,106,0.05) 100%);
-  border: 1rpx solid rgba(196,149,106,0.2);
-  border-radius: 24rpx;
-  display: flex;
-  align-items: center;
-  gap: 16rpx;
-}
-
-.introIcon {
-  font-size: 48rpx;
-  flex-shrink: 0;
-}
-
-.introText {
-  font-size: 26rpx;
-  color: $text-secondary;
-  line-height: 1.6;
-}
-
-.cardGrid {
-  padding: 0 32rpx;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20rpx;
-}
-
-.card {
-  padding: 28rpx 24rpx;
-  border-radius: 24rpx;
-  border: 1rpx solid;
-  display: flex;
-  flex-direction: column;
-  gap: 12rpx;
-  cursor: pointer;
+  padding: 4rpx 12rpx;
   transition: all 0.2s;
-  position: relative;
-
-  &:active {
-    transform: scale(0.97);
-    opacity: 0.85;
-  }
+  &:active { opacity: 0.6; transform: scale(0.9); }
 }
 
-.cardIconWrap {
+.topAvatar {
   width: 72rpx;
   height: 72rpx;
-  border-radius: 20rpx;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(196,149,106,0.15) 0%, rgba(196,149,106,0.06) 100%);
   display: flex;
   align-items: center;
   justify-content: center;
+  font-size: 36rpx;
+  flex-shrink: 0;
 }
 
-.cardIcon {
-  font-size: 40rpx;
-  line-height: 1;
+.topInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2rpx;
 }
 
-.cardTitle {
-  font-size: 28rpx;
-  font-weight: 700;
+.topTitle {
+  font-size: 32rpx;
+  font-weight: 800;
+  color: $text-primary;
+  letter-spacing: 1rpx;
 }
 
-.cardDesc {
+.topStatus {
+  display: flex;
+  align-items: center;
+  gap: 6rpx;
+}
+
+.topStatusDot {
+  width: 10rpx;
+  height: 10rpx;
+  border-radius: 50%;
+  background: #16A34A;
+}
+
+.topStatusText {
   font-size: 22rpx;
-  color: $text-tertiary;
-  line-height: 1.4;
+  color: $text-secondary;
+  font-weight: 500;
 }
 
-.cardArrow {
-  position: absolute;
-  top: 24rpx;
-  right: 20rpx;
-  font-size: 28rpx;
+.topBadge {
+  padding: 6rpx 16rpx;
+  background: rgba(196,149,106,0.1);
+  border-radius: 20rpx;
+  border: 1rpx solid rgba(196,149,106,0.2);
+  flex-shrink: 0;
+}
+
+.topBadgeText {
+  font-size: 20rpx;
+  color: $primary-dark;
   font-weight: 600;
 }
 
-.footerTip {
-  padding: 48rpx 32rpx 24rpx;
-  text-align: center;
+// ===== 聊天区域 =====
+.chatArea {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
-.footerTipText {
-  font-size: 24rpx;
-  color: $text-tertiary;
+.chatList {
+  padding: 20rpx 28rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+// ===== 消息行 =====
+.msgRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 12rpx;
+  margin-bottom: 20rpx;
+  animation: fadeInUp 0.3s ease-out both;
+}
+
+.msgLeft {
+  flex-direction: row;
+  padding-right: 80rpx;
+}
+
+.msgRight {
+  flex-direction: row-reverse;
+  padding-left: 80rpx;
+}
+
+.msgAvatar {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(196,149,106,0.1) 0%, rgba(196,149,106,0.05) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 30rpx;
+  flex-shrink: 0;
+}
+
+// ===== 消息气泡 =====
+.msgBubble {
+  max-width: 100%;
+  padding: 18rpx 24rpx;
+  border-radius: 20rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.04);
+  position: relative;
+}
+
+.bubbleAI {
+  background: $bubble-ai;
+  border-top-left-radius: 6rpx;
+  border: 1rpx solid rgba(196,149,106,0.08);
+}
+
+.bubbleUser {
+  background: $bubble-user;
+  border-top-right-radius: 6rpx;
+}
+
+.msgText {
+  font-size: 28rpx;
+  line-height: 1.55;
+  color: $text-primary;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.bubbleUser .msgText {
+  color: #FFFFFF;
+}
+
+// ===== 打字动画 =====
+.loadingText {
+  font-size: 26rpx;
+  color: $text-secondary;
   line-height: 1.5;
+  margin-bottom: 8rpx;
+  white-space: pre-wrap;
+}
+
+.typingDots {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  padding: 8rpx 4rpx 4rpx;
+}
+
+.typingDot {
+  width: 12rpx;
+  height: 12rpx;
+  border-radius: 50%;
+  background: $primary;
+  animation: typingBounce 1.4s ease-in-out infinite;
+
+  &:nth-child(2) { animation-delay: 0.2s; }
+  &:nth-child(3) { animation-delay: 0.4s; }
+}
+
+// ===== 行动按钮行 =====
+.actionRow {
+  display: flex;
+  gap: 12rpx;
+  padding: 0 28rpx 0 108rpx;
+  margin-bottom: 20rpx;
+  margin-top: -8rpx;
+  flex-wrap: wrap;
+}
+
+.actionBtn {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  padding: 10rpx 18rpx;
+  background: rgba(255,255,255,0.85);
+  border-radius: 24rpx;
+  border: 1rpx solid rgba(196,149,106,0.15);
+  box-shadow: 0 2rpx 6rpx rgba(0,0,0,0.03);
+  transition: all 0.2s ease;
+  cursor: pointer;
+
+  &:active {
+    background: rgba(196,149,106,0.08);
+    transform: scale(0.96);
+  }
+}
+
+.actionBtnIcon {
+  font-size: 24rpx;
+}
+
+.actionBtnLabel {
+  font-size: 22rpx;
+  color: $primary-dark;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+// ===== 善行记录选择卡片 =====
+.kindnessCardsSection {
+  padding: 0 28rpx;
+  margin-bottom: 24rpx;
+}
+
+.kindnessCardsTitle {
+  font-size: 24rpx;
+  font-weight: 600;
+  color: $text-secondary;
+  display: block;
+  margin-bottom: 12rpx;
+  padding-left: 4rpx;
+}
+
+.kindnessCardsScroll {
+  display: flex;
+  flex-direction: column;
+  gap: 10rpx;
+}
+
+.kindnessCard {
+  background: rgba(255,255,255,0.85);
+  border-radius: 16rpx;
+  padding: 18rpx 22rpx;
+  border: 1.5rpx solid rgba(196,149,106,0.12);
+  box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.03);
+  transition: all 0.2s ease;
+  cursor: pointer;
+
+  &:active {
+    transform: scale(0.985);
+    background: rgba(196,149,106,0.05);
+    border-color: rgba(196,149,106,0.25);
+  }
+}
+
+.kindnessCardTop {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12rpx;
+  margin-bottom: 8rpx;
+}
+
+.kindnessCardContent {
+  font-size: 26rpx;
+  color: $text-primary;
+  line-height: 1.5;
+  flex: 1;
+  min-width: 0;
+}
+
+.kindnessCardTime {
+  font-size: 20rpx;
+  color: $text-tertiary;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.kindnessCardMeta {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  flex-wrap: wrap;
+}
+
+.kindnessCardLocation {
+  font-size: 20rpx;
+  color: $text-secondary;
+}
+
+.kindnessCardTag {
+  font-size: 20rpx;
+  color: $primary;
+  background: rgba(196,149,106,0.08);
+  padding: 2rpx 10rpx;
+  border-radius: 8rpx;
+}
+
+// ===== 底部输入栏 =====
+.inputBar {
+  display: flex;
+  align-items: flex-end;
+  gap: 12rpx;
+  padding: 16rpx 24rpx;
+  padding-bottom: calc(16rpx + env(safe-area-inset-bottom));
+  background: linear-gradient(180deg, rgba(248,244,238,0.8) 0%, rgba(255,255,255,0.95) 100%);
+  border-top: 1rpx solid rgba(196,149,106,0.08);
+  flex-shrink: 0;
+  backdrop-filter: blur(12px);
+}
+
+.recordPickerBtn {
+  width: 68rpx;
+  height: 68rpx;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.9);
+  border: 1.5rpx solid rgba(196,149,106,0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+  cursor: pointer;
+
+  &:active { transform: scale(0.92); background: rgba(196,149,106,0.08); }
+}
+
+.recordPickerIcon {
+  font-size: 30rpx;
+}
+
+.inputWrap {
+  flex: 1;
+  background: rgba(255,255,255,0.9);
+  border-radius: 24rpx;
+  border: 1.5rpx solid rgba(196,149,106,0.15);
+  padding: 0 4rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.03);
+}
+
+.textInput {
+  width: 100%;
+  min-height: 44rpx;
+  max-height: 120rpx;
+  padding: 12rpx 16rpx;
+  font-size: 28rpx;
+  color: $text-primary;
+  line-height: 1.4;
+  background: transparent;
+  border: none;
+  box-sizing: border-box;
+}
+
+.inputPlaceholder {
+  color: $text-tertiary;
+}
+
+.sendBtn {
+  width: 68rpx;
+  height: 68rpx;
+  border-radius: 50%;
+  background: rgba(196,149,106,0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.25s ease;
+  cursor: pointer;
+
+  &:active { transform: scale(0.92); }
+}
+
+.sendBtnActive {
+  background: linear-gradient(135deg, $primary 0%, $primary-light 100%);
+  box-shadow: 0 4rpx 12rpx rgba(196,149,106,0.3);
+}
+
+.sendBtnIcon {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: #FFFFFF;
+}
+
+.sendBtn:not(.sendBtnActive) .sendBtnIcon {
+  color: $primary;
 }

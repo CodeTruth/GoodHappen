@@ -34,26 +34,49 @@
 // ===== 页面 =====
 .pageWrapper {
   min-height: 100vh;
+  position: relative;
+  overflow: hidden;
+  background-color: #F0EBE0;
+  // 背景图懒加载 — content-visibility 让非视口区域不渲染
+  content-visibility: auto;
+  contain-intrinsic-size: 100vh;
   background:
     // 半透明暖色叠加层，保证文字可读
     linear-gradient(180deg, rgba(245,240,230,0.75) 0%, rgba(248,244,236,0.65) 50%, rgba(245,240,230,0.75) 100%),
     // 背景图片
     url('@/assets/home-bg.jpg') center / cover no-repeat;
   background-color: #F0EBE0;
+
+  // 顶部暖光装饰
+  &::before {
+    content: '';
+    position: absolute;
+    top: -120rpx;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 600rpx;
+    height: 400rpx;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(212,163,86,0.08) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
 }
 
 .contentScroll {
   flex: 1;
+  position: relative;
+  z-index: 1;
 }
 
 .page {
   padding: 24rpx 32rpx;
-  padding-bottom: calc(120px + env(safe-area-inset-bottom));
+  padding-bottom: calc(140px + env(safe-area-inset-bottom));
   min-height: 100vh;
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
 }
 
 // ===== 顶部 =====
@@ -70,34 +93,38 @@
 }
 
 .headerSlogan {
-  font-size: 40rpx;
-  font-weight: 800;
-  color: #2D241A;
-  letter-spacing: 1rpx;
+  font-size: 42rpx;
+  font-weight: 900;
+  background: linear-gradient(135deg, #2D241A 0%, #5D4E37 40%, #C4956A 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: 2rpx;
+  animation: fadeInUp 0.8s ease-out 0.05s both;
 }
 
 .headerLive {
   display: flex;
   align-items: center;
   gap: 8rpx;
-  background: rgba(76, 175, 80, 0.06);
-  border: 1.5rpx solid rgba(76, 175, 80, 0.12);
+  background: linear-gradient(135deg, rgba(196,149,106,0.1) 0%, rgba(196,149,106,0.05) 100%);
+  border: 1.5rpx solid rgba(196, 149, 106, 0.2);
   border-radius: 40rpx;
   padding: 6rpx 16rpx;
-  animation: breathe 3s ease-in-out infinite;
+  animation: fadeInUp 0.6s ease-out 0.15s both, breathe 3s ease-in-out infinite;
 }
 
 .liveDot {
   width: 8rpx;
   height: 8rpx;
   border-radius: 50%;
-  background: #4CAF50;
+  background: #C4956A;
   animation: pulseDot 2s ease-in-out infinite;
 }
 
 .liveText {
   font-size: 22rpx;
-  color: #4CAF50;
+  color: #B8860B;
   font-weight: 600;
 }
 
@@ -178,6 +205,7 @@
   user-select: none;
   -webkit-user-select: none;
   touch-action: none;
+  animation: fadeInScale 0.8s ease-out 0.3s both;
 }
 
 // 转盘背景圆盘
@@ -214,10 +242,13 @@
   z-index: 0;
 }
 
+// ===== 旋转外圈 =====
 .wheelRotate {
   position: absolute;
   width: 100%;
   height: 100%;
+  will-change: transform;
+  transform: translateZ(0);
   transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
@@ -300,14 +331,43 @@
   50% { box-shadow: 0 0 60rpx rgba(196, 149, 106, 0.55), 0 0 100rpx rgba(196, 149, 106, 0.3); }
 }
 
-// ===== SOS 面板 =====
+// ===== SOS 紧急通道 =====
 .sosSection {
   flex-shrink: 0;
-  margin-top: 40rpx;
-  margin-bottom: 24rpx;
+  margin-top: 48rpx;
+  margin-bottom: 40rpx;
   animation: fadeInScale 0.5s ease-out;
   animation-delay: 0.2s;
   animation-fill-mode: both;
+}
+
+.sosHeader {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  margin-bottom: 20rpx;
+  padding-left: 8rpx;
+}
+
+.sosHeaderLine {
+  width: 6rpx;
+  height: 28rpx;
+  border-radius: 3rpx;
+  background: linear-gradient(180deg, #EF4444 0%, #F87171 100%);
+}
+
+.sosHeaderTitle {
+  font-size: 30rpx;
+  font-weight: 800;
+  color: #2D241A;
+  letter-spacing: 1rpx;
+}
+
+.sosHeaderSub {
+  font-size: 22rpx;
+  color: #9A8B7A;
+  font-weight: 400;
+  margin-left: 4rpx;
 }
 
 .sosGrid {
@@ -320,53 +380,66 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10rpx;
-  padding: 20rpx 6rpx;
-  background: rgba(255,255,255,0.6);
-  backdrop-filter: blur(12px);
-  border-radius: 20rpx;
-  border: 1rpx solid rgba(255,255,255,0.5);
-  box-shadow: 0 2rpx 12rpx rgba(0,0,0,0.04);
+  gap: 12rpx;
+  padding: 24rpx 8rpx;
+  background: linear-gradient(135deg, rgba(255,255,255,0.75) 0%, rgba(255,250,245,0.7) 100%);
+  backdrop-filter: blur(16px);
+  border-radius: 24rpx;
+  border: 1.5rpx solid rgba(255,255,255,0.6);
+  box-shadow: 0 4rpx 16rpx rgba(0,0,0,0.05);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 
   &:active {
-    transform: scale(0.94);
-    background: rgba(255,255,255,0.85);
-    box-shadow: 0 6rpx 20rpx rgba(0,0,0,0.08);
+    transform: scale(0.95) translateY(2rpx);
+    background: rgba(255,255,255,0.9);
+    box-shadow: 0 8rpx 24rpx rgba(0,0,0,0.08);
   }
 }
 
 .sosIconWrap {
-  width: 64rpx;
-  height: 64rpx;
+  width: 72rpx;
+  height: 72rpx;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s ease;
+  transition: all 0.25s ease;
 }
 
 .sosIconRed {
-  background: linear-gradient(135deg, rgba(239,68,68,0.15) 0%, rgba(239,68,68,0.06) 100%);
+  background: linear-gradient(135deg, rgba(239,68,68,0.18) 0%, rgba(239,68,68,0.08) 100%);
+  box-shadow: 0 2rpx 8rpx rgba(239,68,68,0.15);
 }
 
 .sosIconOrange {
-  background: linear-gradient(135deg, rgba(249,115,22,0.12) 0%, rgba(249,115,22,0.05) 100%);
+  background: linear-gradient(135deg, rgba(249,115,22,0.15) 0%, rgba(249,115,22,0.06) 100%);
+  box-shadow: 0 2rpx 8rpx rgba(249,115,22,0.12);
+}
+
+.sosIconBlue {
+  background: linear-gradient(135deg, rgba(59,130,246,0.15) 0%, rgba(59,130,246,0.06) 100%);
+  box-shadow: 0 2rpx 8rpx rgba(59,130,246,0.12);
 }
 
 .sosItem:active .sosIconWrap {
-  transform: scale(1.12);
+  transform: scale(1.15);
 }
 
 .sosItemIcon {
-  font-size: 32rpx;
+  font-size: 36rpx;
   line-height: 1;
 }
 
 .sosItemLabel {
-  font-size: 20rpx;
-  font-weight: 600;
-  color: #5D4E37;
+  font-size: 22rpx;
+  font-weight: 700;
+  color: #4A3F35;
+  text-align: center;
+}
+
+.sosItemDesc {
+  font-size: 18rpx;
+  color: #9A8B7A;
   text-align: center;
 }

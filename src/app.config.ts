@@ -54,7 +54,8 @@ export default defineAppConfig({
     'pages/feedback/index',
     'pages/school-pricing/index',
     'pages/brand-sponsorship/index',
-    'pages/evidence-history/index'
+    'pages/evidence-history/index',
+    'pages/kindness-square/index'
   ],
   window: {
     backgroundTextStyle: 'light',

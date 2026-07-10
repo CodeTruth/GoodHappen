@@ -47,7 +47,14 @@ function App(props: { children: React.ReactNode }) {
       const curPages = Taro.getCurrentPages();
       if (curPages.length > 0) {
         const route = curPages[curPages.length - 1].route || '';
-        const shouldHide = HIDDEN_TAB_PAGES.some(p => route.includes(p));
+        let shouldHide = HIDDEN_TAB_PAGES.some(p => route.includes(p));
+        // 首次进入的欢迎引导页：全屏显示，隐藏 Tab 栏
+        if (!shouldHide && route.includes('pages/home/index')) {
+          try {
+            const welcomeShown = Taro.getStorageSync('haoshi_welcome_shown');
+            if (!welcomeShown) shouldHide = true;
+          } catch { /* ignore */ }
+        }
         setHideTab(shouldHide);
         return;
       }
@@ -55,7 +62,13 @@ function App(props: { children: React.ReactNode }) {
     // fallback：H5 hash
     if (typeof window !== 'undefined') {
       const hash = window.location.hash;
-      const shouldHide = HIDDEN_TAB_PAGES.some(p => hash.includes(p));
+      let shouldHide = HIDDEN_TAB_PAGES.some(p => hash.includes(p));
+      if (!shouldHide && hash.includes('pages/home/index')) {
+        try {
+          const welcomeShown = Taro.getStorageSync('haoshi_welcome_shown');
+          if (!welcomeShown) shouldHide = true;
+        } catch { /* ignore */ }
+      }
       setHideTab(shouldHide);
     }
   };

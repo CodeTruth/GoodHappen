@@ -175,6 +175,50 @@
   margin-bottom: $spacing-sm;
 }
 
+// ===== 快速记录模板 =====
+.quickRecordHint {
+  margin-bottom: 12rpx;
+}
+
+.quickRecordHintText {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+}
+
+.quickRecordList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+  margin-bottom: 16rpx;
+}
+
+.quickRecordItem {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  padding: 12rpx 20rpx;
+  background: rgba(196,149,106,0.06);
+  border-radius: $radius-round;
+  border: 1.5rpx solid rgba(196,149,106,0.12);
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:active {
+    background: rgba(196,149,106,0.15);
+    transform: scale(0.95);
+  }
+}
+
+.quickRecordEmoji {
+  font-size: 28rpx;
+}
+
+.quickRecordLabel {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+  font-weight: $font-weight-medium;
+}
+
 .textarea {
   width: 100%;
   min-height: 300rpx;
@@ -492,6 +536,45 @@
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
+}
+
+// ============================================
+// 庆祝彩纸动画 — UI精致度提升
+// ============================================
+.confettiContainer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 10000;
+  overflow: hidden;
+}
+
+.confettiPiece {
+  position: absolute;
+  top: -60rpx;
+  font-size: 36rpx;
+  animation: confettiFallAnim 3s ease-in forwards;
+}
+
+@keyframes confettiFallAnim {
+  0% {
+    transform: translateY(0) rotate(0deg) scale(0.5);
+    opacity: 1;
+  }
+  20% {
+    transform: translateY(15vh) rotate(90deg) scale(1.2);
+    opacity: 1;
+  }
+  60% {
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateY(100vh) rotate(720deg) scale(0.3);
+    opacity: 0;
+  }
 }
 
 .aiCards {

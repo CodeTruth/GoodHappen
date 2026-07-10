@@ -1,5 +1,5 @@
 /**
- * 证据历史 Store — 管理扇形保护 + 扇形见证的历史文件
+ * 证据历史 Store — 管理善行保护 + 善行见证的历史文件
  *
  * 存储到 Taro Storage（H5 端降级为 localStorage），
  * 文件以 base64 Data URL 存储，不写入手机图库/文件系统。
@@ -67,6 +67,13 @@ export interface EvidenceRecord {
     source?: 'exif' | 'system' | 'manual';
   };
   files: EvidenceFile[];
+  /** 保护过程中的统计数据（即使文件不可用，也能看到录了多久） */
+  evidenceStats?: {
+    videoDuration: number;
+    audioDuration: number;
+    gpsPoints: number;
+    photos: number;
+  };
 
   // === 哈希链 ===
   /** 当前数据内容的 SHA-256 哈希 */
@@ -208,20 +215,44 @@ export const useEvidenceHistoryStore = create<EvidenceHistoryState>((set, get) =
   records: [],
 
   loadFromStorage: async () => {
+    let indexedRecords: EvidenceRecord[] = [];
+    let localStorageRecords: EvidenceRecord[] = [];
+
+    // 1. 从 IndexedDB 读取（含大文件）
     if (isIndexedDBAvailable()) {
       try {
-        const records = await dbGetAllRecords();
-        const sorted = (records || []).sort((a: EvidenceRecord, b: EvidenceRecord) =>
-          new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime()
-        );
-        set({ records: sorted });
-        return;
+        indexedRecords = await dbGetAllRecords() || [];
       } catch (e) {
-        console.warn('[EvidenceHistory] IndexedDB load failed, fallback to localStorage:', e);
+        console.warn('[EvidenceHistory] IndexedDB load failed:', e);
       }
     }
-    const records = loadStorage();
-    set({ records });
+
+    // 2. 从 localStorage 读取（元数据）
+    try {
+      localStorageRecords = loadStorage();
+    } catch {}
+
+    // 3. 合并：以 IndexedDB 为主，localStorage 补漏
+    const indexedMap = new Map(indexedRecords.map((r: EvidenceRecord) => [r.id, r]));
+    const merged: EvidenceRecord[] = [];
+
+    // 先用 IndexedDB 记录（优先）
+    indexedRecords.forEach((r: EvidenceRecord) => merged.push(r));
+
+    // 再补 localStorage 中有但 IndexedDB 没有的记录
+    localStorageRecords.forEach((r) => {
+      if (!indexedMap.has(r.id)) {
+        merged.push(r);
+      }
+    });
+
+    // 按时间倒序
+    const sorted = merged.sort((a, b) =>
+      new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime()
+    );
+
+    set({ records: sorted });
+    console.log('[EvidenceHistory] Loaded', sorted.length, 'records (IndexedDB:', indexedRecords.length, ', localStorage:', localStorageRecords.length, ')');
   },
 
   saveToStorage: () => {
@@ -238,33 +269,56 @@ export const useEvidenceHistoryStore = create<EvidenceHistoryState>((set, get) =
 
   addRecord: async (record) => {
     let prevChainHash = '';
+    let savedToLocalStorage = false;
+
+    // 1. 无论IndexedDB是否可用，先保存元数据到localStorage作为保底
+    const metaRecord = {
+      ...record,
+      files: record.files.filter((f) => f.size <= MAX_FILE_SIZE && (f.type === 'photo' ? f.size <= 2 * 1024 * 1024 : true)),
+    };
+    try {
+      const existing = loadStorage();
+      const merged = [metaRecord, ...existing].slice(0, MAX_RECORDS);
+      saveStorage(merged);
+      savedToLocalStorage = true;
+    } catch (e) {
+      console.warn('[EvidenceHistory] localStorage save failed:', e);
+    }
+
+    // 2. 尝试保存完整文件到IndexedDB
+    let indexedDBSuccess = false;
+    if (isIndexedDBAvailable()) {
+      try {
+        await dbSaveRecord(record);
+        indexedDBSuccess = true;
+      } catch (e) {
+        console.warn('[EvidenceHistory] IndexedDB save failed, full record will not be available:', e);
+        // 保底：尝试存个无大文件的版本
+        if (!savedToLocalStorage) {
+          try {
+            const minimalRecord = { ...record, files: [] };
+            const existing2 = loadStorage();
+            const merged2 = [minimalRecord, ...existing2].slice(0, MAX_RECORDS);
+            saveStorage(merged2);
+          } catch {}
+        }
+      }
+    }
+
+    // 3. 更新React状态（用完整record，内存里文件是有的）
+    const newRecord = indexedDBSuccess || isIndexedDBAvailable()
+      ? { ...record, files: record.files }
+      : { ...record, files: record.files.filter((f) => f.size <= MAX_FILE_SIZE) };
+
     set((state) => {
-      const filtered = isIndexedDBAvailable()
-        ? record.files
-        : record.files.filter((f) => f.size <= MAX_FILE_SIZE);
-      const newRecord = { ...record, files: filtered };
       const newRecords = [newRecord, ...state.records];
       prevChainHash = state.records.length > 0
         ? state.records[0].chainHash || ''
         : '';
-
-      if (isIndexedDBAvailable()) {
-        dbSaveRecord(newRecord).catch((e) => {
-          console.warn('[EvidenceHistory] IndexedDB save failed:', e);
-          saveStorage(newRecords);
-        });
-      } else {
-        saveStorage(newRecords);
-      }
-
       return { records: newRecords };
     });
 
-    // 异步计算哈希链（不阻塞 UI）
-    const filtered = isIndexedDBAvailable()
-      ? record.files
-      : record.files.filter((f) => f.size <= MAX_FILE_SIZE);
-    const newRecord = { ...record, files: filtered };
+    // 4. 异步计算哈希链（不阻塞UI）
     const deviceFingerprint = collectDeviceFingerprint();
     try {
       const enriched = await enrichRecord(newRecord, prevChainHash, deviceFingerprint);
@@ -273,11 +327,15 @@ export const useEvidenceHistoryStore = create<EvidenceHistoryState>((set, get) =
           r.id === enriched.id ? enriched : r
         ),
       }));
-      if (isIndexedDBAvailable()) {
+      if (indexedDBSuccess) {
         await dbSaveRecord(enriched);
-      } else {
-        saveStorage(get().records);
       }
+      // 同步更新localStorage中的哈希链
+      try {
+        const stored = loadStorage();
+        const updated = stored.map((r) => r.id === enriched.id ? enriched : r);
+        saveStorage(updated);
+      } catch {}
     } catch (e) {
       console.warn('[EvidenceHistory] Enrich failed:', e);
     }

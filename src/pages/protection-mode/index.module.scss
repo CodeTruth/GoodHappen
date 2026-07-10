@@ -1,5 +1,5 @@
 // ============================================
-// 善行保护模式 — 深色沉浸式样式
+// 善行保护模式 — 深色沉浸式样式（优化版）
 // ============================================
 
 $bg-primary: #1A1A2E;
@@ -13,6 +13,57 @@ $color-text-primary: #FFFFFF;
 $color-text-secondary: rgba(255, 255, 255, 0.7);
 $color-text-tertiary: rgba(255, 255, 255, 0.4);
 
+// ===== 动画 =====
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20rpx); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInScale {
+  from { opacity: 0; transform: scale(0.95); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes breathe {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.05); opacity: 0.85; }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(244, 67, 54, 0.5);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 0 30rpx rgba(244, 67, 54, 0);
+    transform: scale(1.03);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(244, 67, 54, 0.5);
+    transform: scale(1);
+  }
+}
+
+@keyframes recordingPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+@keyframes sosFlash {
+  0%, 100% { background: rgba(244, 67, 54, 0.25); }
+  50% { background: rgba(244, 67, 54, 0.45); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+// ===== 页面 =====
 .pageWrapper {
   min-height: 100vh;
   min-height: 100dvh;
@@ -50,6 +101,7 @@ $color-text-tertiary: rgba(255, 255, 255, 0.4);
   justify-content: center;
   width: 100%;
   padding-bottom: 0;
+  animation: fadeInUp 0.6s ease-out 0.1s both;
 }
 
 .idleBottom {
@@ -60,37 +112,43 @@ $color-text-tertiary: rgba(255, 255, 255, 0.4);
   justify-content: center;
   width: 100%;
   padding-top: 0;
+  animation: fadeInUp 0.6s ease-out 0.4s both;
 }
 
 .shieldIcon {
-  font-size: 80rpx;
-  margin-bottom: 12rpx;
+  font-size: 88rpx;
+  margin-bottom: 16rpx;
+  filter: drop-shadow(0 4rpx 12rpx rgba(76, 175, 80, 0.3));
 }
 
 .mainTitle {
-  font-size: 36rpx;
-  font-weight: 700;
+  font-size: 40rpx;
+  font-weight: 800;
   color: $color-text-primary;
-  margin-bottom: 8rpx;
+  margin-bottom: 12rpx;
+  letter-spacing: 2rpx;
 }
 
 .subtitle {
-  font-size: 22rpx;
+  font-size: 24rpx;
   color: $color-text-secondary;
-  margin-bottom: 16rpx;
+  margin-bottom: 20rpx;
+  text-align: center;
+  line-height: 1.5;
 }
 
 .descCard {
   width: 100%;
   background: $bg-card;
   border-radius: 24rpx;
-  padding: 20rpx 28rpx;
-  margin-bottom: 16rpx;
+  padding: 24rpx 32rpx;
+  margin-bottom: 20rpx;
   border: 1rpx solid rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(8px);
 }
 
 .descText {
-  font-size: 24rpx;
+  font-size: 26rpx;
   color: $color-text-secondary;
   line-height: 1.6;
   text-align: center;
@@ -104,24 +162,26 @@ $color-text-tertiary: rgba(255, 255, 255, 0.4);
 // AI顾问场景提示
 .sceneHintCard {
   width: 100%;
-  background: rgba(76, 175, 80, 0.12);
-  border: 1rpx solid rgba(76, 175, 80, 0.25);
+  background: linear-gradient(135deg, rgba(76, 175, 80, 0.12) 0%, rgba(76, 175, 80, 0.06) 100%);
+  border: 1.5rpx solid rgba(76, 175, 80, 0.25);
   border-radius: 24rpx;
-  padding: 16rpx 24rpx;
-  margin-bottom: 12rpx;
+  padding: 20rpx 28rpx;
+  margin-bottom: 16rpx;
+  backdrop-filter: blur(8px);
 }
 
 .sceneHintLabel {
-  font-size: 22rpx;
+  font-size: 24rpx;
   color: $color-green-light;
-  font-weight: 600;
-  margin-bottom: 8rpx;
+  font-weight: 700;
+  margin-bottom: 10rpx;
 }
 
 .sceneHintText {
-  font-size: 26rpx;
+  font-size: 28rpx;
   color: $color-text-primary;
   line-height: 1.5;
+  font-weight: 500;
 }
 
 // 紧急联系人提示
@@ -129,22 +189,23 @@ $color-text-tertiary: rgba(255, 255, 255, 0.4);
   width: 100%;
   display: flex;
   align-items: center;
-  gap: 16rpx;
-  padding: 20rpx 24rpx;
-  background: rgba(255, 152, 0, 0.12);
-  border: 1rpx solid rgba(255, 152, 0, 0.3);
-  border-radius: 16rpx;
+  gap: 20rpx;
+  padding: 24rpx 28rpx;
+  background: linear-gradient(135deg, rgba(255, 152, 0, 0.12) 0%, rgba(255, 152, 0, 0.06) 100%);
+  border: 1.5rpx solid rgba(255, 152, 0, 0.3);
+  border-radius: 20rpx;
   margin-bottom: 40rpx;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.25s ease;
 
   &:active {
-    background: rgba(255, 152, 0, 0.2);
+    background: linear-gradient(135deg, rgba(255, 152, 0, 0.2) 0%, rgba(255, 152, 0, 0.1) 100%);
+    transform: scale(0.98);
   }
 }
 
 .contactHintIcon {
-  font-size: 36rpx;
+  font-size: 40rpx;
   flex-shrink: 0;
 }
 
@@ -152,22 +213,22 @@ $color-text-tertiary: rgba(255, 255, 255, 0.4);
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 4rpx;
+  gap: 6rpx;
 }
 
 .contactHintTitle {
-  font-size: 26rpx;
+  font-size: 28rpx;
   color: $color-orange;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .contactHintDesc {
-  font-size: 22rpx;
+  font-size: 24rpx;
   color: rgba(255, 152, 0, 0.7);
 }
 
 // ============================================
-// 中心圆形按钮（idle用 centerBtnWrap，active/paused用 circleBtnWrap）
+// 中心圆形按钮
 // ============================================
 
 .centerBtnWrap {
@@ -196,23 +257,32 @@ $color-text-tertiary: rgba(255, 255, 255, 0.4);
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 8rpx 40rpx rgba(76, 175, 80, 0.35);
-  transition: transform 0.2s ease;
+  box-shadow:
+    0 8rpx 40rpx rgba(76, 175, 80, 0.35),
+    0 0 80rpx rgba(76, 175, 80, 0.15),
+    inset 0 2rpx 4rpx rgba(255, 255, 255, 0.2);
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  animation: fadeInScale 0.6s ease-out 0.2s both;
 
   &:active {
-    transform: scale(0.96);
+    transform: scale(0.95);
+    box-shadow:
+      0 4rpx 20rpx rgba(76, 175, 80, 0.3),
+      0 0 40rpx rgba(76, 175, 80, 0.1);
   }
 }
 
 .circleBtnIdleText {
-  font-size: 32rpx;
-  font-weight: 700;
+  font-size: 34rpx;
+  font-weight: 800;
   color: #FFFFFF;
+  text-shadow: 0 2rpx 4rpx rgba(0, 0, 0, 0.2);
 }
 
 .circleBtnIdleIcon {
-  font-size: 56rpx;
-  margin-bottom: 8rpx;
+  font-size: 64rpx;
+  margin-bottom: 12rpx;
+  filter: drop-shadow(0 2rpx 4rpx rgba(0, 0, 0, 0.2));
 }
 
 // starting 状态 — 加载中
@@ -226,30 +296,25 @@ $color-text-tertiary: rgba(255, 255, 255, 0.4);
   align-items: center;
   justify-content: center;
   animation: breathe 1.5s ease-in-out infinite;
-}
-
-@keyframes breathe {
-  0%, 100% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.05); opacity: 0.85; }
+  box-shadow:
+    0 8rpx 40rpx rgba(76, 175, 80, 0.35),
+    0 0 80rpx rgba(76, 175, 80, 0.15);
 }
 
 .startingSpinner {
-  width: 60rpx;
-  height: 60rpx;
+  width: 64rpx;
+  height: 64rpx;
   border: 4rpx solid rgba(255, 255, 255, 0.3);
   border-top: 4rpx solid #FFFFFF;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
-  margin-bottom: 16rpx;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
+  margin-bottom: 20rpx;
 }
 
 .startingText {
-  font-size: 28rpx;
+  font-size: 30rpx;
   color: rgba(255, 255, 255, 0.9);
+  font-weight: 600;
 }
 
 // active 状态 — 红色脉动圆环 + 计时器
@@ -268,33 +333,20 @@ $color-text-tertiary: rgba(255, 255, 255, 0.4);
   box-shadow: 0 0 0 0 rgba(244, 67, 54, 0.4);
 }
 
-@keyframes pulse {
-  0% {
-    box-shadow: 0 0 0 0 rgba(244, 67, 54, 0.5);
-    transform: scale(1);
-  }
-  50% {
-    box-shadow: 0 0 0 30rpx rgba(244, 67, 54, 0);
-    transform: scale(1.03);
-  }
-  100% {
-    box-shadow: 0 0 0 0 rgba(244, 67, 54, 0.5);
-    transform: scale(1);
-  }
-}
-
 .activeTimer {
-  font-size: 72rpx;
-  font-weight: 700;
+  font-size: 80rpx;
+  font-weight: 800;
   color: $color-text-primary;
   font-variant-numeric: tabular-nums;
-  letter-spacing: 4rpx;
+  letter-spacing: 6rpx;
+  text-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.3);
 }
 
 .activeLabel {
-  font-size: 22rpx;
+  font-size: 24rpx;
   color: $color-text-secondary;
-  margin-top: 4rpx;
+  margin-top: 8rpx;
+  font-weight: 500;
 }
 
 // paused 状态 — 橙色
@@ -302,25 +354,28 @@ $color-text-tertiary: rgba(255, 255, 255, 0.4);
   width: 400rpx;
   height: 400rpx;
   border-radius: 50%;
-  background: rgba(255, 152, 0, 0.2);
+  background: linear-gradient(135deg, rgba(255, 152, 0, 0.2) 0%, rgba(255, 152, 0, 0.1) 100%);
   border: 6rpx solid $color-orange;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  box-shadow: 0 0 40rpx rgba(255, 152, 0, 0.15);
 }
 
 .pausedTimer {
-  font-size: 64rpx;
-  font-weight: 700;
+  font-size: 72rpx;
+  font-weight: 800;
   color: $color-text-primary;
   font-variant-numeric: tabular-nums;
+  text-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.3);
 }
 
 .pausedLabel {
-  font-size: 22rpx;
+  font-size: 24rpx;
   color: $color-text-secondary;
-  margin-top: 4rpx;
+  margin-top: 8rpx;
+  font-weight: 500;
 }
 
 // ============================================
@@ -328,54 +383,62 @@ $color-text-tertiary: rgba(255, 255, 255, 0.4);
 // ============================================
 
 .btnHint {
-  font-size: 22rpx;
+  font-size: 24rpx;
   color: $color-text-tertiary;
   text-align: center;
-  margin-bottom: 16rpx;
+  margin-bottom: 20rpx;
+  font-weight: 500;
 }
 
 // 定时安全确认入口
 .safetyCheckEntry {
   display: flex;
   align-items: center;
-  gap: 16rpx;
-  padding: 20rpx 24rpx;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 16rpx;
+  gap: 20rpx;
+  padding: 24rpx 28rpx;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.03) 100%);
+  border-radius: 20rpx;
   border: 1rpx solid rgba(255, 255, 255, 0.1);
   cursor: pointer;
-  transition: all 0.2s;
-}
+  transition: all 0.25s ease;
+  backdrop-filter: blur(8px);
 
-.safetyCheckEntry:active {
-  background: rgba(255, 255, 255, 0.1);
+  &:active {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+    transform: scale(0.98);
+  }
 }
 
 .safetyCheckIcon {
-  font-size: 36rpx;
+  font-size: 40rpx;
 }
 
 .safetyCheckText {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 4rpx;
+  gap: 6rpx;
 }
 
 .safetyCheckTitle {
-  font-size: 26rpx;
+  font-size: 28rpx;
   color: #FFFFFF;
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .safetyCheckDesc {
-  font-size: 22rpx;
+  font-size: 24rpx;
   color: rgba(255, 255, 255, 0.5);
 }
 
 .safetyCheckArrow {
-  font-size: 28rpx;
+  font-size: 32rpx;
   color: rgba(255, 255, 255, 0.4);
+  transition: transform 0.2s ease;
+}
+
+.safetyCheckEntry:active .safetyCheckArrow {
+  transform: translateX(4rpx);
 }
 
 // ============================================
@@ -386,31 +449,38 @@ $color-text-tertiary: rgba(255, 255, 255, 0.4);
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 16rpx;
-  margin-top: 20rpx;
+  gap: 20rpx;
+  margin-top: 24rpx;
+  animation: fadeInUp 0.5s ease-out 0.3s both;
 }
 
 .initCheckItem {
   display: flex;
   align-items: center;
-  gap: 16rpx;
-  font-size: 26rpx;
+  gap: 20rpx;
+  font-size: 28rpx;
   color: $color-text-secondary;
+  padding: 8rpx 0;
 }
 
 .initCheckIcon {
-  width: 40rpx;
-  height: 40rpx;
+  width: 44rpx;
+  height: 44rpx;
   border-radius: 50%;
   background: $color-green;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 22rpx;
+  font-size: 24rpx;
+  font-weight: 700;
+  color: #FFFFFF;
+  flex-shrink: 0;
+  box-shadow: 0 2rpx 8rpx rgba(76, 175, 80, 0.3);
 }
 
 .initCheckIconPending {
   background: rgba(255, 255, 255, 0.1);
+  box-shadow: none;
 }
 
 // ============================================
@@ -423,58 +493,70 @@ $color-text-tertiary: rgba(255, 255, 255, 0.4);
   grid-template-columns: 1fr 1fr;
   gap: 20rpx;
   margin-bottom: 40rpx;
+  animation: fadeInUp 0.5s ease-out 0.2s both;
 }
 
 // AI风险提示条
 .aiRiskBanner {
   display: flex;
   align-items: center;
-  gap: 12rpx;
-  padding: 16rpx 24rpx;
-  margin-bottom: 24rpx;
-  border-radius: 16rpx;
-  background: rgba(255, 140, 0, 0.08);
-  border: 1rpx solid rgba(255, 140, 0, 0.15);
+  gap: 16rpx;
+  padding: 20rpx 28rpx;
+  margin-bottom: 28rpx;
+  border-radius: 20rpx;
+  background: linear-gradient(135deg, rgba(255, 140, 0, 0.1) 0%, rgba(255, 140, 0, 0.04) 100%);
+  border: 1.5rpx solid rgba(255, 140, 0, 0.15);
+  backdrop-filter: blur(8px);
+  animation: fadeInUp 0.5s ease-out 0.15s both;
 }
 
 .aiRiskIcon {
-  font-size: 28rpx;
+  font-size: 32rpx;
   flex-shrink: 0;
 }
 
 .aiRiskText {
-  font-size: 24rpx;
-  color: rgba(255, 255, 255, 0.7);
+  font-size: 26rpx;
+  color: rgba(255, 255, 255, 0.8);
   line-height: 1.5;
   flex: 1;
+  font-weight: 500;
 }
 
 .dataCard {
-  background: $bg-card;
-  border-radius: 20rpx;
-  padding: 24rpx;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.03) 100%);
+  border-radius: 24rpx;
+  padding: 28rpx 24rpx;
   display: flex;
   flex-direction: column;
   align-items: center;
   border: 1rpx solid rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(8px);
+  transition: all 0.25s ease;
+
+  &:active {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+    transform: scale(0.97);
+  }
 }
 
 .dataIcon {
-  font-size: 40rpx;
-  margin-bottom: 8rpx;
+  font-size: 44rpx;
+  margin-bottom: 12rpx;
 }
 
 .dataValue {
-  font-size: 36rpx;
-  font-weight: 700;
+  font-size: 40rpx;
+  font-weight: 800;
   color: $color-text-primary;
   font-variant-numeric: tabular-nums;
 }
 
 .dataLabel {
-  font-size: 22rpx;
+  font-size: 24rpx;
   color: $color-text-tertiary;
-  margin-top: 4rpx;
+  margin-top: 8rpx;
+  font-weight: 500;
 }
 
 // ============================================
@@ -487,55 +569,62 @@ $color-text-tertiary: rgba(255, 255, 255, 0.4);
   gap: 20rpx;
   padding: 24rpx 0;
   box-sizing: border-box;
+  animation: fadeInUp 0.5s ease-out 0.3s both;
 }
 
 .actionBtn {
   flex: 1;
-  border-radius: 16rpx;
-  padding: 24rpx 0;
+  border-radius: 20rpx;
+  padding: 28rpx 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   border: none;
-  font-size: 24rpx;
-  font-weight: 600;
-  transition: opacity 0.2s;
+  font-size: 26rpx;
+  font-weight: 700;
+  transition: all 0.25s ease;
+  cursor: pointer;
 
   &:active {
-    opacity: 0.8;
+    transform: scale(0.95);
+    opacity: 0.9;
   }
 }
 
 .actionBtnPhoto {
-  background: rgba(255, 255, 255, 0.95);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.9) 100%);
   color: #333333;
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.15);
 }
 
 .actionBtnPause {
-  background: $color-orange;
+  background: linear-gradient(135deg, $color-orange 0%, #FFB74D 100%);
   color: #FFFFFF;
+  box-shadow: 0 4rpx 16rpx rgba(255, 152, 0, 0.3);
 }
 
 .actionBtnSOS {
-  background: $color-red;
+  background: linear-gradient(135deg, $color-red 0%, #EF5350 100%);
   color: #FFFFFF;
   flex: 1.2;
+  box-shadow: 0 4rpx 16rpx rgba(244, 67, 54, 0.3);
 }
 
 .actionBtnClose {
-  background: #333;
+  background: linear-gradient(135deg, #424242 0%, #616161 100%);
   color: #FFFFFF;
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.2);
 }
 
 .actionBtnIcon {
-  font-size: 40rpx;
-  margin-bottom: 8rpx;
+  font-size: 44rpx;
+  margin-bottom: 10rpx;
 }
 
 .actionBtnText {
-  font-size: 24rpx;
-  font-weight: 600;
+  font-size: 26rpx;
+  font-weight: 700;
 }
 
 // ============================================
@@ -547,33 +636,38 @@ $color-text-tertiary: rgba(255, 255, 255, 0.4);
   display: flex;
   gap: 24rpx;
   margin-top: 40rpx;
+  animation: fadeInUp 0.5s ease-out 0.2s both;
 }
 
 .pausedBtn {
   flex: 1;
-  border-radius: 16rpx;
-  padding: 28rpx 0;
+  border-radius: 20rpx;
+  padding: 32rpx 0;
   display: flex;
   align-items: center;
   justify-content: center;
   border: none;
-  font-size: 28rpx;
-  font-weight: 600;
+  font-size: 30rpx;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.25s ease;
 
   &:active {
-    opacity: 0.8;
+    transform: scale(0.95);
+    opacity: 0.9;
   }
 }
 
 .pausedBtnResume {
-  background: $color-green;
+  background: linear-gradient(135deg, $color-green 0%, $color-green-light 100%);
   color: #FFFFFF;
+  box-shadow: 0 4rpx 16rpx rgba(76, 175, 80, 0.3);
 }
 
 .pausedBtnClose {
-  background: rgba(255, 255, 255, 0.15);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.08) 100%);
   color: $color-text-primary;
-  border: 1rpx solid rgba(255, 255, 255, 0.2);
+  border: 1.5rpx solid rgba(255, 255, 255, 0.2);
 }
 
 // ============================================
@@ -592,49 +686,49 @@ $color-text-tertiary: rgba(255, 255, 255, 0.4);
   padding: 48rpx 32rpx;
 }
 
-@keyframes sosFlash {
-  0%, 100% { background: rgba(244, 67, 54, 0.25); }
-  50% { background: rgba(244, 67, 54, 0.45); }
-}
-
 .sosIcon {
-  font-size: 120rpx;
-  margin-bottom: 24rpx;
+  font-size: 140rpx;
+  margin-bottom: 32rpx;
+  filter: drop-shadow(0 4rpx 12rpx rgba(244, 67, 54, 0.4));
 }
 
 .sosTitle {
-  font-size: 44rpx;
-  font-weight: 700;
+  font-size: 48rpx;
+  font-weight: 800;
   color: $color-red;
-  margin-bottom: 16rpx;
+  margin-bottom: 20rpx;
+  text-shadow: 0 2rpx 8rpx rgba(244, 67, 54, 0.3);
 }
 
 .sosCountdown {
-  font-size: 28rpx;
+  font-size: 30rpx;
   color: $color-text-secondary;
-  margin-bottom: 32rpx;
+  margin-bottom: 40rpx;
+  font-weight: 500;
 }
 
 .sosContactList {
   width: 100%;
-  background: $bg-card;
-  border-radius: 20rpx;
-  padding: 24rpx;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.03) 100%);
+  border-radius: 24rpx;
+  padding: 28rpx;
   margin-bottom: 40rpx;
-  border: 1rpx solid rgba(244, 67, 54, 0.3);
+  border: 1.5rpx solid rgba(244, 67, 54, 0.3);
+  backdrop-filter: blur(8px);
 }
 
 .sosContactTitle {
-  font-size: 24rpx;
+  font-size: 26rpx;
   color: $color-text-secondary;
-  margin-bottom: 16rpx;
+  margin-bottom: 20rpx;
+  font-weight: 600;
 }
 
 .sosContactItem {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12rpx 0;
+  padding: 16rpx 0;
   border-bottom: 1rpx solid rgba(255, 255, 255, 0.06);
 
   &:last-child {
@@ -643,8 +737,9 @@ $color-text-tertiary: rgba(255, 255, 255, 0.4);
 }
 
 .sosContactName {
-  font-size: 26rpx;
+  font-size: 28rpx;
   color: $color-text-primary;
+  font-weight: 600;
 }
 
 .sosContactPhone {
@@ -653,9 +748,9 @@ $color-text-tertiary: rgba(255, 255, 255, 0.4);
 }
 
 .sosContactNotified {
-  font-size: 22rpx;
+  font-size: 24rpx;
   color: $color-red;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .sosActionBar {
@@ -666,29 +761,34 @@ $color-text-tertiary: rgba(255, 255, 255, 0.4);
 
 .sosBtn {
   flex: 1;
-  border-radius: 16rpx;
-  padding: 28rpx 0;
+  border-radius: 20rpx;
+  padding: 32rpx 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   border: none;
-  font-size: 26rpx;
-  font-weight: 600;
+  font-size: 28rpx;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.25s ease;
 
   &:active {
-    opacity: 0.8;
+    transform: scale(0.95);
+    opacity: 0.9;
   }
 }
 
 .sosBtnPhoto {
-  background: rgba(255, 255, 255, 0.9);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.9) 100%);
   color: #333333;
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.15);
 }
 
 .sosBtnClose {
-  background: $color-red;
+  background: linear-gradient(135deg, $color-red 0%, #EF5350 100%);
   color: #FFFFFF;
+  box-shadow: 0 4rpx 16rpx rgba(244, 67, 54, 0.3);
 }
 
 // ============================================
@@ -701,43 +801,48 @@ $color-text-tertiary: rgba(255, 255, 255, 0.4);
   flex-direction: column;
   align-items: center;
   flex: 1;
+  animation: fadeInUp 0.6s ease-out both;
 }
 
 .closedIcon {
-  font-size: 100rpx;
-  margin-bottom: 24rpx;
+  font-size: 120rpx;
+  margin-bottom: 32rpx;
+  filter: drop-shadow(0 4rpx 12rpx rgba(76, 175, 80, 0.3));
 }
 
 .closedTitle {
-  font-size: 40rpx;
-  font-weight: 700;
+  font-size: 44rpx;
+  font-weight: 800;
   color: $color-text-primary;
-  margin-bottom: 8rpx;
+  margin-bottom: 12rpx;
+  letter-spacing: 2rpx;
 }
 
 .closedSaved {
-  font-size: 26rpx;
+  font-size: 28rpx;
   color: $color-green-light;
-  margin-bottom: 40rpx;
+  margin-bottom: 48rpx;
   display: flex;
   align-items: center;
-  gap: 8rpx;
+  gap: 10rpx;
+  font-weight: 600;
 }
 
 .evidenceSummary {
   width: 100%;
-  background: $bg-card;
-  border-radius: 24rpx;
-  padding: 32rpx;
-  margin-bottom: 40rpx;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.03) 100%);
+  border-radius: 28rpx;
+  padding: 36rpx;
+  margin-bottom: 48rpx;
   border: 1rpx solid rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(8px);
 }
 
 .evidenceRow {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 20rpx 0;
+  padding: 24rpx 0;
   border-bottom: 1rpx solid rgba(255, 255, 255, 0.06);
 
   &:last-child {
@@ -746,36 +851,37 @@ $color-text-tertiary: rgba(255, 255, 255, 0.4);
 }
 
 .evidenceRowIcon {
-  font-size: 36rpx;
-  width: 60rpx;
+  font-size: 40rpx;
+  width: 64rpx;
 }
 
 .evidenceRowLabel {
   flex: 1;
-  font-size: 26rpx;
+  font-size: 28rpx;
   color: $color-text-secondary;
+  font-weight: 500;
 }
 
 .evidenceRowValue {
-  font-size: 28rpx;
-  font-weight: 600;
+  font-size: 30rpx;
+  font-weight: 700;
   color: $color-text-primary;
   font-variant-numeric: tabular-nums;
 }
 
 .evidenceTotalRow {
-  padding-top: 24rpx;
-  margin-top: 8rpx;
+  padding-top: 28rpx;
+  margin-top: 12rpx;
   border-top: 2rpx solid rgba(255, 255, 255, 0.1);
 
   .evidenceRowLabel {
     color: $color-text-primary;
-    font-weight: 600;
+    font-weight: 700;
   }
 
   .evidenceRowValue {
     color: $color-green-light;
-    font-size: 32rpx;
+    font-size: 36rpx;
   }
 }
 
@@ -790,34 +896,39 @@ $color-text-tertiary: rgba(255, 255, 255, 0.4);
 
 .closedBtn {
   flex: 1;
-  border-radius: 16rpx;
-  padding: 28rpx 0;
+  border-radius: 20rpx;
+  padding: 32rpx 0;
   display: flex;
   align-items: center;
   justify-content: center;
   border: none;
-  font-size: 26rpx;
-  font-weight: 600;
+  font-size: 28rpx;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.25s ease;
 
   &:active {
-    opacity: 0.8;
+    transform: scale(0.95);
+    opacity: 0.9;
   }
 }
 
 .closedBtnRecord {
   background: linear-gradient(135deg, $color-green 0%, $color-green-light 100%);
   color: #FFFFFF;
+  box-shadow: 0 4rpx 16rpx rgba(76, 175, 80, 0.3);
 }
 
 .closedBtnDetail {
-  background: rgba(255, 255, 255, 0.1);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.06) 100%);
   color: $color-text-primary;
-  border: 1rpx solid rgba(255, 255, 255, 0.15);
+  border: 1.5rpx solid rgba(255, 255, 255, 0.15);
 }
 
 .closedBtnNew {
   background: linear-gradient(135deg, $color-green 0%, $color-green-light 100%);
   color: #FFFFFF;
+  box-shadow: 0 4rpx 16rpx rgba(76, 175, 80, 0.3);
 }
 
 // ============================================
@@ -832,6 +943,7 @@ $color-text-tertiary: rgba(255, 255, 255, 0.4);
   position: relative;
   margin-bottom: 24rpx;
   background: rgba(0, 0, 0, 0.3);
+  box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.3);
 }
 
 .cameraPreview {
@@ -856,13 +968,14 @@ $color-text-tertiary: rgba(255, 255, 255, 0.4);
 }
 
 .cameraLoadingIcon {
-  font-size: 60rpx;
-  margin-bottom: 16rpx;
+  font-size: 64rpx;
+  margin-bottom: 20rpx;
 }
 
 .cameraLoadingText {
-  font-size: 26rpx;
+  font-size: 28rpx;
   color: rgba(255, 255, 255, 0.7);
+  font-weight: 500;
 }
 
 .cameraOverlay {
@@ -891,9 +1004,10 @@ $color-text-tertiary: rgba(255, 255, 255, 0.4);
   display: flex;
   align-items: center;
   gap: 8rpx;
-  padding: 8rpx 16rpx;
-  background: rgba(244, 67, 54, 0.9);
-  border-radius: 8rpx;
+  padding: 10rpx 18rpx;
+  background: linear-gradient(135deg, rgba(244, 67, 54, 0.95) 0%, rgba(239, 83, 80, 0.95) 100%);
+  border-radius: 10rpx;
+  box-shadow: 0 2rpx 8rpx rgba(244, 67, 54, 0.3);
 }
 
 .recordingDot {
@@ -904,26 +1018,22 @@ $color-text-tertiary: rgba(255, 255, 255, 0.4);
   animation: recordingPulse 1s ease-in-out infinite;
 }
 
-@keyframes recordingPulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
-}
-
 .recordingText {
-  font-size: 22rpx;
-  font-weight: 700;
+  font-size: 24rpx;
+  font-weight: 800;
   color: #FFFFFF;
   letter-spacing: 2rpx;
 }
 
 .cameraTime {
-  padding: 8rpx 16rpx;
-  background: rgba(0, 0, 0, 0.6);
-  border-radius: 8rpx;
-  font-size: 24rpx;
-  font-weight: 600;
+  padding: 10rpx 18rpx;
+  background: rgba(0, 0, 0, 0.7);
+  border-radius: 10rpx;
+  font-size: 26rpx;
+  font-weight: 700;
   color: #FFFFFF;
   font-variant-numeric: tabular-nums;
+  backdrop-filter: blur(8px);
 }
 
 // ============================================
@@ -933,45 +1043,48 @@ $color-text-tertiary: rgba(255, 255, 255, 0.4);
 .demoBadge {
   display: inline-flex;
   align-items: center;
-  gap: 8rpx;
-  padding: 8rpx 20rpx;
-  background: rgba(255, 152, 0, 0.2);
-  border: 1rpx solid rgba(255, 152, 0, 0.4);
+  gap: 10rpx;
+  padding: 10rpx 24rpx;
+  background: linear-gradient(135deg, rgba(255, 152, 0, 0.2) 0%, rgba(255, 152, 0, 0.1) 100%);
+  border: 1.5rpx solid rgba(255, 152, 0, 0.4);
   border-radius: 24rpx;
-  margin-bottom: 16rpx;
+  margin-bottom: 20rpx;
+  backdrop-filter: blur(8px);
 }
 
 .demoBadgeIcon {
-  font-size: 28rpx;
+  font-size: 32rpx;
 }
 
 .demoBadgeText {
-  font-size: 22rpx;
+  font-size: 24rpx;
   color: $color-orange;
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .demoHint {
-  font-size: 22rpx;
+  font-size: 24rpx;
   color: rgba(255, 255, 255, 0.4);
   text-align: center;
-  margin-top: 16rpx;
-  padding: 12rpx 24rpx;
+  margin-top: 20rpx;
+  padding: 16rpx 28rpx;
   background: rgba(255, 255, 255, 0.05);
-  border-radius: 12rpx;
+  border-radius: 16rpx;
+  border: 1rpx solid rgba(255, 255, 255, 0.06);
 }
 
 .demoSummary {
   width: 100%;
-  background: rgba(76, 175, 80, 0.1);
-  border: 1rpx solid rgba(76, 175, 80, 0.2);
-  border-radius: 16rpx;
-  padding: 24rpx;
-  margin-bottom: 24rpx;
+  background: linear-gradient(135deg, rgba(76, 175, 80, 0.1) 0%, rgba(76, 175, 80, 0.05) 100%);
+  border: 1.5rpx solid rgba(76, 175, 80, 0.2);
+  border-radius: 20rpx;
+  padding: 28rpx;
+  margin-bottom: 28rpx;
+  backdrop-filter: blur(8px);
 }
 
 .demoSummaryText {
-  font-size: 24rpx;
+  font-size: 26rpx;
   color: rgba(255, 255, 255, 0.85);
   line-height: 1.7;
 }
@@ -982,67 +1095,77 @@ $color-text-tertiary: rgba(255, 255, 255, 0.4);
 
 .savedSessionCard {
   width: 100%;
-  background: rgba(196, 149, 106, 0.1);
-  border: 1rpx solid rgba(196, 149, 106, 0.25);
-  border-radius: 16rpx;
-  padding: 24rpx;
-  margin-bottom: 24rpx;
+  background: linear-gradient(135deg, rgba(196, 149, 106, 0.1) 0%, rgba(196, 149, 106, 0.05) 100%);
+  border: 1.5rpx solid rgba(196, 149, 106, 0.25);
+  border-radius: 20rpx;
+  padding: 28rpx;
+  margin-bottom: 28rpx;
+  backdrop-filter: blur(8px);
 }
 
 .savedSessionHeader {
   display: flex;
   align-items: center;
-  gap: 12rpx;
-  margin-bottom: 12rpx;
+  gap: 14rpx;
+  margin-bottom: 16rpx;
 }
 
 .savedSessionIcon {
-  font-size: 36rpx;
+  font-size: 40rpx;
 }
 
 .savedSessionTitle {
-  font-size: 28rpx;
-  font-weight: 600;
+  font-size: 30rpx;
+  font-weight: 700;
   color: rgba(255, 255, 255, 0.9);
 }
 
 .savedSessionTime {
-  font-size: 24rpx;
+  font-size: 26rpx;
   color: rgba(255, 255, 255, 0.6);
-  margin-bottom: 20rpx;
+  margin-bottom: 24rpx;
   display: block;
 }
 
 .savedSessionActions {
   display: flex;
-  gap: 16rpx;
+  gap: 20rpx;
 }
 
 .savedSessionBtnPrimary {
   flex: 1;
   background: linear-gradient(135deg, #C4956A 0%, #A87B52 100%);
-  border-radius: 12rpx;
-  padding: 16rpx 0;
+  border-radius: 14rpx;
+  padding: 20rpx 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: transform 0.15s ease;
+  transition: all 0.25s ease;
+  color: #FFFFFF;
+  font-weight: 700;
+  font-size: 26rpx;
+  box-shadow: 0 4rpx 12rpx rgba(196, 149, 106, 0.3);
 
   &:active {
     transform: scale(0.97);
+    opacity: 0.9;
   }
 }
 
 .savedSessionBtnSecondary {
-  padding: 16rpx 32rpx;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 12rpx;
+  padding: 20rpx 36rpx;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 14rpx;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.15s ease;
+  transition: all 0.25s ease;
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 600;
+  font-size: 26rpx;
+  border: 1rpx solid rgba(255, 255, 255, 0.1);
 
   &:active {
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.12);
   }
 }

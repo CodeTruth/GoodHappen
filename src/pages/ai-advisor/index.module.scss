@@ -1,8 +1,9 @@
 // ============================================
-// 善行顾问 — 微信聊天风格
+// 善行顾问 — 微信聊天风格（优化版）
 // ============================================
 
 $bg: #F5F0EB;
+$bg-chat: linear-gradient(180deg, #F0EBE0 0%, #F5F0EB 30%, #F5F0EB 100%);
 $bubble-ai: #FFFFFF;
 $bubble-user: #8B5CF6;
 $bubble-user-text: #FFFFFF;
@@ -22,35 +23,94 @@ $text-tertiary: #B8A99A;
 .topBar {
   display: flex;
   align-items: center;
-  gap: 12rpx;
-  padding: 12rpx 28rpx;
-  padding-top: calc(12rpx + env(safe-area-inset-top));
-  background: #FFFFFF;
-  border-bottom: 1rpx solid rgba(0,0,0,0.06);
+  gap: 16rpx;
+  padding: 16rpx 28rpx;
+  padding-top: calc(16rpx + env(safe-area-inset-top));
+  background: linear-gradient(135deg, #FFFFFF 0%, rgba(139,92,246,0.04) 100%);
+  border-bottom: 1rpx solid rgba(139,92,246,0.08);
   flex-shrink: 0;
+  box-shadow: 0 2rpx 12rpx rgba(139,92,246,0.06);
 }
 
 .backBtn {
-  font-size: 32rpx;
+  font-size: 36rpx;
   color: $text-primary;
   font-weight: 600;
-  padding: 4rpx 8rpx;
+  padding: 4rpx 12rpx;
+  transition: all 0.2s;
+
+  &:active {
+    opacity: 0.6;
+    transform: scale(0.9);
+  }
+}
+
+.topAvatar {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(139,92,246,0.15) 0%, rgba(139,92,246,0.08) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36rpx;
+  flex-shrink: 0;
 }
 
 .topInfo {
+  flex: 1;
   display: flex;
   flex-direction: column;
+  gap: 2rpx;
 }
 
 .topTitle {
-  font-size: 28rpx;
-  font-weight: 700;
+  font-size: 32rpx;
+  font-weight: 800;
   color: $text-primary;
+  letter-spacing: 1rpx;
 }
 
 .topStatus {
+  font-size: 22rpx;
+  color: #8B5CF6;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6rpx;
+}
+
+.topStatusDot {
+  width: 10rpx;
+  height: 10rpx;
+  border-radius: 50%;
+  background: #8B5CF6;
+}
+
+.topStatusText {
+  font-size: 22rpx;
+  color: #8B5CF6;
+  font-weight: 500;
+}
+
+.topOnlineBadge {
+  display: flex;
+  align-items: center;
+  gap: 6rpx;
+  padding: 6rpx 16rpx;
+  background: linear-gradient(135deg, rgba(139,92,246,0.08) 0%, rgba(139,92,246,0.04) 100%);
+  border-radius: 20rpx;
+  border: 1rpx solid rgba(139,92,246,0.12);
+}
+
+.topOnlineIcon {
+  font-size: 22rpx;
+}
+
+.topOnlineText {
   font-size: 20rpx;
-  color: #4CAF50;
+  color: #8B5CF6;
+  font-weight: 600;
 }
 
 // ===== 聊天区域 =====
@@ -71,7 +131,7 @@ $text-tertiary: #B8A99A;
 .msgRow {
   display: flex;
   align-items: flex-start;
-  gap: 12rpx;
+  gap: 14rpx;
   max-width: 100%;
 }
 
@@ -84,35 +144,37 @@ $text-tertiary: #B8A99A;
 }
 
 .msgAvatar {
-  width: 72rpx;
-  height: 72rpx;
+  width: 76rpx;
+  height: 76rpx;
   border-radius: 50%;
-  background: rgba(139,92,246,0.1);
+  background: linear-gradient(135deg, rgba(139,92,246,0.12) 0%, rgba(139,92,246,0.06) 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 36rpx;
+  font-size: 38rpx;
   flex-shrink: 0;
+  box-shadow: 0 2rpx 8rpx rgba(139,92,246,0.1);
 }
 
 // ===== 消息气泡 =====
 .msgBubble {
   max-width: 75%;
-  padding: 20rpx 24rpx;
-  border-radius: 20rpx;
+  padding: 24rpx 28rpx;
+  border-radius: 24rpx;
   position: relative;
   word-break: break-all;
 }
 
 .bubbleAI {
   background: $bubble-ai;
-  border-top-left-radius: 6rpx;
-  box-shadow: 0 1rpx 3rpx rgba(0,0,0,0.04);
+  border-top-left-radius: 8rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.06);
 }
 
 .bubbleUser {
-  background: $bubble-user;
-  border-top-right-radius: 6rpx;
+  background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%);
+  border-top-right-radius: 8rpx;
+  box-shadow: 0 4rpx 16rpx rgba(139,92,246,0.25);
 }
 
 .msgText {
@@ -723,4 +785,47 @@ $text-tertiary: #B8A99A;
 
 .sendBtnActive .sendBtnIcon {
   color: #FFFFFF;
+}
+
+// ===== 语音按钮 =====
+.voiceBtn {
+  flex: 1;
+  height: 80rpx;
+  border-radius: 40rpx;
+  background: linear-gradient(135deg, rgba(139,92,246,0.08) 0%, rgba(139,92,246,0.04) 100%);
+  border: 1.5rpx solid rgba(139,92,246,0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+  -webkit-user-select: none;
+
+  &:active {
+    opacity: 0.8;
+  }
+}
+
+.voiceBtnPressing {
+  background: linear-gradient(135deg, rgba(139,92,246,0.2) 0%, rgba(139,92,246,0.12) 100%);
+  border-color: rgba(139,92,246,0.35);
+  box-shadow: 0 0 20rpx rgba(139,92,246,0.15);
+  animation: voicePulse 1.5s ease-in-out infinite;
+}
+
+@keyframes voicePulse {
+  0%, 100% { box-shadow: 0 0 20rpx rgba(139,92,246,0.15); }
+  50% { box-shadow: 0 0 40rpx rgba(139,92,246,0.3); }
+}
+
+.voiceBtnText {
+  font-size: 28rpx;
+  color: #8B5CF6;
+  font-weight: 600;
+  letter-spacing: 2rpx;
+}
+
+.voiceBtnPressing .voiceBtnText {
+  color: #7C3AED;
 }

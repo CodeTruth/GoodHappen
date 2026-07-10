@@ -1,46 +1,159 @@
 @use '@/styles/variables.scss' as *;
 
+// ===== 动画 =====
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20rpx); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInScale {
+  from { opacity: 0; transform: scale(0.95); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+// ===== 页面 =====
 .pageWrapper {
   height: 100vh;
   height: 100dvh;
   display: flex;
   flex-direction: column;
-  background: $color-bg-page;
-  box-sizing: border-box;
+  background:
+    linear-gradient(180deg, rgba(248,244,238,0.9) 0%, rgba(250,246,240,0.85) 50%, rgba(248,244,238,0.9) 100%),
+    url('@/assets/home-bg.jpg') center / cover no-repeat;
+  background-color: $color-bg-page;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: -100rpx;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 500rpx;
+    height: 350rpx;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(196,149,106,0.06) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
 }
 
-// ===== 搜索栏（顶部固定） =====
+// ===== 搜索栏 =====
 .searchBar {
   display: flex;
   align-items: center;
   gap: $spacing-sm;
-  background: #fff;
-  border-bottom: 1rpx solid $color-border;
-  padding: 20rpx $spacing-lg;
-  flex-shrink: 0;
+  margin: 20rpx $spacing-lg 16rpx;
+  padding: 16rpx 24rpx;
+  background: rgba(255,255,255,0.75);
+  backdrop-filter: blur(16px);
+  border-radius: $radius-round;
+  border: 1.5rpx solid rgba(196,149,106,0.15);
+  box-shadow: 0 2rpx 12rpx rgba(0,0,0,0.04);
   cursor: pointer;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+  transition: all 0.25s ease;
+
+  &:active {
+    background: rgba(255,255,255,0.9);
+    box-shadow: 0 4rpx 16rpx rgba(0,0,0,0.06);
+    transform: scale(0.99);
+  }
 }
 
 .searchIcon {
-  font-size: $font-size-md;
+  font-size: 28rpx;
   color: $color-text-tertiary;
 }
 
 .searchPlaceholder {
   font-size: $font-size-sm;
   color: $color-text-tertiary;
+  flex: 1;
+}
+
+// ===== 善行广场引导 =====
+.squareGuide {
+  margin: 0 $spacing-lg 12rpx;
+  padding: 12rpx 20rpx;
+  background: rgba(196,149,106,0.06);
+  border-radius: $radius-md;
+  border: 1rpx solid rgba(196,149,106,0.08);
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.2s ease;
+
+  &:active {
+    background: rgba(196,149,106,0.1);
+    transform: scale(0.99);
+  }
+}
+
+.squareGuideText {
+  font-size: 24rpx;
+  color: $color-text-secondary;
+}
+
+// ===== 顶部 Tab 切换器 =====
+.topTabs {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  padding: 0 $spacing-lg;
+  margin-bottom: 16rpx;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.topTabItem {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12rpx 24rpx;
+  border-radius: $radius-round;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  position: relative;
+
+  &:active {
+    opacity: 0.8;
+  }
+}
+
+.topTabText {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+  font-weight: $font-weight-medium;
+  transition: all 0.25s ease;
+}
+
+.topTabActive {
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  box-shadow: 0 4rpx 16rpx rgba(196,149,106,0.3);
+
+  .topTabText {
+    color: $color-text-white;
+    font-weight: $font-weight-semibold;
+  }
 }
 
 // ===== 内容滚动区域 =====
 .contentScroll {
   flex: 1;
-  padding: $spacing-md $spacing-lg $spacing-xl;
+  padding: 0 $spacing-lg;
   padding-bottom: calc(120px + env(safe-area-inset-bottom));
+  position: relative;
+  z-index: 1;
 }
 
 // ===== 筛选栏 =====
 .filterBar {
   margin-bottom: $spacing-md;
+  animation: fadeInUp 0.5s ease-out 0.1s both;
 }
 
 .tagFilter {
@@ -50,19 +163,20 @@
 
 .tagFilterInner {
   display: inline-flex;
-  gap: $spacing-xs;
+  gap: 12rpx;
 }
 
 .filterTag {
   display: inline-block;
   font-size: $font-size-xs;
   color: $color-text-secondary;
-  background: $color-bg-hover;
-  border-radius: $radius-button;
-  padding: 8rpx 16rpx;
+  background: rgba(255,255,255,0.6);
+  border-radius: $radius-round;
+  padding: 10rpx 20rpx;
   white-space: nowrap;
-  transition: all $transition-base;
+  transition: all 0.25s ease;
   cursor: pointer;
+  border: 1rpx solid rgba(196,149,106,0.1);
 
   &:active {
     opacity: 0.8;
@@ -72,6 +186,8 @@
     background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
     color: $color-text-white;
     font-weight: $font-weight-medium;
+    border-color: transparent;
+    box-shadow: 0 2rpx 8rpx rgba(196,149,106,0.25);
   }
 }
 
@@ -86,10 +202,12 @@
   display: flex;
   align-items: center;
   gap: $spacing-xs;
-  background: $color-bg-hover;
-  border-radius: $radius-button;
-  padding: 8rpx 16rpx;
+  background: rgba(255,255,255,0.6);
+  border-radius: $radius-round;
+  padding: 10rpx 20rpx;
   cursor: pointer;
+  border: 1rpx solid rgba(196,149,106,0.1);
+  transition: all 0.25s ease;
 
   &:active {
     opacity: 0.8;
@@ -130,25 +248,29 @@
   display: inline-block;
   font-size: $font-size-xs;
   color: $color-text-secondary;
-  background: $color-bg-hover;
+  background: rgba(255,255,255,0.6);
   border-radius: $radius-sm;
-  padding: 6rpx 12rpx;
+  padding: 8rpx 16rpx;
   white-space: nowrap;
   cursor: pointer;
+  border: 1rpx solid rgba(196,149,106,0.1);
+  transition: all 0.2s ease;
 
   &:active {
     opacity: 0.8;
   }
 
   &.regionOptionActive {
-    background: $color-primary;
+    background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
     color: $color-text-white;
+    border-color: transparent;
   }
 }
 
 // ===== 温暖伙伴 =====
 .warmPartnerSection {
   margin-bottom: $spacing-md;
+  animation: fadeInUp 0.5s ease-out 0.15s both;
 }
 
 .sectionHeader {
@@ -159,12 +281,272 @@
   font-size: $font-size-md;
   font-weight: $font-weight-semibold;
   color: $color-text-primary;
-  margin-bottom: $spacing-sm;
+}
+
+.sectionSubtitle {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin-top: 4rpx;
+}
+
+// ============================================
+// 本周温暖挑战
+// ============================================
+.challengeSection {
+  margin-bottom: 32rpx;
+  animation: fadeInUp 0.4s ease-out 0.05s both;
+}
+
+.challengeList {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.challengeCard {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  background: linear-gradient(135deg, rgba(255,255,255,0.85) 0%, rgba(255,252,248,0.8) 100%);
+  border-radius: 20rpx;
+  padding: 24rpx;
+  border: 1.5rpx solid rgba(196,149,106,0.12);
+  box-shadow: 0 2rpx 12rpx rgba(0,0,0,0.04);
+  backdrop-filter: blur(8px);
+  transition: all 0.2s ease;
+
+  &:active {
+    transform: scale(0.98);
+  }
+
+  &.challengeCardDone {
+    opacity: 0.6;
+    border-color: rgba(76,175,80,0.2);
+  }
+}
+
+.challengeLeft {
+  width: 88rpx;
+  height: 88rpx;
+  border-radius: 20rpx;
+  background: linear-gradient(135deg, rgba(196,149,106,0.1) 0%, rgba(196,149,106,0.04) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.challengeEmoji {
+  font-size: 44rpx;
+}
+
+.challengeBody {
+  flex: 1;
+  min-width: 0;
+}
+
+.challengeTitle {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin-bottom: 6rpx;
+}
+
+.challengeDesc {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+  margin-bottom: 10rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.challengeMeta {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.challengeParticipants {
+  font-size: 22rpx;
+  color: $color-text-tertiary;
+}
+
+.challengeFortune {
+  font-size: 22rpx;
+  color: $color-primary;
+  font-weight: $font-weight-semibold;
+  background: rgba(196,149,106,0.08);
+  padding: 4rpx 12rpx;
+  border-radius: 8rpx;
+}
+
+.challengeBtn {
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  border-radius: 32rpx;
+  padding: 14rpx 28rpx;
+  flex-shrink: 0;
+  box-shadow: 0 4rpx 16rpx rgba(196,149,106,0.3);
+  transition: transform 0.15s;
+
+  &:active {
+    transform: scale(0.92);
+  }
+
+  &.challengeBtnDone {
+    background: linear-gradient(135deg, #4CAF50 0%, #66BB6A 100%);
+    box-shadow: 0 4rpx 16rpx rgba(76,175,80,0.3);
+  }
+}
+
+.challengeBtnText {
+  font-size: $font-size-xs;
+  color: #fff;
+  font-weight: $font-weight-semibold;
+  white-space: nowrap;
+}
+
+// ============================================
+// 附近需要帮忙
+// ============================================
+.helpSection {
+  margin-bottom: 32rpx;
+  animation: fadeInUp 0.4s ease-out 0.15s both;
+}
+
+.helpList {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.helpCard {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  background: linear-gradient(135deg, rgba(255,255,255,0.85) 0%, rgba(255,252,248,0.8) 100%);
+  border-radius: 20rpx;
+  padding: 24rpx;
+  border: 1.5rpx solid rgba(196,149,106,0.12);
+  box-shadow: 0 2rpx 12rpx rgba(0,0,0,0.04);
+  backdrop-filter: blur(8px);
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:active {
+    transform: scale(0.98);
+    background: rgba(255,255,255,0.95);
+  }
+}
+
+.helpCardLeft {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 18rpx;
+  background: linear-gradient(135deg, rgba(34,197,94,0.1) 0%, rgba(34,197,94,0.04) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.helpEmoji {
+  font-size: 40rpx;
+}
+
+.helpCardBody {
+  flex: 1;
+  min-width: 0;
+}
+
+.helpTitle {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin-bottom: 6rpx;
+}
+
+.helpDesc {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+  margin-bottom: 10rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.helpMeta {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.helpDistance {
+  font-size: 22rpx;
+  color: $color-text-tertiary;
+}
+
+.helpTime {
+  font-size: 22rpx;
+  color: $color-text-tertiary;
+}
+
+.helpActionBtn {
+  background: linear-gradient(135deg, #22C55E 0%, #16A34A 100%);
+  border-radius: 32rpx;
+  padding: 14rpx 28rpx;
+  flex-shrink: 0;
+  box-shadow: 0 4rpx 16rpx rgba(34,197,94,0.3);
+  transition: transform 0.15s;
+
+  &:active {
+    transform: scale(0.92);
+  }
+}
+
+.helpActionText {
+  font-size: $font-size-xs;
+  color: #fff;
+  font-weight: $font-weight-semibold;
+  white-space: nowrap;
+}
+
+// ============================================
+// 善行广场（折叠）
+// ============================================
+.squareSection {
+  margin-bottom: 32rpx;
+  animation: fadeInUp 0.4s ease-out 0.25s both;
+}
+
+.squareHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  padding: 12rpx 0;
+}
+
+.squareToggle {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+}
+
+.squareToggleText {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.squareToggleArrow {
+  font-size: 20rpx;
+  color: $color-text-tertiary;
 }
 
 // ===== 善行列表 =====
 .kindnessList {
   padding-bottom: $spacing-xl;
+  animation: fadeInUp 0.5s ease-out 0.2s both;
 }
 
 .empty {
@@ -186,25 +568,41 @@
   line-height: $line-height-loose;
 }
 
+.loadMore {
+  padding: 32rpx 0;
+  text-align: center;
+}
+
+.loadMoreText {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  font-weight: 500;
+}
+
 // ===== 善行圈Tab =====
 .circleSection {
   margin-bottom: $spacing-lg;
+  animation: fadeInUp 0.5s ease-out 0.1s both;
 }
 
 .circleCard {
   display: flex;
   align-items: center;
   gap: $spacing-md;
-  background: #fff;
-  border-radius: $radius-lg;
+  background: linear-gradient(135deg, rgba(255,255,255,0.8) 0%, rgba(255,252,248,0.75) 100%);
+  border-radius: 24rpx;
   padding: $spacing-md;
   margin-bottom: $spacing-sm;
-  border: 1rpx solid $color-border;
+  border: 1.5rpx solid rgba(196,149,106,0.1);
+  box-shadow: 0 2rpx 12rpx rgba(0,0,0,0.04);
   cursor: pointer;
-  transition: all $transition-base;
+  transition: all 0.25s ease;
+  backdrop-filter: blur(8px);
 
   &:active {
-    background: $color-bg-hover;
+    background: rgba(255,255,255,0.95);
+    transform: scale(0.98);
+    box-shadow: 0 4rpx 16rpx rgba(0,0,0,0.06);
   }
 }
 
@@ -254,31 +652,37 @@
 }
 
 .createCircleBtn {
-  background: #fff;
-  border-radius: $radius-lg;
+  background: linear-gradient(135deg, rgba(255,255,255,0.7) 0%, rgba(255,252,248,0.65) 100%);
+  border-radius: 24rpx;
   padding: $spacing-md;
   text-align: center;
-  border: 2rpx dashed $color-border;
+  border: 2rpx dashed rgba(196,149,106,0.25);
   cursor: pointer;
   margin-top: $spacing-sm;
+  backdrop-filter: blur(8px);
+  transition: all 0.25s ease;
 
   &:active {
-    background: $color-bg-hover;
+    background: rgba(255,255,255,0.9);
+    border-color: rgba(196,149,106,0.4);
   }
 }
 
 .createCircleText {
   font-size: $font-size-sm;
   color: $color-text-secondary;
+  font-weight: $font-weight-medium;
 }
 
 // ===== 我的Tab =====
 .userCard {
   background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
-  border-radius: $radius-lg;
+  border-radius: 28rpx;
   padding: $spacing-lg;
   margin-bottom: $spacing-lg;
   color: #fff;
+  box-shadow: 0 8rpx 28rpx rgba(196,149,106,0.3);
+  animation: fadeInScale 0.5s ease-out 0.1s both;
 }
 
 .userHeader {
@@ -296,6 +700,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  border: 2rpx solid rgba(255,255,255,0.3);
 }
 
 .userAvatarText {
@@ -315,7 +720,7 @@
 
 .userLevel {
   font-size: $font-size-sm;
-  color: rgba(255, 255, 255, 0.8);
+  color: rgba(255, 255, 255, 0.85);
 }
 
 .userStats {
@@ -347,6 +752,7 @@
   grid-template-columns: repeat(4, 1fr);
   gap: $spacing-md;
   margin-bottom: $spacing-lg;
+  animation: fadeInUp 0.5s ease-out 0.2s both;
 }
 
 .myItem {
@@ -356,9 +762,11 @@
   gap: 8rpx;
   padding: $spacing-sm 0;
   cursor: pointer;
+  transition: all 0.2s ease;
 
   &:active {
     opacity: 0.7;
+    transform: scale(0.95);
   }
 }
 
@@ -369,6 +777,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: all 0.2s ease;
 }
 
 .myIcon {
@@ -378,18 +787,21 @@
 .myLabel {
   font-size: 22rpx;
   color: $color-text-secondary;
+  font-weight: $font-weight-medium;
 }
 
 // 最近善行
 .recentSection {
   margin-bottom: $spacing-lg;
+  animation: fadeInUp 0.5s ease-out 0.3s both;
 }
 
 // ===== 底部固定分类Tab =====
 .bottomTabs {
   display: flex;
   align-items: center;
-  background: #fff;
+  background: rgba(255,255,255,0.9);
+  backdrop-filter: blur(20px);
   border-top: 1rpx solid $color-border;
   padding: 12rpx 0 calc(12rpx + env(safe-area-inset-bottom));
   flex-shrink: 0;
@@ -464,7 +876,9 @@
 .shopHeader {
   padding: $spacing-lg;
   background: linear-gradient(135deg, rgba(196, 149, 106, 0.08) 0%, rgba(196, 149, 106, 0.02) 100%);
+  border-radius: 24rpx;
   margin-bottom: $spacing-lg;
+  animation: fadeInUp 0.5s ease-out 0.1s both;
 }
 
 .shopHeaderTop {
@@ -485,8 +899,8 @@
   color: $color-primary;
   font-weight: $font-weight-semibold;
   background: rgba(196, 149, 106, 0.1);
-  padding: 6rpx 16rpx;
-  border-radius: 20rpx;
+  padding: 8rpx 20rpx;
+  border-radius: $radius-round;
 }
 
 .shopSubtitle {
@@ -498,24 +912,25 @@
   display: flex;
   flex-direction: column;
   gap: $spacing-md;
-  padding: 0 $spacing-lg;
   padding-bottom: 200rpx;
 }
 
 .shopCard {
   display: flex;
   gap: $spacing-md;
-  background: $color-bg-card;
-  border-radius: $radius-lg;
+  background: linear-gradient(135deg, rgba(255,255,255,0.8) 0%, rgba(255,252,248,0.75) 100%);
+  border-radius: 24rpx;
   padding: $spacing-md;
-  box-shadow: $shadow-card;
+  box-shadow: 0 2rpx 12rpx rgba(0,0,0,0.04);
+  border: 1.5rpx solid rgba(196,149,106,0.08);
+  backdrop-filter: blur(8px);
 }
 
 .shopCardImage {
   width: 140rpx;
   height: 140rpx;
-  background: $color-bg-page;
-  border-radius: $radius-md;
+  background: linear-gradient(135deg, rgba(196,149,106,0.06) 0%, rgba(196,149,106,0.02) 100%);
+  border-radius: 20rpx;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -564,9 +979,10 @@
 
 .shopCardBtn {
   background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
-  border-radius: 20rpx;
-  padding: 6rpx 20rpx;
+  border-radius: $radius-round;
+  padding: 8rpx 24rpx;
   transition: transform 0.15s;
+  box-shadow: 0 2rpx 8rpx rgba(196,149,106,0.2);
 
   &:active {
     transform: scale(0.95);

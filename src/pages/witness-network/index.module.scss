@@ -850,3 +850,294 @@
   font-size: $font-size-xs;
   color: $color-text-secondary;
 }
+
+/* ============================================
+   快速搜索见证 — 输入区
+   ============================================ */
+.sectionHint {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  display: block;
+  margin-bottom: 16rpx;
+  line-height: $line-height-normal;
+}
+
+.searchInput {
+  width: 100%;
+  min-height: 120rpx;
+  background: $color-bg-page;
+  border-radius: 16rpx;
+  padding: 20rpx 24rpx;
+  font-size: 28rpx;
+  color: $color-text-primary;
+  line-height: $line-height-loose;
+  border: 2rpx solid rgba(196, 149, 106, 0.15);
+  box-sizing: border-box;
+  margin-bottom: 16rpx;
+  transition: border-color 0.2s;
+
+  &:focus {
+    border-color: rgba(196, 149, 106, 0.4);
+  }
+}
+
+/* 搜索规则展示 */
+.searchRules {
+  background: linear-gradient(135deg, rgba(59,130,246,0.04) 0%, rgba(59,130,246,0.01) 100%);
+  border-radius: 16rpx;
+  padding: 20rpx;
+  margin-bottom: 16rpx;
+  border: 1rpx solid rgba(59,130,246,0.1);
+}
+
+.searchRulesTitle {
+  font-size: 22rpx;
+  font-weight: 600;
+  color: #2563EB;
+  display: block;
+  margin-bottom: 12rpx;
+}
+
+.searchRulesGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12rpx;
+}
+
+.searchRuleItem {
+  padding: 12rpx;
+  background: rgba(255,255,255,0.6);
+  border-radius: 12rpx;
+}
+
+.searchRuleIcon {
+  font-size: 24rpx;
+  display: block;
+  margin-bottom: 4rpx;
+}
+
+.searchRuleText {
+  font-size: 22rpx;
+  color: #5D4E37;
+  font-weight: 600;
+  display: block;
+  margin-bottom: 2rpx;
+}
+
+.searchRuleSub {
+  font-size: 18rpx;
+  color: #9A8B7A;
+  display: block;
+}
+
+/* 搜索按钮 */
+.searchBtn {
+  width: 100%;
+  height: 88rpx;
+  background: linear-gradient(135deg, #C4956A 0%, #D4A76A 100%);
+  border-radius: 44rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12rpx;
+  cursor: pointer;
+  box-shadow: 0 4rpx 16rpx rgba(196,149,106,0.3);
+  transition: all 0.2s ease;
+
+  &:active {
+    transform: scale(0.98);
+    opacity: 0.9;
+  }
+}
+
+.searchBtnIcon {
+  font-size: 36rpx;
+}
+
+.searchBtnText {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: #FFFFFF;
+}
+
+/* ============================================
+   扫描中卡片
+   ============================================ */
+.scanningCard {
+  background: linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(248,244,238,0.85) 100%);
+  border-radius: 20rpx;
+  padding: 28rpx;
+  border: 1.5rpx solid rgba(196,149,106,0.15);
+  backdrop-filter: blur(8px);
+}
+
+.scanningHeader {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  margin-bottom: 20rpx;
+}
+
+.scanningIcon {
+  font-size: 48rpx;
+  animation: scanPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes scanPulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.1); opacity: 0.8; }
+}
+
+.scanningInfo {
+  flex: 1;
+}
+
+.scanningTitle {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: #5D4E37;
+  display: block;
+  margin-bottom: 4rpx;
+}
+
+.scanningDesc {
+  font-size: 22rpx;
+  color: #9A8B7A;
+  display: block;
+}
+
+.scanningProgress {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  margin-bottom: 16rpx;
+}
+
+.scanningProgressBar {
+  flex: 1;
+  height: 10rpx;
+  background: rgba(196,149,106,0.12);
+  border-radius: 5rpx;
+  overflow: hidden;
+}
+
+.scanningProgressFill {
+  height: 100%;
+  border-radius: 5rpx;
+  background: linear-gradient(90deg, #C4956A 0%, #D4A76A 100%);
+  transition: width 0.5s ease;
+}
+
+.scanningProgressText {
+  font-size: 24rpx;
+  font-weight: 700;
+  color: #C4956A;
+  min-width: 60rpx;
+  text-align: right;
+}
+
+.scanningHints {
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+}
+
+.scanningHintItem {
+  font-size: 22rpx;
+  color: #5D4E37;
+  line-height: 1.4;
+  animation: fadeInUp 0.3s ease-out both;
+}
+
+/* ============================================
+   空搜索结果
+   ============================================ */
+.emptyCard {
+  margin: 0 32rpx;
+  background: rgba(255,255,255,0.8);
+  border-radius: 20rpx;
+  padding: 48rpx 32rpx;
+  text-align: center;
+  border: 1.5rpx solid rgba(196,149,106,0.1);
+}
+
+.emptyCardIcon {
+  font-size: 80rpx;
+  display: block;
+  margin-bottom: 16rpx;
+}
+
+.emptyCardTitle {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: $color-text-primary;
+  display: block;
+  margin-bottom: 12rpx;
+}
+
+.emptyCardDesc {
+  font-size: 24rpx;
+  color: $color-text-tertiary;
+  line-height: $line-height-loose;
+  display: block;
+  margin-bottom: 24rpx;
+}
+
+.retryBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 72rpx;
+  padding: 0 48rpx;
+  background: linear-gradient(135deg, #C4956A 0%, #D4A76A 100%);
+  border-radius: 36rpx;
+  cursor: pointer;
+  box-shadow: 0 4rpx 16rpx rgba(196,149,106,0.3);
+
+  &:active {
+    opacity: 0.9;
+    transform: scale(0.98);
+  }
+}
+
+.retryBtnText {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #FFFFFF;
+}
+
+/* ============================================
+   见证者卡片
+   ============================================ */
+.witnessCard {
+  padding: $spacing-md;
+  background: $color-bg-page;
+  border-radius: $radius-md;
+  margin-bottom: $spacing-sm;
+  border: 1rpx solid rgba(196,149,106,0.08);
+}
+
+.witnessIconWrap {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(196,149,106,0.15) 0%, rgba(196,149,106,0.06) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: $spacing-md;
+  flex-shrink: 0;
+}
+
+.witnessIconEmoji {
+  font-size: 30rpx;
+}
+
+/* AI 触发按钮扩展 */
+.aiTriggerHint {
+  font-size: 20rpx;
+  color: rgba(255,255,255,0.8);
+  display: block;
+  text-align: center;
+  margin-top: 4rpx;
+}

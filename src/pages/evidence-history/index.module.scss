@@ -1,7 +1,7 @@
 .page {
   min-height: 100vh;
   background: #F8F4EE;
-  padding-bottom: calc(160px + env(safe-area-inset-bottom));
+  padding-bottom: calc(160rpx + env(safe-area-inset-bottom));
 }
 
 .list {
@@ -18,32 +18,23 @@
   gap: 24rpx;
 }
 
-.emptyIcon {
-  font-size: 120rpx;
-}
-
-.emptyTitle {
-  font-size: 32rpx;
-  font-weight: 600;
-  color: #5D4E37;
-}
-
+.emptyIcon { font-size: 120rpx; }
+.emptyTitle { font-size: 32rpx; font-weight: 600; color: #5D4E37; }
 .emptyDesc {
   font-size: 26rpx;
   color: #9E8E7E;
   text-align: center;
   padding: 0 60rpx;
   line-height: 1.6;
-  white-space: pre-line;
 }
 
 // ===== 卡片 =====
 .card {
   background: #fff;
-  border-radius: 20rpx;
+  border-radius: 24rpx;
   padding: 28rpx;
-  margin-bottom: 24rpx;
-  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.04);
+  margin-bottom: 28rpx;
+  box-shadow: 0 2rpx 16rpx rgba(0,0,0,0.06);
 }
 
 .cardHeader {
@@ -53,422 +44,253 @@
   margin-bottom: 12rpx;
 }
 
-.cardSource {
-  font-size: 24rpx;
-  font-weight: 600;
-  color: #C4956A;
-}
+.cardSource { font-size: 24rpx; font-weight: 600; color: #C4956A; }
+.cardTime { font-size: 22rpx; color: #A89880; }
+.cardTitle { font-size: 30rpx; font-weight: 700; color: #2C2419; margin-bottom: 20rpx; }
 
-.cardTime {
-  font-size: 20rpx;
-  color: #A89880;
-}
-
-.cardTitle {
-  font-size: 30rpx;
-  font-weight: 600;
-  color: #2C2419;
-  margin-bottom: 8rpx;
-}
-
-.cardDesc {
-  font-size: 24rpx;
-  color: #7A6B55;
-  line-height: 1.5;
-  margin-bottom: 16rpx;
-}
-
-.cardMeta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12rpx;
-  margin-bottom: 16rpx;
-}
-
-.metaItem {
-  font-size: 22rpx;
-  color: #9E8E7E;
-  background: #F8F4EE;
-  padding: 6rpx 14rpx;
-  border-radius: 8rpx;
-}
-
-// ===== GPS 条 =====
-.gpsBar {
+// ===== 视频/音频播放按钮（大号、清晰、点击区域大） =====
+.mediaBtn {
   display: flex;
   align-items: center;
-  gap: 16rpx;
-  background: linear-gradient(135deg, #F0F7FF, #E8F0FE);
-  border-radius: 14rpx;
-  padding: 20rpx 24rpx;
-  margin-bottom: 20rpx;
+  gap: 20rpx;
+  padding: 24rpx 28rpx;
+  margin-bottom: 16rpx;
+  border-radius: 20rpx;
   cursor: pointer;
   transition: all 0.15s;
 
-  &:active {
-    opacity: 0.85;
-    transform: scale(0.98);
+  &:active { transform: scale(0.98); opacity: 0.85; }
+}
+
+.mediaBtn:first-of-type {
+  background: linear-gradient(135deg, #1a1a2e, #16213e);
+  .mediaBtnIcon, .mediaBtnArrow, .mediaBtnLabel { color: #fff; }
+  .mediaBtnMeta { color: rgba(255,255,255,0.6); }
+}
+
+.mediaBtn:last-of-type {
+  background: linear-gradient(135deg, #FFF0E5, #FFE0D0);
+  .mediaBtnIcon, .mediaBtnArrow { color: #E67E22; }
+  .mediaBtnLabel { color: #2C2419; }
+  .mediaBtnMeta { color: #9E8E7E; }
+}
+
+.mediaBtnIcon {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36rpx;
+  flex-shrink: 0;
+
+  .mediaBtn:first-of-type & {
+    background: rgba(255,255,255,0.15);
+  }
+  .mediaBtn:last-of-type & {
+    background: rgba(230,126,34,0.15);
   }
 }
 
-.gpsIcon {
-  font-size: 36rpx;
-  flex-shrink: 0;
+.mediaBtnInfo { flex: 1; display: flex; flex-direction: column; gap: 6rpx; }
+.mediaBtnLabel { font-size: 30rpx; font-weight: 700; }
+.mediaBtnMeta { font-size: 22rpx; }
+.mediaBtnArrow { font-size: 32rpx; opacity: 0.5; }
+
+.mediaBtnDisabled {
+  background: #F0EDE6 !important;
+  cursor: default;
+  .mediaBtnIcon, .mediaBtnLabel, .mediaBtnMeta { color: #B8A99A !important; }
+  .mediaBtnIcon { background: rgba(0,0,0,0.06); }
 }
 
-.gpsInfo {
+// ===== 证据统计条 =====
+.statsRow {
+  display: flex;
+  gap: 12rpx;
+  margin-bottom: 20rpx;
+  padding: 16rpx;
+  background: linear-gradient(135deg, #F0FAF0, #E8F5E8);
+  border-radius: 16rpx;
+  border-left: 4rpx solid #27AE60;
+}
+
+.statItem {
   flex: 1;
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 4rpx;
-  min-width: 0;
 }
 
-.gpsAddress {
-  font-size: 26rpx;
-  font-weight: 500;
-  color: #2C2419;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
+.statIcon { font-size: 32rpx; }
+.statValue { font-size: 24rpx; font-weight: 700; color: #2C2419; font-variant-numeric: tabular-nums; }
+.statLabel { font-size: 20rpx; color: #9E8E7E; }
 
-.gpsCoords {
-  font-size: 20rpx;
-  color: #7A6B55;
-  font-family: monospace;
-}
-
-.gpsArrow {
-  font-size: 28rpx;
-  color: #A89880;
-  flex-shrink: 0;
-}
-
-// ===== 文件预览 =====
-.fileGrid {
+// ===== 照片缩略图 =====
+.photoRow {
   display: flex;
   flex-wrap: wrap;
   gap: 12rpx;
   margin-bottom: 20rpx;
 }
 
-.fileItem {
+.photoItem {
   width: 160rpx;
-  border-radius: 12rpx;
+  height: 160rpx;
+  border-radius: 16rpx;
   overflow: hidden;
   background: #F0EDE6;
-  position: relative;
-}
-
-.fileThumb {
-  width: 160rpx;
-  height: 160rpx;
-  display: block;
-}
-
-.fileVideoItem {
-  width: 160rpx;
-  height: 160rpx;
-  border-radius: 12rpx;
-  overflow: hidden;
-  background: #333;
-  position: relative;
-  cursor: pointer;
-
-  .fileLabel {
-    position: absolute;
-    bottom: 4rpx;
-    left: 4rpx;
-    font-size: 18rpx;
-    color: #fff;
-    background: rgba(0,0,0,0.55);
-    padding: 2rpx 10rpx;
-    border-radius: 6rpx;
-  }
-}
-
-.fileVideoPlaceholder {
-  width: 100%;
-  height: 160rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, #2a2a2a, #1a1a1a);
-}
-
-.fileVideoIcon {
-  font-size: 48rpx;
-}
-
-.playBadge {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 56rpx;
-  height: 56rpx;
-  border-radius: 50%;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  pointer-events: none;
-}
-
-.playBadgeIcon {
-  font-size: 28rpx;
-  color: #fff;
-  margin-left: 4rpx;
-}
-
-.fileAudioItem {
-  width: 160rpx;
-  height: 160rpx;
-  border-radius: 12rpx;
-  background: linear-gradient(135deg, #FFF0E5, #FFE0D0);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 8rpx;
   cursor: pointer;
   transition: all 0.15s;
 
-  &:active {
-    transform: scale(0.96);
-    opacity: 0.8;
-  }
+  &:active { transform: scale(0.96); opacity: 0.85; }
 }
 
-.audioItemIcon {
+.photoImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.photoFallback {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-size: 48rpx;
 }
 
-.fileLabel {
-  font-size: 22rpx;
-  color: #7A6B55;
-  font-weight: 500;
+// ===== 无媒体 =====
+.noMedia {
+  padding: 32rpx;
+  text-align: center;
+  margin-bottom: 12rpx;
 }
+
+.noMediaText { font-size: 26rpx; color: #C4B8AA; }
+
+// ===== GPS =====
+.gpsRow {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  padding: 20rpx 24rpx;
+  background: linear-gradient(135deg, #F0F7FF, #E8F0FE);
+  border-radius: 16rpx;
+  margin-bottom: 16rpx;
+  cursor: pointer;
+  transition: all 0.15s;
+
+  &:active { opacity: 0.85; transform: scale(0.98); }
+}
+
+.gpsIcon { font-size: 36rpx; flex-shrink: 0; }
+.gpsInfo { flex: 1; display: flex; flex-direction: column; gap: 4rpx; min-width: 0; }
+.gpsAddr { font-size: 26rpx; font-weight: 500; color: #2C2419; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gpsCoords { font-size: 20rpx; color: #7A6B55; font-family: monospace; }
+.gpsArrow { font-size: 28rpx; color: #A89880; flex-shrink: 0; }
+
+// ===== 保护时长 =====
+.durationRow {
+  padding: 16rpx 0;
+  margin-bottom: 8rpx;
+}
+
+.durationText { font-size: 24rpx; color: #A89880; }
+
+// ===== 操作按钮 =====
+.actionRow {
+  display: flex;
+  gap: 16rpx;
+}
+
+.actionBtnPrimary {
+  flex: 1;
+  padding: 22rpx;
+  background: linear-gradient(135deg, #C4956A, #D4A76A);
+  border-radius: 16rpx;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.15s;
+
+  &:active { opacity: 0.85; transform: scale(0.97); }
+}
+
+.actionBtnText { font-size: 26rpx; color: #fff; font-weight: 600; }
+
+.actionBtnDel {
+  padding: 22rpx 32rpx;
+  background: #F5F0EA;
+  border-radius: 16rpx;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.15s;
+
+  &:active { background: #E8E0D5; }
+}
+
+.actionBtnTextDel { font-size: 26rpx; color: #A89880; }
+
+// ===== 底部 =====
+.footer { text-align: center; padding: 40rpx 0; }
+.footerText { font-size: 22rpx; color: #C4B8AA; }
 
 // ===== 播放器浮层 =====
 .playerOverlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.75);
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.8);
   z-index: 20000;
   display: flex;
   align-items: center;
   justify-content: center;
-  animation: fadeIn 0.2s ease-out;
 }
 
 .playerCard {
-  width: 90vw;
+  width: 94vw;
   max-width: 600px;
-  background: #000;
-  border-radius: 16rpx;
+  border-radius: 20rpx;
   overflow: hidden;
-  position: relative;
+  background: #000;
 }
 
-.audioPlayerCard {
-  width: 90vw;
+.audioCard {
+  width: 85vw;
   max-width: 500px;
   background: #fff;
   border-radius: 24rpx;
   padding: 40rpx 32rpx;
-  text-align: center;
-  position: relative;
 }
 
-.playerClose {
-  position: absolute;
-  top: 16rpx;
-  right: 16rpx;
-  width: 48rpx;
-  height: 48rpx;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.2);
+.playerTop {
   display: flex;
   align-items: center;
-  justify-content: center;
-  z-index: 10;
-  cursor: pointer;
-
-  .audioPlayerCard & {
-    background: #F0EDE6;
-  }
+  justify-content: space-between;
+  padding: 20rpx 24rpx;
+  background: rgba(0,0,0,0.3);
 }
 
-.playerCloseText {
+.videoPlayer { width: 100%; display: block; max-height: 70vh; }
+
+.playerTitle {
   font-size: 28rpx;
+  font-weight: 700;
   color: #fff;
 
-  .audioPlayerCard & {
-    color: #5D4E37;
-  }
+  .audioCard & { color: #2C2419; }
 }
 
-.videoPlayer {
-  width: 100%;
-  display: block;
-  max-height: 70vh;
-}
-
-.audioPlayerTitle {
-  font-size: 32rpx;
-  font-weight: 600;
-  color: #2C2419;
-  margin-bottom: 32rpx;
-}
-
-.audioPlayer {
-  width: 100%;
-  margin-bottom: 8rpx;
-}
-
-// ===== 操作按钮 =====
-.cardActions {
-  display: flex;
-  gap: 16rpx;
-}
-
-.actionBtn {
-  flex: 1;
-  padding: 18rpx;
-  background: linear-gradient(135deg, #C4956A, #D4A76A);
-  border-radius: 12rpx;
-  text-align: center;
-  cursor: pointer;
-  transition: all 0.15s;
-
-  &:active {
-    opacity: 0.85;
-    transform: scale(0.97);
-  }
-}
-
-.actionBtnText {
-  font-size: 26rpx;
+.playerCloseBtn {
+  font-size: 36rpx;
   color: #fff;
-  font-weight: 600;
-}
-
-.actionBtnDel {
-  padding: 18rpx 32rpx;
-  background: #F5F0EA;
-  border-radius: 12rpx;
-  text-align: center;
+  padding: 8rpx;
   cursor: pointer;
-  transition: all 0.15s;
+  opacity: 0.7;
 
-  &:active {
-    background: #E8E0D5;
-  }
-}
+  .audioCard & { color: #2C2419; }
 
-.actionBtnDelText {
-  font-size: 26rpx;
-  color: #A89880;
-}
-
-// ===== 底部 =====
-.footer {
-  text-align: center;
-  padding: 40rpx 0;
-}
-
-.footerText {
-  font-size: 22rpx;
-  color: #C4B8AA;
-}
-
-// ===== 验证完整性 =====
-.verifyBar {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12rpx;
-  margin-bottom: 24rpx;
-  padding: 20rpx;
-  background: #fff;
-  border-radius: 16rpx;
-  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.04);
-}
-
-.verifyBtn {
-  padding: 16rpx 48rpx;
-  background: linear-gradient(135deg, #3498DB, #2980B9);
-  border-radius: 40rpx;
-  cursor: pointer;
-  transition: all 0.2s;
-
-  &:active {
-    opacity: 0.85;
-    transform: scale(0.96);
-  }
-}
-
-.verifyBtnText {
-  font-size: 28rpx;
-  color: #fff;
-  font-weight: 600;
-}
-
-.verifyOk {
-  font-size: 24rpx;
-  color: #27AE60;
-  font-weight: 500;
-}
-
-.verifyFail {
-  font-size: 24rpx;
-  color: #E74C3C;
-  font-weight: 500;
-}
-
-// ===== 数据完整性条 =====
-.integrityBar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8rpx;
-  margin-bottom: 16rpx;
-  padding: 16rpx;
-  background: linear-gradient(135deg, #F0FAF0, #E8F5E8);
-  border-radius: 12rpx;
-  border-left: 4rpx solid #27AE60;
-}
-
-.integrityItem {
-  display: flex;
-  align-items: center;
-  gap: 6rpx;
-  padding: 4rpx 10rpx;
-  background: rgba(255, 255, 255, 0.7);
-  border-radius: 8rpx;
-}
-
-.integrityIcon {
-  font-size: 22rpx;
-}
-
-.integrityLabel {
-  font-size: 20rpx;
-  color: #7A6B55;
-}
-
-.integrityValue {
-  font-size: 20rpx;
-  color: #27AE60;
-  font-weight: 600;
-  font-family: monospace;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  &:active { opacity: 1; }
 }

@@ -13,6 +13,7 @@ import { useCircleStore } from '@/store/circle';
 import { useRitualStore } from '@/store/ritual';
 import { useMoralTaskStore } from '@/store/moral-task';
 import { useProtectionStore } from '@/store/protection';
+import { useBadgeStore } from '@/store/badge';
 import { getCurrentGPS, MediaAsset } from '@/services/evidence';
 import { clearLastClosedSession } from '@/services/protection-mode';
 import { CircleType, getCircleTypeConfig } from '@/config/circle-types';
@@ -23,6 +24,18 @@ import MilestonePopup from '@/components/MilestonePopup';
 import SharePoster from '@/components/SharePoster';
 import { WITNESS_TEMPLATES } from '@/data/witness-templates';
 import styles from './index.module.scss';
+
+// 快速记录模板（内联，避免循环依赖）
+const QUICK_TEMPLATES_DISPLAY = [
+  { id: 'qt_001', emoji: '🚌', label: '让了座', content: '🚌 今天给需要的人让了座', tags: ['助人'] },
+  { id: 'qt_002', emoji: '😊', label: '说了谢谢', content: '😊 今天认真对服务人员说了声谢谢', tags: ['关怀'] },
+  { id: 'qt_003', emoji: '🗑️', label: '捡了垃圾', content: '🗑️ 路上顺手捡了个垃圾扔进垃圾桶', tags: ['环保'] },
+  { id: 'qt_004', emoji: '🚪', label: '留了门', content: '🚪 进门时帮后面的人留了一下门', tags: ['助人'] },
+  { id: 'qt_005', emoji: '💬', label: '夸了人', content: '💬 今天真诚地夸了身边一个人', tags: ['关怀'] },
+  { id: 'qt_006', emoji: '📱', label: '打了电话', content: '📱 今天给家人打了个电话', tags: ['孝亲', '陪伴'] },
+  { id: 'qt_007', emoji: '🤝', label: '帮了忙', content: '🤝 今天帮身边的人做了一件小事', tags: ['助人'] },
+  { id: 'qt_008', emoji: '☕', label: '请了杯水', content: '☕ 今天帮同事接了杯水/买了杯咖啡', tags: ['关怀'] },
+];
 
 // 先贤语录库
 const SAGE_QUOTES = [
@@ -196,6 +209,8 @@ const RecordPage: React.FC = () => {
   const [fortuneDisplay, setFortuneDisplay] = useState(0);
   // 飘字是否可见
   const [floatVisible, setFloatVisible] = useState(false);
+  // 庆祝彩纸
+  const [showConfetti, setShowConfetti] = useState(false);
 
   // ====== 草稿自动保存（任务2）======
   const {
@@ -246,7 +261,7 @@ const RecordPage: React.FC = () => {
     }
   }, [publishedList]);
 
-  // 从URL参数读取外部上下文（AI顾问 / 保护模式）
+  // 从URL参数读取外部上下文（AI顾问 / 保护模式 / 挑战预设）
   const [fromSource, setFromSource] = useState('');
   const [protectionMeta, setProtectionMeta] = useState<{
     duration: number; video: number; audio: number; gps: number; photos: number;
@@ -259,16 +274,22 @@ const RecordPage: React.FC = () => {
     const scene = params.scene ? decodeURIComponent(params.scene) : '';
     setFromSource(from);
 
+    // 挑战/求助跳转来：预填内容和标签
+    if (from === 'challenge' && params.preset) {
+      try {
+        const preset = JSON.parse(decodeURIComponent(params.preset));
+        if (preset.content) setContent(preset.content);
+        if (preset.tags && Array.isArray(preset.tags)) setSelectedTags(preset.tags);
+      } catch {}
+    }
+
     if (from === 'advisor' && scene) {
-      // AI顾问跳转来：预填场景描述
       setContent(scene);
-      // 自动检测风险
       const risk = detectRisk(scene);
       if (risk) setRiskScenario(risk);
     }
 
     if (from === 'protection') {
-      // 保护模式跳转来：预填保护信息
       const duration = parseInt(params.duration || '0', 10);
       const video = parseInt(params.video || '0', 10);
       const audio = parseInt(params.audio || '0', 10);
@@ -747,7 +768,35 @@ const RecordPage: React.FC = () => {
 
       // 进入反馈阶段，启动严格时序动画
       setPhase('feedback');
+      setShowConfetti(true);
+      // 3s后隐藏彩纸
+      setTimeout(() => setShowConfetti(false), 3500);
       runFeedbackSequence(fortuneResult.total);
+
+      // 徽章检查
+      try {
+        const badgeStore = useBadgeStore.getState();
+        const fs = useFortuneStore.getState();
+        const cs = useCircleStore.getState();
+        const uid = userInfo?.id || 'currentUser';
+        const userCircleCount = cs.circles.filter(c =>
+          c.members.some(m => m.userId === uid) || c.adminId === uid
+        ).length;
+        const hour = new Date().getHours();
+        const isNight = hour >= 22 || hour < 6;
+        badgeStore.checkAndUnlock({
+          totalKindness: publishedList.length + 1,
+          streakDays: fs.streak.currentStreak,
+          fortune: fs.totalFortune + fortuneResult.total,
+          circleCount: userCircleCount,
+          commentCount: 0,
+          likeCount: 0,
+          hasLocationKindness: !!userInfo?.region,
+          hasAnonymousKindness: isAnonymous,
+          hasNightKindness: isNight,
+          completedInspirations: 0,
+        });
+      } catch {}
 
       // 等待 AI 卡片出现后再开始流式输出（仪式关闭时立即开始）
       const streamTimer = setTimeout(async () => {
@@ -972,6 +1021,29 @@ const RecordPage: React.FC = () => {
             {/* 文字输入（始终可用，语音/视频时可作为补充） */}
             <View className={styles.formItem}>
               <Text className={styles.label}>内容</Text>
+              {/* 快速记录模板 */}
+              {content.trim().length === 0 && (
+                <View className={styles.quickRecordHint}>
+                  <Text className={styles.quickRecordHintText}>💡 今天发生了什么温暖的小事？</Text>
+                </View>
+              )}
+              {content.trim().length === 0 && (
+                <View className={styles.quickRecordList}>
+                  {QUICK_TEMPLATES_DISPLAY.map((tmpl) => (
+                    <View
+                      key={tmpl.id}
+                      className={styles.quickRecordItem}
+                      onClick={() => {
+                        setContent(tmpl.content);
+                        setSelectedTags(tmpl.tags);
+                      }}
+                    >
+                      <Text className={styles.quickRecordEmoji}>{tmpl.emoji}</Text>
+                      <Text className={styles.quickRecordLabel}>{tmpl.label}</Text>
+                    </View>
+                  ))}
+                </View>
+              )}
               <Textarea
                 className={styles.textarea}
                 placeholder={'记录下这个温暖的瞬间...'}
@@ -1295,6 +1367,25 @@ const RecordPage: React.FC = () => {
 
       {phase === 'feedback' && (
         <View className={styles.feedback}>
+          {/* 庆祝彩纸 */}
+          {showConfetti && (
+            <View className={styles.confettiContainer}>
+              {['✨','🌟','💫','🎉','🎊','💖','⭐','🌸','🦋','🍀'].map((emoji, i) => (
+                <Text
+                  key={i}
+                  className={styles.confettiPiece}
+                  style={{
+                    left: `${10 + (i % 8) * 10}%`,
+                    animationDelay: `${i * 0.15}s`,
+                    animationDuration: `${2.5 + Math.random() * 1.5}s`,
+                  }}
+                >
+                  {emoji}
+                </Text>
+              ))}
+            </View>
+          )}
+
           {/* 任务3：严格时序动效 */}
           {/* Step 1: 入库成功（0.5s 后） */}
           {feedbackStep !== 'hidden' && (
