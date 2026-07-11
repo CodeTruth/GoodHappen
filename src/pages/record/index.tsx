@@ -195,6 +195,8 @@ const RecordPage: React.FC = () => {
   const [recordDuration, setRecordDuration] = useState(0);
   const recorderManagerRef = useRef<RecorderManager | null>(null);
   const recordTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [showTagPicker, setShowTagPicker] = useState(false);
+  const [showScopePicker, setShowScopePicker] = useState(false);
   const feedbackTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const aiAbortedRef = useRef(false);
   const fortuneIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -355,7 +357,31 @@ const RecordPage: React.FC = () => {
       });
     }
 
+    // 监听从保护记录选择回传
+    const onEvidencePick = (e: any) => {
+      const record = e.detail;
+      if (!record?.files) return;
+      record.files.forEach((f: any) => {
+        if (f.type === 'photo' && f.dataUrl) {
+          setImages(prev => prev.length < 9 ? [...prev, f.dataUrl] : prev);
+        } else if (f.type === 'video' && f.dataUrl) {
+          setVideoPath(f.dataUrl);
+          setVideoThumb(f.thumbnail || f.dataUrl);
+        } else if (f.type === 'audio' && f.dataUrl) {
+          // 音频以文件形式暂存到图片列表（显示为占位）
+          setImages(prev => prev.length < 9 ? [...prev, f.dataUrl] : prev);
+        }
+      });
+      // 如果记录有描述，追加到内容
+      if (record.description && !content) {
+        setContent(record.description);
+      }
+      Taro.showToast({ title: '已添加保护记录的文件', icon: 'success' });
+    };
+    window.addEventListener('evidencePick', onEvidencePick);
+
     return () => {
+      window.removeEventListener('evidencePick', onEvidencePick);
       stopAutoSave();
       if (recordTimerRef.current) {
         clearInterval(recordTimerRef.current);
@@ -506,6 +532,41 @@ const RecordPage: React.FC = () => {
   const handleDeleteVideo = () => {
     setVideoPath('');
     setVideoThumb('');
+  };
+
+  // 选择任意文件（文档、音频等）
+  const handleChooseFile = () => {
+    Taro.chooseMessageFile({
+      count: 5,
+      type: 'file',
+      success: (res) => {
+        res.tempFiles.forEach(file => {
+          // 如果是图片，加入图片列表
+          if (/^image\//.test(file.type || '')) {
+            setImages(prev => prev.length < 9 ? [...prev, file.path] : prev);
+          }
+          // 如果是视频且还没选视频
+          else if (/^video\//.test(file.type || '') && !videoPath) {
+            setVideoPath(file.path);
+            setVideoThumb(file.path);
+          }
+          // 其他文件：暂存为图片位置的占位（后续上传时处理）
+          else {
+            // 非图片视频文件，显示在图片区域用文件名占位
+            // Taro H5 环境下直接用 path
+            setImages(prev => {
+              if (prev.length >= 9) return prev;
+              return [...prev, file.path];
+            });
+          }
+        });
+      },
+    });
+  };
+
+  // 从善行保护记录选择
+  const handlePickFromHistory = () => {
+    Taro.navigateTo({ url: '/pages/evidence-history/index?mode=pick' });
   };
 
   // ====== 任务2：草稿操作 ======
@@ -953,408 +1014,206 @@ const RecordPage: React.FC = () => {
 
       {phase === 'input' && (
         <>
-          <View className={styles.header}>
-            <Text className={styles.headerCancel} onClick={handleBack}>取消</Text>
-            <Text className={styles.title}>记录善行</Text>
-            <View className={styles.headerPublish} onClick={handleSubmit}>
-              <Text className={styles.headerPublishText}>发表</Text>
+          {/* 朋友圈极简顶栏 */}
+          <View className={styles.wxHeader}>
+            <Text className={styles.wxCancel} onClick={handleBack}>取消</Text>
+            <View className={styles.wxPublish} onClick={handleSubmit}>
+              <Text className={styles.wxPublishText}>发表</Text>
             </View>
           </View>
 
-          {recordType === 'self' && (
-            <View className={styles.streakInfo}>
-              <Text className={styles.streakText}>
-                🔥 连续{streak.currentStreak}天 · 今日剩余福气额度: {dailyRemaining}
-              </Text>
-            </View>
-          )}
+          {/* 直接输入 — 像朋友圈一样 */}
+          <Textarea
+            className={styles.wxTextarea}
+            placeholder='记录下这个温暖的瞬间...'
+            value={content}
+            onInput={(e) => setContent(e.detail.value)}
+            maxlength={500}
+            showConfirmBar={false}
+            autoHeight
+          />
 
-          {recordType === 'witness' && (
-            <View className={styles.streakInfo}>
-              <Text className={styles.streakText}>
-                💡 你不需要亲自行善，见证他人善行同样值得记录
-              </Text>
-            </View>
-          )}
-
-          <View className={styles.typeSelector}>
-            <View
-              className={`${styles.typeOption} ${recordType === 'self' ? styles.active : ''}`}
-              onClick={() => setRecordType('self')}
-            >
-              <Text className={styles.typeIcon}>✨</Text>
-              <Text className={styles.typeName}>我做的好事</Text>
-              <Text className={styles.typeDesc}>记录自己的善行</Text>
-            </View>
-            <View
-              className={`${styles.typeOption} ${recordType === 'witness' ? styles.active : ''}`}
-              onClick={() => { setRecordType('witness'); setVisibleScope('public'); }}
-            >
-              <Text className={styles.typeIcon}>👀</Text>
-              <Text className={styles.typeName}>我看到的好事</Text>
-              <Text className={styles.typeDesc}>见证他人的温暖</Text>
-            </View>
+          {/* 图片九宫格 + 添加按钮 */}
+          <View className={styles.wxImages}>
+            {images.map((img, index) => (
+              <View key={`img-${index}`} className={styles.wxImageWrap}>
+                <Image src={img} className={styles.wxImage} mode="aspectFill" />
+                <View className={styles.wxImageDel} onClick={() => handleDeleteImage(index)}>
+                  <Text className={styles.wxImageDelIcon}>✕</Text>
+                </View>
+              </View>
+            ))}
+            {images.length < 9 && !videoPath && (
+              <View className={styles.wxImageAdd} onClick={() => setShowFilePicker(true)}>
+                <Text className={styles.wxImageAddIcon}>+</Text>
+              </View>
+            )}
+            {videoPath && (
+              <View className={styles.wxImageWrap}>
+                <Image src={videoThumb} className={styles.wxImage} mode="aspectFill" />
+                <View className={styles.wxVideoBadge}><Text className={styles.wxVideoBadgeText}>▶ 视频</Text></View>
+                <View className={styles.wxImageDel} onClick={handleDeleteVideo}>
+                  <Text className={styles.wxImageDelIcon}>✕</Text>
+                </View>
+              </View>
+            )}
           </View>
 
-          <View className={styles.form}>
-
-            {/* 任务2：一键见证模板选择（仅在"我看到的好事"模式下显示） */}
-            {recordType === 'witness' && (
-              <View className={styles.formItem}>
-                <Text className={styles.label}>快速选择见证场景</Text>
-                <Text className={styles.mediaHint}>点击模板快速记录你看到的善意</Text>
-                <View className={styles.witnessTemplates}>
-                  {WITNESS_TEMPLATES.map((tmpl) => (
-                    <View
-                      key={tmpl.id}
-                      className={`${styles.witnessTemplate} ${content === tmpl.desc ? styles.witnessTemplateActive : ''}`}
-                      onClick={() => setContent(tmpl.desc)}
-                    >
-                      <Text className={styles.witnessTemplateIcon}>{tmpl.icon}</Text>
-                      <Text className={styles.witnessTemplateTitle}>{tmpl.title}</Text>
-                    </View>
-                  ))}
+          {/* 附件选择面板 — 从保护记录选择 */}
+          {showFilePicker && (
+            <View className={styles.wxPickerOverlay} onClick={() => setShowFilePicker(false)}>
+              <View className={styles.wxPickerSheet} onClick={(e) => e.stopPropagation()}>
+                <View className={styles.wxPickerHeader}>
+                  <Text className={styles.wxPickerTitle}>添加附件</Text>
+                  <Text className={styles.wxPickerClose} onClick={() => setShowFilePicker(false)}>✕</Text>
                 </View>
-              </View>
-            )}
-
-            {/* 文字输入（始终可用，语音/视频时可作为补充） */}
-            <View className={styles.formItem}>
-              <Text className={styles.label}>内容</Text>
-              {/* 快速记录模板 */}
-              {content.trim().length === 0 && (
-                <View className={styles.quickRecordHint}>
-                  <Text className={styles.quickRecordHintText}>💡 今天发生了什么温暖的小事？</Text>
-                </View>
-              )}
-              {content.trim().length === 0 && (
-                <View className={styles.quickRecordList}>
-                  {QUICK_TEMPLATES_DISPLAY.map((tmpl) => (
-                    <View
-                      key={tmpl.id}
-                      className={styles.quickRecordItem}
-                      onClick={() => {
-                        setContent(tmpl.content);
-                        setSelectedTags(tmpl.tags);
-                      }}
-                    >
-                      <Text className={styles.quickRecordEmoji}>{tmpl.emoji}</Text>
-                      <Text className={styles.quickRecordLabel}>{tmpl.label}</Text>
+                <View className={styles.wxPickerOptions}>
+                  <View className={styles.wxPickerOption} onClick={() => { setShowFilePicker(false); handleChooseImage(); }}>
+                    <Text className={styles.wxPickerOptionIcon}>📷</Text>
+                    <View className={styles.wxPickerOptionBody}>
+                      <Text className={styles.wxPickerOptionLabel}>拍照 / 从相册选择</Text>
+                      <Text className={styles.wxPickerOptionHint}>照片，最多9张</Text>
                     </View>
-                  ))}
-                </View>
-              )}
-              <Textarea
-                className={styles.textarea}
-                placeholder={'记录下这个温暖的瞬间...'}
-                value={content}
-                onInput={(e) => setContent(e.detail.value)}
-                maxlength={500}
-                showConfirmBar={false}
-              />
-              {content.trim().length > 0 && content.trim().length < 10 && (
-                <Text className={styles.lengthHint}>💡 多写几句吧，说说具体做了什么、感受如何？（建议20字以上）</Text>
-              )}
-            </View>
-
-            {/* 媒体文件区域（图片+视频统一入口） */}
-            <View className={styles.formItem}>
-              <Text className={styles.label}>附件</Text>
-              {/* 已选文件预览 */}
-              {(images.length > 0 || videoPath) && (
-                <View className={styles.fileList}>
-                  {/* 图片预览 */}
-                  {images.map((img, index) => (
-                    <View key={`img-${index}`} className={styles.filePreview}>
-                      <Image src={img} className={styles.fileThumb} mode="aspectFill" />
-                      <View className={styles.deleteBtn} onClick={() => handleDeleteImage(index)}>
-                        <Text className={styles.deleteIcon}>✕</Text>
-                      </View>
+                  </View>
+                  <View className={styles.wxPickerOption} onClick={() => { setShowFilePicker(false); handleChooseVideo(); }}>
+                    <Text className={styles.wxPickerOptionIcon}>🎬</Text>
+                    <View className={styles.wxPickerOptionBody}>
+                      <Text className={styles.wxPickerOptionLabel}>拍摄 / 选择视频</Text>
+                      <Text className={styles.wxPickerOptionHint}>最长{VIDEO_MAX_DURATION}秒</Text>
                     </View>
-                  ))}
-                  {/* 视频预览 */}
-                  {videoPath && (
-                    <View className={styles.filePreview}>
-                      <Image src={videoThumb} className={styles.fileThumb} mode="aspectFill" />
-                      <View className={styles.videoPlayIcon}>
-                        <Text className={styles.playIcon}>▶</Text>
-                      </View>
-                      <View className={styles.deleteBtn} onClick={handleDeleteVideo}>
-                        <Text className={styles.deleteIcon}>✕</Text>
-                      </View>
+                  </View>
+                  <View className={styles.wxPickerOption} onClick={() => { setShowFilePicker(false); handleChooseFile(); }}>
+                    <Text className={styles.wxPickerOptionIcon}>📎</Text>
+                    <View className={styles.wxPickerOptionBody}>
+                      <Text className={styles.wxPickerOptionLabel}>选择任意文件</Text>
+                      <Text className={styles.wxPickerOptionHint}>文档、音频等</Text>
                     </View>
-                  )}
+                  </View>
+                  <View className={styles.wxPickerOption} onClick={() => { setShowFilePicker(false); handlePickFromHistory(); }}>
+                    <Text className={styles.wxPickerOptionIcon}>🛡️</Text>
+                    <View className={styles.wxPickerOptionBody}>
+                      <Text className={styles.wxPickerOptionLabel}>从善行保护记录选择</Text>
+                      <Text className={styles.wxPickerOptionHint}>之前保护/见证模式保存的音视频</Text>
+                    </View>
+                  </View>
                 </View>
-              )}
-              {/* 添加文件按钮 */}
-              <View className={styles.addFileBtn} onClick={() => setShowFilePicker(true)}>
-                <Text className={styles.addFileIcon}>📎</Text>
-                <Text className={styles.addFileText}>添加文件</Text>
               </View>
             </View>
+          )}
 
-            {/* 文件选择弹窗 */}
-            {showFilePicker && (
-              <View className={styles.filePickerOverlay} onClick={() => setShowFilePicker(false)}>
-                <View className={styles.filePickerCard} onClick={(e) => e.stopPropagation()}>
-                  <Text className={styles.filePickerTitle}>选择文件</Text>
-                  <View
-                    className={styles.filePickerOption}
-                    onClick={() => { setShowFilePicker(false); handleChooseVideo(); }}
-                  >
-                    <Text className={styles.filePickerIcon}>🎬</Text>
-                    <View className={styles.filePickerBody}>
-                      <Text className={styles.filePickerLabel}>拍视频</Text>
-                      <Text className={styles.filePickerHint}>最长{VIDEO_MAX_DURATION}秒</Text>
-                    </View>
-                  </View>
-                  <View
-                    className={styles.filePickerOption}
-                    onClick={() => { setShowFilePicker(false); handleChooseImage(); }}
-                  >
-                    <Text className={styles.filePickerIcon}>📁</Text>
-                    <View className={styles.filePickerBody}>
-                      <Text className={styles.filePickerLabel}>从本地文件里找</Text>
-                      <Text className={styles.filePickerHint}>照片</Text>
-                    </View>
-                  </View>
-                  <View
-                    className={styles.filePickerOption}
-                    onClick={() => {
-                      setShowFilePicker(false);
-                      Taro.navigateTo({ url: '/pages/evidence-history/index?mode=pick' });
-                    }}
-                  >
-                    <Text className={styles.filePickerIcon}>🛡️</Text>
-                    <View className={styles.filePickerBody}>
-                      <Text className={styles.filePickerLabel}>从保护/见证历史选择</Text>
-                      <Text className={styles.filePickerHint}>之前录制保存的文件</Text>
-                    </View>
-                  </View>
-                  <View className={styles.filePickerCancel} onClick={() => setShowFilePicker(false)}>
-                    <Text className={styles.filePickerCancelText}>取消</Text>
-                  </View>
-                </View>
-              </View>
-            )}
+          {/* 风险提示 — 仅在有风险时一行显示 */}
+          {riskScenario && (
+            <View className={styles.wxRisk} style={{ borderLeftColor: riskScenario.color }}>
+              <Text className={styles.wxRiskText}>{riskScenario.icon} {riskScenario.category}</Text>
+              <Text className={styles.wxRiskLink} onClick={() => Taro.navigateTo({ url: '/pages/protection-mode/index' })}>开启保护 →</Text>
+            </View>
+          )}
 
-            {/* 风险提示横幅 */}
-                {riskScenario && (
-                  <View className={styles.riskBanner} style={{ borderLeftColor: riskScenario.color }}>
-                    <View className={styles.riskBannerHeader}>
-                      <Text className={styles.riskBannerIcon}>{riskScenario.icon}</Text>
-                      <View className={styles.riskBannerInfo}>
-                        <Text className={styles.riskBannerTitle} style={{ color: riskScenario.color }}>
-                          {riskScenario.level === 'high' ? '⚠️ 高风险善行场景' : '⚡ 注意保护'}
-                        </Text>
-                        <Text className={styles.riskBannerCategory}>
-                          检测到：{riskScenario.category} · {riskScenario.matchedKeyword}
-                        </Text>
-                      </View>
-                    </View>
-                    <View className={styles.riskBannerAdvice}>
-                      {riskScenario.advice.map((advice, index) => (
-                        <Text key={index} className={styles.riskBannerAdviceItem}>
-                          {index + 1}. {advice}
-                        </Text>
-                      ))}
-                    </View>
-                    <View className={styles.riskBannerFooter}>
-                      <Text className={styles.riskBannerShield}>🛡️ 系统为您兜底</Text>
-                      <Text className={styles.riskBannerHint}>事后如遇纠纷，平台保险+法律援助+见证网络全程护航</Text>
-                    </View>
-                  </View>
-                )}
+          {/* 更多设置 — 折叠列表，像朋友圈的"所在位置" */}
+          <View className={styles.wxSettings}>
+            <View className={styles.wxSettingRow}>
+              <Text className={styles.wxSettingIcon}>📍</Text>
+              <Text className={styles.wxSettingLabel}>{userInfo?.region || '当前位置'}</Text>
+            </View>
 
-                {/* 事后补录引导：引导用户补充关键证据 */}
-                {riskScenario && (
-                  <View className={styles.postHocGuide}>
-                    <Text className={styles.postHocGuideTitle}>📋 事后补录检查清单</Text>
-                    <Text className={styles.postHocGuideDesc}>
-                      您正在记录一件已经发生的善行。如事后遇纠纷，以下证据至关重要：
-                    </Text>
-                    <View className={styles.postHocChecklist}>
-                      <View className={styles.postHocCheckItem}>
-                        <Text className={styles.postHocCheckIcon}>📷</Text>
-                        <Text className={styles.postHocCheckText}>是否有现场照片/视频？（如有请上传）</Text>
-                      </View>
-                      <View className={styles.postHocCheckItem}>
-                        <Text className={styles.postHocCheckIcon}>📍</Text>
-                        <Text className={styles.postHocCheckText}>是否记得具体地点？（系统已自动定位）</Text>
-                      </View>
-                      <View className={styles.postHocCheckItem}>
-                        <Text className={styles.postHocCheckIcon}>🕐</Text>
-                        <Text className={styles.postHocCheckText}>是否记得大致时间？（尽量准确填写）</Text>
-                      </View>
-                      <View className={styles.postHocCheckItem}>
-                        <Text className={styles.postHocCheckIcon}>👁️</Text>
-                        <Text className={styles.postHocCheckText}>是否有目击者在场？（可在描述中注明）</Text>
-                      </View>
-                    </View>
-                    <Text className={styles.postHocGuideTip}>
-                    💡 下次做好事前，可先开启
-                    <Text className={styles.postHocGuideLink} onClick={() => Taro.navigateTo({ url: '/pages/protection-mode/index' })}>
-                      "善行保护模式"
-                    </Text>
-                    自动录像+录音+GPS存证
-                  </Text>
-                  </View>
-                )}
+            <View className={styles.wxSettingRow} onClick={() => setShowTagPicker(!showTagPicker)}>
+              <Text className={styles.wxSettingIcon}>🏷️</Text>
+              <Text className={styles.wxSettingLabel}>
+                {selectedTags.length > 0 ? selectedTags.map(t => `#${t}`).join(' ') : '添加标签'}
+              </Text>
+              <Text className={styles.wxSettingArrow}>{showTagPicker ? '▲' : '›'}</Text>
+            </View>
 
-            <View className={styles.formItem}>
-              <Text className={styles.label}>标签（可多选）</Text>
-              <View className={styles.tags}>
+            {showTagPicker && (
+              <View className={styles.wxTagPicker}>
                 {tags.map((tag) => (
                   <View
                     key={tag}
-                    className={`${styles.tag} ${selectedTags.includes(tag) ? styles.active : ''}`}
+                    className={`${styles.wxTag} ${selectedTags.includes(tag) ? styles.wxTagActive : ''}`}
                     onClick={() => handleTagToggle(tag)}
                   >
-                    <Text className={styles.tagText}>#{tag}</Text>
+                    <Text className={styles.wxTagText}>#{tag}</Text>
+                  </View>
+                ))}
+              </View>
+            )}
+
+            <View className={styles.wxSettingRow} onClick={() => setShowScopePicker(!showScopePicker)}>
+              <Text className={styles.wxSettingIcon}>👁️</Text>
+              <Text className={styles.wxSettingLabel}>
+                {visibleScope === 'private' ? '仅自己' : visibleScope === 'followers' ? '互相关注' : visibleScope === 'circle' ? '团体可见' : '所有人'}
+                {isAnonymous && ' · 匿名'}
+              </Text>
+              <Text className={styles.wxSettingArrow}>{showScopePicker ? '▲' : '›'}</Text>
+            </View>
+
+            {showScopePicker && (
+              <View className={styles.wxScopePicker}>
+                {(!isMinor ? [{k:'public',l:'所有人'}, {k:'followers',l:'互相关注'}] : [{k:'followers',l:'互相关注'}] as const)
+                  .concat(userCircles.length > 0 ? [{k:'circle' as const, l:'团体可见'}] : [])
+                  .concat([{k:'private' as const, l:'仅自己'}])
+                  .map(s => (
+                    <View key={s.k} className={`${styles.wxScopeOption} ${visibleScope === s.k ? styles.wxScopeOptionActive : ''}`}
+                      onClick={() => { setVisibleScope(s.k as any); if (s.k !== 'circle') setShowScopePicker(false); }}>
+                      <Text className={styles.wxScopeOptionText}>{s.l}</Text>
+                    </View>
+                  ))}
+                <View className={styles.wxAnonRow}>
+                  <Text className={styles.wxAnonLabel}>🛡️ 匿名行善</Text>
+                  <View className={`${styles.wxAnonSwitch} ${isAnonymous ? styles.wxAnonSwitchOn : ''}`}
+                    onClick={() => setIsAnonymous(!isAnonymous)}>
+                    <View className={styles.wxAnonSwitchThumb} />
+                  </View>
+                </View>
+                {visibleScope === 'circle' && userCircles.length > 0 && (
+                  <View className={styles.wxCircleList}>
+                    {userCircles.map(c => (
+                      <View key={c.id} className={`${styles.wxCircleOption} ${selectedCircleId === c.id ? styles.wxCircleOptionActive : ''}`}
+                        onClick={() => { setSelectedCircleId(c.id); setShowScopePicker(false); }}>
+                        <Text className={styles.wxCircleOptionText}>{c.name}</Text>
+                      </View>
+                    ))}
+                  </View>
+                )}
+              </View>
+            )}
+
+            <View className={styles.wxSettingRow}>
+              <Text className={styles.wxSettingIcon}>{recordType === 'self' ? '✨' : '👀'}</Text>
+              <Text className={styles.wxSettingLabel} onClick={() => setRecordType(recordType === 'self' ? 'witness' : 'self')}>
+                {recordType === 'self' ? '记录我做的好事' : '记录我看到的好事'}
+              </Text>
+              <Text className={styles.wxSettingArrow}>切换</Text>
+            </View>
+          </View>
+
+          {/* 快速模板 — 仅在空白时横滑显示 */}
+          {content.trim().length === 0 && images.length === 0 && (
+            <View className={styles.wxQuickHint}>
+              <Text className={styles.wxQuickHintText}>💡 快速记录</Text>
+              <View className={styles.wxQuickScroll}>
+                {QUICK_TEMPLATES_DISPLAY.map((tmpl) => (
+                  <View key={tmpl.id} className={styles.wxQuickItem}
+                    onClick={() => { setContent(tmpl.content); setSelectedTags(tmpl.tags); }}>
+                    <Text className={styles.wxQuickEmoji}>{tmpl.emoji}</Text>
+                    <Text className={styles.wxQuickLabel}>{tmpl.label}</Text>
                   </View>
                 ))}
               </View>
             </View>
-
-            {recordType === 'self' && (
-              <View className={styles.formItem}>
-                <Text className={styles.label}>可见范围</Text>
-                <View className={styles.scopeSelector}>
-                  <View
-                    className={`${styles.scopeOption} ${visibleScope === 'private' ? styles.active : ''}`}
-                    onClick={() => setVisibleScope('private')}
-                  >
-                    <Text className={styles.scopeText}>仅自己</Text>
-                  </View>
-                  {/* N2 团体可见：仅当用户有所属团体时显示 */}
-                  {userCircles.length > 0 && (
-                    <View
-                      className={`${styles.scopeOption} ${visibleScope === 'circle' ? styles.active : ''}`}
-                      onClick={() => setVisibleScope('circle')}
-                    >
-                      <Text className={styles.scopeText}>团体可见</Text>
-                    </View>
-                  )}
-                  <View
-                    className={`${styles.scopeOption} ${visibleScope === 'followers' ? styles.active : ''}`}
-                    onClick={() => setVisibleScope('followers')}
-                  >
-                    <Text className={styles.scopeText}>互相关注</Text>
-                  </View>
-                  {/* 未成年用户隐藏"所有人"选项 */}
-                  {!isMinor && (
-                    <View
-                      className={`${styles.scopeOption} ${visibleScope === 'public' ? styles.active : ''}`}
-                      onClick={() => setVisibleScope('public')}
-                    >
-                      <Text className={styles.scopeText}>所有人</Text>
-                    </View>
-                  )}
-                </View>
-                {/* N2 团体可见时，选择具体团体 */}
-                {visibleScope === 'circle' && userCircles.length > 0 && (
-                  <View className={styles.circleSelector}>
-                    <Text className={styles.circleSelectorLabel}>选择团体：</Text>
-                    <View className={styles.circleOptions}>
-                      {userCircles.map(circle => (
-                        <View
-                          key={circle.id}
-                          className={`${styles.circleOption} ${selectedCircleId === circle.id ? styles.active : ''}`}
-                          onClick={() => setSelectedCircleId(circle.id)}
-                        >
-                          <Text className={styles.circleOptionText}>{circle.name}</Text>
-                        </View>
-                      ))}
-                    </View>
-                    {userCircles.length > 1 && !selectedCircleId && (
-                      <Text className={styles.circleHint}>请选择要分享到的团体</Text>
-                    )}
-                  </View>
-                )}
-
-                {/* 匿名行善开关 */}
-                <View className={styles.anonymousToggle}>
-                  <View className={styles.anonymousToggleLeft}>
-                    <Text className={styles.anonymousToggleIcon}>🛡️</Text>
-                    <View className={styles.anonymousToggleText}>
-                      <Text className={styles.anonymousToggleTitle}>匿名行善</Text>
-                      <Text className={styles.anonymousToggleDesc}>保护隐私，让善意无负担</Text>
-                    </View>
-                  </View>
-                  <View
-                    className={`${styles.anonymousSwitch} ${isAnonymous ? styles.anonymousSwitchOn : ''}`}
-                    onClick={() => setIsAnonymous(!isAnonymous)}
-                  >
-                    <View className={styles.anonymousSwitchThumb} />
-                  </View>
-                </View>
-                {showAnonymousTip && (
-                  <View className={styles.anonymousFirstTip}>
-                    <Text className={styles.anonymousFirstTipText}>
-                      💡 首次善行已为您开启匿名模式，消除被熟人看到的顾虑
-                    </Text>
-                  </View>
-                )}
-
-                {/* 关联德育任务（仅在选择了班级圈时显示） */}
-                {visibleScope === 'circle' && selectedCircleId && (
-                  <View className={styles.taskSelector}>
-                    <View className={styles.taskSelectorHeader} onClick={() => setShowTaskSelector(!showTaskSelector)}>
-                      <Text className={styles.taskSelectorTitle}>
-                        {selectedTaskId ? '📋 已关联任务' : '📋 关联本周德育任务（可选）'}
-                      </Text>
-                      <Text className={styles.taskSelectorToggle}>{showTaskSelector ? '▲' : '▼'}</Text>
-                    </View>
-                    {showTaskSelector && (
-                      <TaskSelectorContent
-                        circleId={selectedCircleId}
-                        selectedTaskId={selectedTaskId}
-                        onSelect={setSelectedTaskId}
-                      />
-                    )}
-                    {selectedTaskId && (
-                      <Text className={styles.taskSelectedHint}>
-                        已关联：{useMoralTaskStore.getState().getTasksByCircle(selectedCircleId).find(t => t.id === selectedTaskId)?.title || ''}
-                        {useMoralTaskStore.getState().getTasksByCircle(selectedCircleId).find(t => t.id === selectedTaskId)?.requireVideo && ' · 需视频'}
-                      </Text>
-                    )}
-                  </View>
-                )}
-              </View>
-            )}
-          </View>
-
-          {/* 任务2：草稿保存状态提示 */}
-          {currentDraftId && lastSavedAt && (
-            <View className={styles.draftSavedHint}>
-              <Text className={styles.draftSavedText}>📝 草稿已自动保存 · {formatSaveTime(lastSavedAt)}</Text>
-            </View>
           )}
 
-          {/* 任务2：草稿列表 */}
           {drafts.length > 0 && (
-            <View className={styles.draftList}>
-              <Text className={styles.draftListTitle}>草稿箱（{drafts.length}）</Text>
-              {drafts.map(draft => (
-                <View key={draft.id} className={styles.draftItem}>
-                  <View
-                    className={styles.draftContent}
-                    onClick={() => handleEditDraft(draft.id)}
-                  >
-                    <Text className={styles.draftPreview}>
-                      {draft.content.slice(0, 30) || (draft.voice ? '[语音草稿]' : '[视频草稿]') || '[空草稿]'}
-                    </Text>
-                    <Text className={styles.draftTime}>{formatSaveTime(draft.updatedAt)}</Text>
-                  </View>
-                  <View className={styles.draftOps}>
-                    <Text className={styles.draftOp} onClick={() => handleEditDraft(draft.id)}>编辑</Text>
-                    <Text className={styles.draftOp} onClick={() => handleDeleteDraft(draft.id)}>删除</Text>
-                  </View>
-                </View>
-              ))}
+            <View className={styles.wxDraftBar} onClick={() => handleEditDraft(drafts[0].id)}>
+              <Text className={styles.wxDraftText}>📝 {drafts.length}个草稿 · {drafts[0].content.slice(0, 20) || '[空草稿]'}</Text>
             </View>
           )}
 
+          {showAnonymousTip && (
+            <View className={styles.wxAnonymousTip}>
+              <Text className={styles.wxAnonymousTipText}>💡 首次善行已开启匿名，让善意无负担</Text>
+            </View>
+          )}
         </>
       )}
 

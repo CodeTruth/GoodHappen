@@ -6,6 +6,7 @@ import styles from './index.module.scss';
 
 const EvidenceHistoryPage: React.FC = () => {
   const { records, loadFromStorage, removeRecord } = useEvidenceHistoryStore();
+  const isPickMode = Taro.getCurrentInstance().router?.params?.mode === 'pick';
 
   useEffect(() => {
     loadFromStorage();
@@ -78,7 +79,15 @@ const EvidenceHistoryPage: React.FC = () => {
   };
 
   const handleUseInRecord = (record: EvidenceRecord) => {
-    Taro.navigateTo({ url: `/pages/record/index?from=history&historyId=${record.id}` });
+    const params = Taro.getCurrentInstance().router?.params;
+    if (params?.mode === 'pick') {
+      // 选择模式：通过全局事件回传
+      const event = new CustomEvent('evidencePick', { detail: record });
+      window.dispatchEvent(event);
+      Taro.navigateBack();
+    } else {
+      Taro.navigateTo({ url: `/pages/record/index?from=history&historyId=${record.id}` });
+    }
   };
 
   const formatTime = (iso: string) => {
@@ -319,11 +328,13 @@ const EvidenceHistoryPage: React.FC = () => {
               {/* ===== 操作按钮 ===== */}
               <View className={styles.actionRow}>
                 <View className={styles.actionBtnPrimary} onClick={() => handleUseInRecord(record)}>
-                  <Text className={styles.actionBtnText}>📝 用于发布记录</Text>
+                  <Text className={styles.actionBtnText}>{isPickMode ? '✓ 选择这条记录' : '📝 用于发布记录'}</Text>
                 </View>
-                <View className={styles.actionBtnDel} onClick={() => handleDelete(record.id)}>
-                  <Text className={styles.actionBtnTextDel}>🗑 删除</Text>
-                </View>
+                {!isPickMode && (
+                  <View className={styles.actionBtnDel} onClick={() => handleDelete(record.id)}>
+                    <Text className={styles.actionBtnTextDel}>🗑 删除</Text>
+                  </View>
+                )}
               </View>
             </View>
           );

@@ -844,7 +844,7 @@ export default function KindnessGuardPage() {
 
     // 善守模式：检测意图直接触发功能
     if (agentMode === 'guard') {
-      const wantsLawyer = /要律师|需要法律服务|接入法律服务|法律咨询|找律师|请律师|法律帮助|法律支援/.test(text);
+      const wantsLawyer = /要律师|需要法律服务|接入法律服务|法律咨询|找律师|请律师|法律帮助|法律支援|全权代理|委托律师|律师代理/.test(text);
       const isConfirmLawyer = lastAskedForLawyerRef.current && text.trim().length <= 12 && /^(好的|好|行|可以|同意|嗯|要|需要|接入|是的)/.test(text.trim());
       if (wantsLawyer || isConfirmLawyer) {
         lastAskedForLawyerRef.current = false;
@@ -859,6 +859,45 @@ export default function KindnessGuardPage() {
         lastAskedForLawyerRef.current = false;
         lastAskedForInsuranceRef.current = false;
         doConnectInsurance();
+        return;
+      }
+    }
+
+    // ===== 跨模式意图检测：在保险/律师/见证模式中检测切换意图 =====
+    if (agentMode !== 'guard') {
+      const wantsLawyer = /找律师|请律师|要律师|需要律师|全权代理|委托律师|律师代理|法律咨询|法律服务|接入法律/.test(text);
+      const wantsInsurance = /查保险|看保险|保险理赔|善行保险|保险状态|保额|理赔/.test(text);
+      const wantsWitness = /搜索见证|找人|找目击|搜索证人/.test(text);
+      const wantsGuard = /退出|返回|不聊了|够了|回到.*善守|结束咨询/.test(text);
+
+      if (agentMode === 'insurance' && wantsLawyer) {
+        // 保险→律师
+        addAIMessage('好的，正在为您转接律师，请稍候…');
+        setTimeout(() => {
+          doConnectLawyer();
+        }, 800);
+        return;
+      }
+      if (agentMode === 'lawyer' && wantsInsurance) {
+        // 律师→保险
+        addAIMessage('好的，正在为您转接保险专员，请稍候…');
+        setTimeout(() => {
+          doConnectInsurance();
+        }, 800);
+        return;
+      }
+      if ((agentMode === 'insurance' || agentMode === 'lawyer') && wantsWitness) {
+        addAIMessage('好的，正在启动见证搜索，请稍候…');
+        setTimeout(() => {
+          doSearchWitness();
+        }, 800);
+        return;
+      }
+      if (wantsGuard) {
+        exitLawyerMode();
+        exitInsuranceMode();
+        exitWitnessMode();
+        addAIMessage('已返回善行守护模式。有什么需要随时告诉我。');
         return;
       }
     }

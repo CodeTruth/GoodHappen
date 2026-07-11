@@ -3,7 +3,7 @@ import { View, Text, ScrollView } from '@tarojs/components';
 import Taro from '@tarojs/taro';
 import { useUserStore } from '@/store/user';
 import { useKindnessStore } from '@/store/kindness';
-import { getActiveInspirations, getSelfCareTasks, getOrgTasks, type WeeklyInspiration } from '@/data/weekly-challenges';
+import { getActiveInspirations, getOrgTasks, type WeeklyInspiration } from '@/data/weekly-challenges';
 import { CHALLENGES } from '@/data/challenge-data';
 import { THANK_NOTES } from '@/data/thank-wall-data';
 import styles from './index.module.scss';
@@ -118,7 +118,7 @@ const RELAY_CHAINS: RelayLink[][] = [
     { id: 'r4', name: '??', avatar: '❓', content: '等你来接棒…', time: '', relation: '下一棒' },
   ],
   [
-    { id: 's1', name: '李老师', avatar: '👨\u200D🏫', content: '给一个平时不怎么发言的学生的家长打了电话，专门表扬了孩子最近的进步。挂电话的时候能听出家长特别激动，其实孩子一直在努力，只是没人看到而已。', time: '昨天 18:00', relation: '发起' },
+    { id: 's1', name: '李老师', avatar: '👨‍🏫', content: '给一个平时不怎么发言的学生的家长打了电话，专门表扬了孩子最近的进步。挂电话的时候能听出家长特别激动，其实孩子一直在努力，只是没人看到而已。', time: '昨天 18:00', relation: '发起' },
     { id: 's2', name: '王同学', avatar: '📚', content: '同桌对一道题死活想不通，急得直挠头。我画了张图给她讲了两遍，她突然眼睛一亮说"原来是这样啊！"那个瞬间比自己做出题还开心，知识分享出去居然会变多。', time: '昨天 20:30', relation: '接棒' },
     { id: 's3', name: '??', avatar: '❓', content: '等你来接棒…', time: '', relation: '下一棒' },
   ],
@@ -185,8 +185,12 @@ export default function DiscoverPage() {
 
   const [activeTab, setActiveTab] = useState(0);
   const [matchedNotes, setMatchedNotes] = useState<Record<string, typeof THANK_NOTES[number]>>({});
+  // 任务详情弹窗
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [detailType, setDetailType] = useState<'task' | 'challenge' | null>(null);
+  const [detailData, setDetailData] = useState<any>(null);
 
-  // \u6A21\u62DF AI \u611F\u8C22\u5899\u5339\u914D\uFF1A\u6839\u636E\u65F6\u95F4\u3001\u5730\u70B9\u3001\u5173\u952E\u8BCD\u5339\u914D\u5584\u884C\u8BB0\u5F55
+  // 模拟 AI 感谢墙匹配：根据时间、地点、关键词匹配善行记录
   const runAIMatch = useCallback(() => {
     const results: Record<string, typeof THANK_NOTES[number]> = {};
     THANK_NOTES.forEach(note => {
@@ -196,20 +200,20 @@ export default function DiscoverPage() {
       publishedList.forEach(k => {
         let score = 0;
         const kDate = k.createdAt.slice(5, 10);
-        if (note.time.includes(kDate) || note.time.includes('\u4ECA\u5929') || note.time.includes('\u5C0F\u65F6') || note.time.includes('\u5206\u949F\u524D')) score += 30;
+        if (note.time.includes(kDate) || note.time.includes('今天') || note.time.includes('小时') || note.time.includes('分钟前')) score += 30;
         if (note.location && k.location && note.location.includes(k.location.slice(0, 2))) score += 25;
         if (k.tags) {
           k.tags.forEach(tag => {
             if (note.content.includes(tag)) score += 15;
           });
         }
-        const contentWords = ['\u5E2E', '\u6361', '\u63A8', '\u9001', '\u627E', '\u5E26', '\u6434\u6276', '\u5E2E\u5FD9', '\u6307\u8DEF', '\u62B1'];
+        const contentWords = ['帮', '捡', '推', '送', '找', '带', '搀扶', '帮忙', '指路', '抱'];
         contentWords.forEach(w => {
           if (k.content.includes(w) && note.content.includes(w)) score += 10;
         });
         if (score > bestScore && score >= 40) {
           bestScore = score;
-          bestMatch = { id: k.id, author: k.userName || '\u533F\u540D', content: k.content.slice(0, 40) + '...', date: k.createdAt.slice(5, 10), matchScore: score };
+          bestMatch = { id: k.id, author: k.userName || '匿名', content: k.content.slice(0, 40) + '...', date: k.createdAt.slice(5, 10), matchScore: score };
         }
       });
       if (bestMatch) {
@@ -218,9 +222,9 @@ export default function DiscoverPage() {
     });
     if (Object.keys(results).length > 0) {
       setMatchedNotes(prev => ({ ...prev, ...results }));
-      Taro.showToast({ title: `\u5339\u914D\u5230 ${Object.keys(results).length} \u6761`, icon: 'none' });
+      Taro.showToast({ title: `匹配到 ${Object.keys(results).length} 条`, icon: 'none' });
     } else {
-      Taro.showToast({ title: '\u6682\u65E0\u65B0\u5339\u914D', icon: 'none' });
+      Taro.showToast({ title: '暂无新匹配', icon: 'none' });
     }
   }, [publishedList]);
 
@@ -233,14 +237,14 @@ export default function DiscoverPage() {
       return next;
     });
     if (action === 'linked') {
-      Taro.showToast({ title: '\u5DF2\u5173\u8054\u5584\u884C\u8BB0\u5F55', icon: 'success' });
+      Taro.showToast({ title: '已关联善行记录', icon: 'success' });
     }
   }, []);
-  const TABS = ['\u63A8\u8350', '\u5584\u884C\u63A5\u529B', '\u4EFB\u52A1\u5E7F\u573A', '\u611F\u8C22\u5899'] as const;
+  const TABS = ['推荐', '善行接力', '任务广场', '感谢墙'] as const;
 
   // 本周灵感
   const activeInspirations = useMemo(() => getActiveInspirations(), []);
-  const selfCareTasks = useMemo(() => getSelfCareTasks().slice(0, 1), []);
+
   const orgTasks = useMemo(() => getOrgTasks(), []);
 
   // 今日已发布数
@@ -329,12 +333,43 @@ export default function DiscoverPage() {
   }, [refreshStreak]);
 
   // ===== 渲染任务卡片 =====
+  const openDetail = useCallback((type: 'task' | 'challenge', data: any) => {
+    setDetailType(type);
+    setDetailData(data);
+    setDetailOpen(true);
+  }, []);
+
+  const closeDetail = useCallback(() => {
+    setDetailOpen(false);
+    setDetailType(null);
+    setDetailData(null);
+  }, []);
+
+  const acceptTask = useCallback(async () => {
+    if (!detailData) return;
+    closeDetail();
+    const isChallenge = detailType === 'challenge';
+    const title = isChallenge ? detailData.title : detailData.title;
+    const confirm = await Taro.showModal({
+      title: `领取「${title}」`,
+      content: isChallenge
+        ? '报名挑战后，你需要在目标天数内坚持完成。完成后记得回来提交证明哦！'
+        : '领取任务后，请按照要求完成并回来提交证明。每一份真实的善意都会被记录。',
+      confirmText: '去记录',
+      cancelText: '稍后再说',
+    });
+    if (!confirm.confirm) return;
+    Taro.navigateTo({
+      url: `/pages/record/index?presetTitle=${encodeURIComponent(title)}&presetTags=${encodeURIComponent(isChallenge ? '善行挑战' : '任务')}`,
+    });
+  }, [detailData, detailType, closeDetail]);
+
   const renderTaskCard = (task: WeeklyInspiration) => {
     const isSelfCare = task.category === 'selfcare';
     const isOrg = task.category === 'org';
     const diffLabel = task.difficulty === 'easy' ? '简单' : task.difficulty === 'hard' ? '较难' : '中等';
     return (
-      <View key={task.id} className={`${styles.taskCard} ${isSelfCare ? styles.taskCardSelfCare : ''} ${isOrg ? styles.taskCardOrg : ''}`} onClick={() => handleTaskClick(task)}>
+      <View key={task.id} className={`${styles.taskCard} ${isSelfCare ? styles.taskCardSelfCare : ''} ${isOrg ? styles.taskCardOrg : ''}`} onClick={() => openDetail('task', task)}>
         <View className={styles.taskCardEmoji}><Text>{task.emoji}</Text></View>
         <View className={styles.taskCardBody}>
           <View className={styles.taskCardHeader}>
@@ -398,7 +433,7 @@ export default function DiscoverPage() {
         {activeTab === 0 && (<>
           <View className={styles.section}>
             <View className={styles.sectionHeader}>
-              <Text className={styles.sectionTitle}>{'\uD83C\uDF81 \u5584\u884C\u76F2\u76D2'}</Text>
+              <Text className={styles.sectionTitle}>{'🎁 善行盲盒'}</Text>
               <Text className={styles.sectionSubtitle}>拆开惊喜，发现未知的温暖</Text>
             </View>
             <View className={styles.blindBoxRow}>
@@ -407,7 +442,7 @@ export default function DiscoverPage() {
                 const revealed = blindBoxRevealed[box.id];
                 return (
                   <View key={box.id} className={`${styles.blindBox} ${opened ? styles.blindBoxOpened : ''}`} onClick={() => !opened && handleOpenBlindBox(box.id)}>
-                    {!opened && (<><Text className={styles.blindBoxEmoji}>{'\uD83C\uDF81'}</Text><Text className={styles.blindBoxLabel}>拆开</Text></>)}
+                    {!opened && (<><Text className={styles.blindBoxEmoji}>{'🎁'}</Text><Text className={styles.blindBoxLabel}>拆开</Text></>)}
                     {opened && revealed && (<>
                       <Text className={styles.blindBoxEmoji}>{revealed.emoji}</Text>
                       <Text className={styles.blindBoxLabel}>{revealed.title}</Text>
@@ -420,35 +455,35 @@ export default function DiscoverPage() {
           </View>
           <View className={styles.section}>
             <View className={styles.sectionHeader}>
-              <Text className={styles.sectionTitle}>{'\u23F3 \u6E29\u6696\u65F6\u5149\u673A'}</Text>
+              <Text className={styles.sectionTitle}>{'⏳ 温暖时光机'}</Text>
               <Text className={styles.sectionSubtitle}>看看过去的你</Text>
             </View>
             {timeMachineRecord ? (
               <View className={styles.timeMachineCard} onClick={() => Taro.navigateTo({ url: `/pages/detail/index?id=${timeMachineRecord.id}` })}>
-                <View className={styles.timeMachineBadge}><Text className={styles.timeMachineBadgeText}>{'\uD83D\uDCC5 \u53BB\u5E74\u4ECA\u5929'}</Text></View>
+                <View className={styles.timeMachineBadge}><Text className={styles.timeMachineBadgeText}>{'📅 去年今天'}</Text></View>
                 <Text className={styles.timeMachineContent}>{timeMachineRecord.content}</Text>
                 <View className={styles.timeMachineMeta}>
                   <Text className={styles.timeMachineDate}>{timeMachineRecord.createdAt.slice(0, 10)}</Text>
                   <Text className={styles.timeMachineTag}>{timeMachineRecord.tags[0] || '善行'}</Text>
                 </View>
-                <Text className={styles.timeMachinePrompt}>{'\uD83D\uDCA1 \u4ECA\u5E74\u7684\u4ECA\u5929\uFF0C\u4F60\u4F1A\u505A\u4E00\u4EF6\u4EC0\u4E48\u6837\u7684\u4E8B\u5462\uFF1F'}</Text>
+                <Text className={styles.timeMachinePrompt}>{'💡 今年的今天，你会做一件什么样的事呢？'}</Text>
               </View>
             ) : (
               <View className={styles.timeMachineEmpty}>
-                <Text className={styles.timeMachineEmptyText}>{'\uD83D\uDCC5 \u53BB\u5E74\u4ECA\u5929\uFF0C\u4F60\u8FD8\u6CA1\u6709\u8BB0\u5F55\u5584\u884C'}</Text>
+                <Text className={styles.timeMachineEmptyText}>{'📅 去年今天，你还没有记录善行'}</Text>
                 <Text className={styles.timeMachineEmptySub}>从今天开始，明年的今天你会看到过去的自己</Text>
               </View>
             )}
           </View>
           <View className={styles.section}>
             <View className={styles.sectionHeader}>
-              <Text className={styles.sectionTitle}>{'\uD83C\uDF1F \u66F4\u591A'}</Text>
+              <Text className={styles.sectionTitle}>{'🌟 更多'}</Text>
               <Text className={styles.sectionSubtitle}>探索善行的更多可能</Text>
             </View>
             <View className={styles.moreGrid}>
-              <View className={styles.moreCard} onClick={() => Taro.navigateTo({ url: '/pages/kindness-square/index' })}><Text className={styles.moreIcon}>{'\uD83D\uDC65'}</Text><Text className={styles.moreLabel}>善行广场</Text></View>
-              <View className={styles.moreCard} onClick={() => Taro.navigateTo({ url: '/pages/warmth-map/index' })}><Text className={styles.moreIcon}>{'\uD83C\uDF0D'}</Text><Text className={styles.moreLabel}>温暖地图</Text></View>
-              <View className={styles.moreCard} onClick={() => Taro.navigateTo({ url: '/pages/future-letter/index' })}><Text className={styles.moreIcon}>{'\uD83D\uDCE7'}</Text><Text className={styles.moreLabel}>给未来的信</Text></View>
+              <View className={styles.moreCard} onClick={() => Taro.navigateTo({ url: '/pages/kindness-square/index' })}><Text className={styles.moreIcon}>{'👥'}</Text><Text className={styles.moreLabel}>善行广场</Text></View>
+              <View className={styles.moreCard} onClick={() => Taro.navigateTo({ url: '/pages/warmth-map/index' })}><Text className={styles.moreIcon}>{'🌍'}</Text><Text className={styles.moreLabel}>温暖地图</Text></View>
+              <View className={styles.moreCard} onClick={() => Taro.navigateTo({ url: '/pages/future-letter/index' })}><Text className={styles.moreIcon}>{'📩'}</Text><Text className={styles.moreLabel}>给未来的信</Text></View>
             </View>
           </View>
         </>)}
@@ -457,7 +492,7 @@ export default function DiscoverPage() {
         {activeTab === 1 && (
           <View className={styles.section}>
             <View className={styles.sectionHeader}>
-              <Text className={styles.sectionTitle}>{'\uD83C\uDFC3 \u5584\u884C\u63A5\u529B'}</Text>
+              <Text className={styles.sectionTitle}>{'🏅 善行接力'}</Text>
               <Text className={styles.sectionSubtitle}>接过这一棒，让善意传递</Text>
             </View>
             <Text className={styles.sectionDesc}>看到别人的善行，接力做一件类似的事。善意会传染，从你开始。</Text>
@@ -466,17 +501,17 @@ export default function DiscoverPage() {
                 <View className={styles.relayLinks}>
                   {chain.map((link, li) => (
                     <View key={link.id} className={styles.relayLink}>
-                      <View className={`${styles.relayAvatar} ${link.relation === '\u4E0B\u4E00\u68D2' ? styles.relayAvatarNext : ''}`}><Text>{link.avatar}</Text></View>
+                      <View className={`${styles.relayAvatar} ${link.relation === '下一棒' ? styles.relayAvatarNext : ''}`}><Text>{link.avatar}</Text></View>
                       <View className={styles.relayBody}>
                         <View className={styles.relayHeader}><Text className={styles.relayName}>{link.name}</Text><Text className={styles.relayRelation}>{link.relation}</Text></View>
                         <Text className={styles.relayContent}>{link.content}</Text>
                         {link.time && <Text className={styles.relayTime}>{link.time}</Text>}
                       </View>
-                      {li < chain.length - 1 && <View className={styles.relayArrow}>{'\u2193'}</View>}
+                      {li < chain.length - 1 && <View className={styles.relayArrow}>{'↓'}</View>}
                     </View>
                   ))}
                 </View>
-                <View className={styles.relayAction} onClick={() => handleRelay(ci)}><Text className={styles.relayActionText}>{'\uD83C\uDFC3 \u6211\u8981\u63A5\u68D2'}</Text></View>
+                <View className={styles.relayAction} onClick={() => handleRelay(ci)}><Text className={styles.relayActionText}>{'🏅 我要接棒'}</Text></View>
               </View>
             ))}
           </View>
@@ -484,18 +519,10 @@ export default function DiscoverPage() {
 
         {/* ===== Tab: 任务广场 ===== */}
         {activeTab === 2 && (<>
-          <View className={styles.section}>
-            <View className={styles.sectionHeader}>
-              <Text className={styles.sectionTitle}>{'\uD83D\uDCA1 \u4ECA\u65E5\u6E29\u6696\u7075\u611F'}</Text>
-              <Text className={styles.sectionSubtitle}>每周轮换 · 对他人行善</Text>
-            </View>
-            <Text className={styles.sectionDesc}>选一件小事，<Text className={styles.highlight}>先做，再做记录</Text>。善意不需要轰轰烈烈，从日常开始。</Text>
-            <View className={styles.taskList}>{activeInspirations.map(renderTaskCard)}</View>
-          </View>
           {orgTasks.length > 0 && (
             <View className={styles.section}>
               <View className={styles.sectionHeader}>
-                <Text className={styles.sectionTitle}>{'\uD83C\uDFDB\uFE0F \u8BA4\u8BC1\u673A\u6784\u4EFB\u52A1'}</Text>
+                <Text className={styles.sectionTitle}>{'🏛️ 认证机构任务'}</Text>
                 <Text className={styles.sectionSubtitle}>社区 · 政府 · 公益组织</Text>
               </View>
               <Text className={styles.sectionDesc}>这些任务由认证机构发布，有更大的社会影响力。参与后可获得<Text className={styles.highlight}>额外福气值奖励</Text>。</Text>
@@ -504,20 +531,20 @@ export default function DiscoverPage() {
           )}
           <View className={styles.section}>
             <View className={styles.sectionHeader}>
-              <Text className={styles.sectionTitle}>{'\uD83C\uDF31 \u5584\u5F85\u81EA\u5DF1'}</Text>
-              <Text className={styles.sectionSubtitle}>善良先从对自己好开始</Text>
+              <Text className={styles.sectionTitle}>{'💡 今日温暖灵感'}</Text>
+              <Text className={styles.sectionSubtitle}>每周轮换 · 对他人行善</Text>
             </View>
-            <Text className={styles.sectionDesc}>对自己好，也是一种善行。照顾好自己，才有更多能量温暖他人。</Text>
-            <View className={styles.taskList}>{selfCareTasks.map(renderTaskCard)}</View>
+            <Text className={styles.sectionDesc}>选一件小事，<Text className={styles.highlight}>先做，再做记录</Text>。善意不需要轰轰烈烈，从日常开始。</Text>
+            <View className={styles.taskList}>{activeInspirations.map(renderTaskCard)}</View>
           </View>
           <View className={styles.section}>
             <View className={styles.sectionHeader}>
-              <Text className={styles.sectionTitle}>{'\uD83C\uDFC6 \u5584\u884C\u6311\u6218\u8D5B'}</Text>
+              <Text className={styles.sectionTitle}>{'🏆 善行挑战赛'}</Text>
               <Text className={styles.sectionSubtitle}>完成挑战赢取专属奖励</Text>
             </View>
             <View className={styles.challengeList}>
               {CHALLENGES.filter(c => c.status === 'active').map(ch => (
-                <View key={ch.id} className={styles.challengeCard}>
+                <View key={ch.id} className={styles.challengeCard} onClick={() => openDetail('challenge', ch)}>
                   <View className={styles.challengeHeader}>
                     <Text className={styles.challengeEmoji}>{ch.emoji}</Text>
                     <View className={styles.challengeBody}>
@@ -529,7 +556,7 @@ export default function DiscoverPage() {
                     <Text className={styles.challengeOrg}>{ch.orgName}</Text>
                     <Text className={styles.challengeParticipants}>{ch.participants}人参与</Text>
                   </View>
-                  <View className={styles.challengeMeta}><Text className={styles.challengeReward}>{'\uD83C\uDF81'} {ch.reward}</Text></View>
+                  <View className={styles.challengeMeta}><Text className={styles.challengeReward}>{'🎁'} {ch.reward}</Text></View>
                 </View>
               ))}
             </View>
@@ -540,13 +567,13 @@ export default function DiscoverPage() {
         {activeTab === 3 && (
           <View className={styles.section}>
             <View className={styles.sectionHeader}>
-              <Text className={styles.sectionTitle}>{'\uD83D\uDC8C \u611F\u8C22\u5899'}</Text>
+              <Text className={styles.sectionTitle}>{'💌 感谢墙'}</Text>
               <Text className={styles.sectionSubtitle}>每一份善意，都值得被看见</Text>
             </View>
             <View className={styles.aiMatchBar} onClick={runAIMatch}>
-              <Text className={styles.aiMatchIcon}>{'\uD83E\uDD16'}</Text>
-              <Text className={styles.aiMatchText}>AI \u667A\u80FD\u5339\u914D\u611F\u8C22\u2192\u5584\u884C</Text>
-              <Text className={styles.aiMatchHint}>{'\u6839\u636E\u65F6\u95F4\u00B7\u5730\u70B9\u00B7\u5173\u952E\u8BCD\u5339\u914D'}</Text>
+              <Text className={styles.aiMatchIcon}>{'🤖'}</Text>
+              <Text className={styles.aiMatchText}>AI 智能匹配感谢→善行</Text>
+              <Text className={styles.aiMatchHint}>{'根据时间·地点·关键词匹配'}</Text>
             </View>
             {THANK_NOTES.map(note => {
               const m = matchedNotes[note.id];
@@ -566,15 +593,15 @@ export default function DiscoverPage() {
 
                   {m && m.matchStatus === 'matched' && m.matchedKindness && (
                     <View className={styles.matchBanner}>
-                      <Text className={styles.matchLabel}>{'\uD83E\uDD16 AI\u5339\u914D'}</Text>
+                      <Text className={styles.matchLabel}>{'🤖 AI匹配'}</Text>
                       <Text className={styles.matchDesc}>"{m.matchedKindness.content}"</Text>
-                      <Text className={styles.matchMeta}>{m.matchedKindness.author} \u00B7 {m.matchedKindness.date} \u00B7 \u5339\u914D\u5EA6 {m.matchedKindness.matchScore}%</Text>
+                      <Text className={styles.matchMeta}>{m.matchedKindness.author} · {m.matchedKindness.date} · 匹配度 {m.matchedKindness.matchScore}%</Text>
                       <View className={styles.matchActions}>
                         <View className={styles.matchBtnConfirm} onClick={() => handleMatchAction(note.id, 'linked')}>
-                          <Text className={styles.matchBtnConfirmText}>{'\u2705 \u786E\u8BA4\u5173\u8054'}</Text>
+                          <Text className={styles.matchBtnConfirmText}>{'✅ 确认关联'}</Text>
                         </View>
                         <View className={styles.matchBtnSkip} onClick={() => handleMatchAction(note.id, 'skipped')}>
-                          <Text className={styles.matchBtnSkipText}>{'\u274C \u4E0D\u662F\u6211'}</Text>
+                          <Text className={styles.matchBtnSkipText}>{'❌ 不是我'}</Text>
                         </View>
                       </View>
                     </View>
@@ -582,29 +609,29 @@ export default function DiscoverPage() {
 
                   {m && m.matchStatus === 'linked' && m.matchedKindness && (
                     <View className={styles.matchBannerLinked} onClick={() => Taro.navigateTo({ url: `/pages/detail/index?id=${m.matchedKindness!.id}` })}>
-                      <Text className={styles.matchLabel}>{'\u2705 \u5DF2\u5173\u8054\u5584\u884C\u8BB0\u5F55'}</Text>
-                      <Text className={styles.matchDesc}>{m.matchedKindness.author} \u00B7 {m.matchedKindness.date}</Text>
+                      <Text className={styles.matchLabel}>{'✅ 已关联善行记录'}</Text>
+                      <Text className={styles.matchDesc}>{m.matchedKindness.author} · {m.matchedKindness.date}</Text>
                     </View>
                   )}
 
                   {m && m.matchStatus === 'skipped' && (
                     <View className={styles.matchBannerSkipped}>
-                      <Text className={styles.matchLabelSkipped}>{'\u5DF2\u8DF3\u8FC7'}</Text>
+                      <Text className={styles.matchLabelSkipped}>{'已跳过'}</Text>
                     </View>
                   )}
 
                   <View className={styles.thankFooter}>
                     <View className={styles.thankLikes}>
-                      <Text className={styles.thankLikeIcon}>{'\u2764\uFE0F'}</Text>
+                      <Text className={styles.thankLikeIcon}>{'❤️'}</Text>
                       <Text className={styles.thankLikeCount}>{note.likes}</Text>
                     </View>
                     {note.kindnessId ? (
                       <View className={styles.thankReplyBtn} onClick={() => Taro.navigateTo({ url: `/pages/detail/index?id=${note.kindnessId}` })}>
-                        <Text className={styles.thankReplyText}>{'\uD83D\uDCC4 \u67E5\u770B\u5584\u884C'}</Text>
+                        <Text className={styles.thankReplyText}>{'📄 查看善行'}</Text>
                       </View>
                     ) : (
                       <View className={styles.thankReplyBtn}>
-                        <Text className={styles.thankReplyText}>{note.replied ? '\u2714 \u5DF2\u56DE\u5E94' : '\u611F\u8C22\u4ED6/\u5979'}</Text>
+                        <Text className={styles.thankReplyText}>{note.replied ? '✔ 已回应' : '感谢他/她'}</Text>
                       </View>
                     )}
                   </View>
@@ -616,6 +643,86 @@ export default function DiscoverPage() {
 
         <View style={{ height: 40 }} />
       </ScrollView>
+
+      {/* ===== 任务/挑战详情弹窗 ===== */}
+      {detailOpen && detailData && (
+        <View className={styles.detailOverlay} onClick={closeDetail}>
+          <View className={styles.detailModal} onClick={(e) => e.stopPropagation()}>
+            <View className={styles.detailHeader}>
+              <Text className={styles.detailEmoji}>{detailData.emoji}</Text>
+              <Text className={styles.detailTitle}>{detailData.title}</Text>
+              <View className={styles.detailClose} onClick={closeDetail}><Text>✕</Text></View>
+            </View>
+            <ScrollView scrollY className={styles.detailBody}>
+              <Text className={styles.detailDesc}>{detailData.desc}</Text>
+              {detailType === 'task' && detailData.orgName && (
+                <View className={styles.detailOrg}>
+                  <Text className={styles.detailOrgLabel}>主办方</Text>
+                  <Text className={styles.detailOrgName}>{detailData.orgName}</Text>
+                  {detailData.orgType && (
+                    <Text className={styles.detailOrgBadge}>
+                      {detailData.orgType === 'community' ? '社区' : detailData.orgType === 'gov' ? '政府' : detailData.orgType === 'ngo' ? '公益组织' : '认证机构'}
+                    </Text>
+                  )}
+                </View>
+              )}
+              {detailType === 'challenge' && (
+                <View className={styles.detailMetaBox}>
+                  <View className={styles.detailMetaRow}>
+                    <Text className={styles.detailMetaLabel}>主办方</Text>
+                    <Text className={styles.detailMetaValue}>{detailData.orgName}</Text>
+                  </View>
+                  <View className={styles.detailMetaRow}>
+                    <Text className={styles.detailMetaLabel}>时间</Text>
+                    <Text className={styles.detailMetaValue}>{detailData.startDate} ~ {detailData.endDate}</Text>
+                  </View>
+                  <View className={styles.detailMetaRow}>
+                    <Text className={styles.detailMetaLabel}>目标</Text>
+                    <Text className={styles.detailMetaValue}>连续 {detailData.targetDays} 天</Text>
+                  </View>
+                </View>
+              )}
+              <View className={styles.detailStats}>
+                <View className={styles.detailStat}>
+                  <Text className={styles.detailStatNum}>{detailData.participants || 0}</Text>
+                  <Text className={styles.detailStatLabel}>人已参与</Text>
+                </View>
+                {detailType === 'task' && (
+                  <View className={styles.detailStat}>
+                    <Text className={styles.detailStatNum}>+{detailData.fortune}</Text>
+                    <Text className={styles.detailStatLabel}>福气值</Text>
+                  </View>
+                )}
+                {detailType === 'challenge' && (
+                  <View className={styles.detailStat}>
+                    <Text className={styles.detailStatNum}>{detailData.reward}</Text>
+                    <Text className={styles.detailStatLabel}>挑战奖励</Text>
+                  </View>
+                )}
+              </View>
+              <View className={styles.detailRule}>
+                <Text className={styles.detailRuleTitle}>参与规则</Text>
+                <Text className={styles.detailRuleItem}>1. 领取任务后按要求完成</Text>
+                <Text className={styles.detailRuleItem}>2. 完成后在「记录善行」中提交证明</Text>
+                <Text className={styles.detailRuleItem}>3. 审核通过后即可获得奖励</Text>
+                <Text className={styles.detailRuleItem}>4. 恶意刷任务将被取消资格</Text>
+              </View>
+              <View className={styles.detailContact}>
+                <Text className={styles.detailContactTitle}>有问题？</Text>
+                <Text className={styles.detailContactText}>领取后可在「记录善行」中提交时@主办方，或联系客服反馈。</Text>
+              </View>
+            </ScrollView>
+            <View className={styles.detailFooter}>
+              <View className={styles.detailBtnSecondary} onClick={closeDetail}>
+                <Text className={styles.detailBtnSecondaryText}>再看看</Text>
+              </View>
+              <View className={styles.detailBtnPrimary} onClick={acceptTask}>
+                <Text className={styles.detailBtnPrimaryText}>{detailType === 'challenge' ? '报名挑战' : '领取任务'}</Text>
+              </View>
+            </View>
+          </View>
+        </View>
+      )}
     </View>
   );
 }

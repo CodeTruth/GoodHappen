@@ -1,4 +1,4 @@
-﻿@use '@/styles/variables.scss' as *;
+@use '@/styles/variables.scss' as *;
 
 .pageWrapper {
   min-height: 100vh;
@@ -1721,3 +1721,309 @@
   to { opacity: 1; }
 }
 
+
+// ============================================
+// 朋友圈极简模式
+// ============================================
+.wxHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20rpx 0;
+  margin-bottom: 16rpx;
+}
+.wxCancel {
+  font-size: 32rpx;
+  color: #666;
+  padding: 12rpx 16rpx;
+}
+.wxPublish {
+  background: linear-gradient(135deg, #C4956A, #A67B5B);
+  border-radius: 32rpx;
+  padding: 14rpx 36rpx;
+  &:active { opacity: 0.85; }
+}
+.wxPublishText {
+  font-size: 28rpx;
+  color: #fff;
+  font-weight: 600;
+}
+.wxTextarea {
+  width: 100%;
+  min-height: 300rpx;
+  font-size: 32rpx;
+  line-height: 1.7;
+  color: #1F2937;
+  background: transparent;
+  padding: 0;
+  margin-bottom: 24rpx;
+}
+.wxImages {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 12rpx;
+  margin-bottom: 24rpx;
+}
+.wxImageWrap {
+  position: relative;
+  width: 200rpx;
+  height: 200rpx;
+  border-radius: 12rpx;
+  overflow: hidden;
+}
+.wxImage {
+  width: 100%;
+  height: 100%;
+}
+.wxImageDel {
+  position: absolute;
+  top: 8rpx;
+  right: 8rpx;
+  width: 40rpx;
+  height: 40rpx;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.wxImageDelIcon {
+  font-size: 24rpx;
+  color: #fff;
+}
+.wxImageAdd {
+  width: 200rpx;
+  height: 200rpx;
+  border-radius: 12rpx;
+  border: 2rpx dashed #D1D5DB;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  &:active { background: #F9FAFB; }
+}
+.wxImageAddIcon {
+  font-size: 56rpx;
+  color: #9CA3AF;
+}
+.wxVideoBadge {
+  position: absolute;
+  bottom: 8rpx;
+  left: 8rpx;
+  background: rgba(0,0,0,0.6);
+  border-radius: 8rpx;
+  padding: 4rpx 12rpx;
+}
+.wxVideoBadgeText {
+  font-size: 22rpx;
+  color: #fff;
+}
+.wxRisk {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #FFFBEB;
+  border-left: 6rpx solid #F59E0B;
+  border-radius: 0 12rpx 12rpx 0;
+  padding: 20rpx 24rpx;
+  margin-bottom: 16rpx;
+}
+.wxRiskText { font-size: 26rpx; color: #92400E; }
+.wxRiskLink { font-size: 26rpx; color: #D97706; font-weight: 500; }
+.wxSettings {
+  background: #fff;
+  border-radius: 16rpx;
+  overflow: hidden;
+  margin-bottom: 24rpx;
+}
+.wxSettingRow {
+  display: flex;
+  align-items: center;
+  padding: 28rpx 28rpx;
+  border-bottom: 1rpx solid #F3F4F6;
+  &:last-child { border-bottom: none; }
+}
+.wxSettingIcon { font-size: 32rpx; margin-right: 20rpx; }
+.wxSettingLabel { flex: 1; font-size: 28rpx; color: #374151; }
+.wxSettingArrow { font-size: 28rpx; color: #9CA3AF; }
+.wxTagPicker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+  padding: 0 28rpx 24rpx;
+  background: #F9FAFB;
+  border-bottom: 1rpx solid #F3F4F6;
+}
+.wxTag {
+  background: #F3F4F6;
+  border-radius: 24rpx;
+  padding: 10rpx 24rpx;
+  &.wxTagActive { background: #FFF7ED; }
+}
+.wxTagText { font-size: 24rpx; color: #6B7280; }
+.wxScopePicker {
+  background: #F9FAFB;
+  padding: 16rpx 28rpx 24rpx;
+  border-bottom: 1rpx solid #F3F4F6;
+}
+.wxScopeOption {
+  padding: 18rpx 24rpx;
+  border-radius: 12rpx;
+  margin-bottom: 8rpx;
+  background: #fff;
+  &.wxScopeOptionActive { background: #FFF7ED; border: 2rpx solid #C4956A; }
+}
+.wxScopeOptionText { font-size: 28rpx; color: #374151; }
+.wxAnonRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18rpx 0 8rpx;
+}
+.wxAnonLabel { font-size: 28rpx; color: #374151; }
+.wxAnonSwitch {
+  width: 88rpx;
+  height: 48rpx;
+  border-radius: 24rpx;
+  background: #E5E7EB;
+  position: relative;
+  transition: background 0.2s;
+  &.wxAnonSwitchOn { background: #C4956A; }
+}
+.wxAnonSwitchThumb {
+  position: absolute;
+  top: 4rpx;
+  left: 4rpx;
+  width: 40rpx;
+  height: 40rpx;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1rpx 4rpx rgba(0,0,0,0.15);
+  transition: transform 0.2s;
+}
+.wxAnonSwitchOn .wxAnonSwitchThumb { transform: translateX(40rpx); }
+.wxCircleList { padding-top: 12rpx; }
+.wxCircleOption {
+  padding: 18rpx 24rpx;
+  border-radius: 12rpx;
+  margin-bottom: 8rpx;
+  background: #fff;
+  &.wxCircleOptionActive { background: #F0FDF4; border: 2rpx solid #10B981; }
+}
+.wxCircleOptionText { font-size: 28rpx; color: #374151; }
+.wxQuickHint {
+  margin-bottom: 24rpx;
+}
+.wxQuickHintText {
+  font-size: 26rpx;
+  color: #9CA3AF;
+  margin-bottom: 16rpx;
+  display: block;
+}
+.wxQuickScroll {
+  display: flex;
+  flex-direction: row;
+  gap: 16rpx;
+  overflow-x: auto;
+  padding-bottom: 8rpx;
+}
+.wxQuickItem {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8rpx;
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 20rpx 24rpx;
+  box-shadow: 0 1rpx 4rpx rgba(0,0,0,0.06);
+  &:active { opacity: 0.8; }
+}
+.wxQuickEmoji { font-size: 40rpx; }
+.wxQuickLabel { font-size: 24rpx; color: #6B7280; }
+.wxDraftBar {
+  background: #F9FAFB;
+  border-radius: 12rpx;
+  padding: 20rpx 24rpx;
+  margin-bottom: 16rpx;
+  &:active { background: #F3F4F6; }
+}
+.wxDraftText { font-size: 26rpx; color: #6B7280; }
+.wxAnonymousTip {
+  background: #F0F9FF;
+  border-radius: 12rpx;
+  padding: 16rpx 24rpx;
+  margin-bottom: 24rpx;
+}
+.wxAnonymousTipText { font-size: 24rpx; color: #0284C7; }
+
+// ============================================
+// 附件选择面板（底部弹出）
+// ============================================
+.wxPickerOverlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 1000;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+.wxPickerSheet {
+  background: #fff;
+  border-radius: 32rpx 32rpx 0 0;
+  width: 100%;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.wxPickerHeader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32rpx;
+  position: relative;
+  border-bottom: 1rpx solid #F3F4F6;
+}
+.wxPickerTitle {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #1F2937;
+}
+.wxPickerClose {
+  position: absolute;
+  right: 28rpx;
+  font-size: 36rpx;
+  color: #9CA3AF;
+  padding: 8rpx;
+}
+.wxPickerOptions {
+  padding: 16rpx 28rpx 32rpx;
+}
+.wxPickerOption {
+  display: flex;
+  align-items: center;
+  padding: 28rpx 0;
+  border-bottom: 1rpx solid #F9FAFB;
+  &:last-child { border-bottom: none; }
+  &:active { opacity: 0.7; }
+}
+.wxPickerOptionIcon {
+  font-size: 44rpx;
+  margin-right: 24rpx;
+  width: 72rpx;
+  text-align: center;
+}
+.wxPickerOptionBody {
+  flex: 1;
+}
+.wxPickerOptionLabel {
+  font-size: 30rpx;
+  color: #1F2937;
+  font-weight: 500;
+  display: block;
+}
+.wxPickerOptionHint {
+  font-size: 24rpx;
+  color: #9CA3AF;
+  margin-top: 4rpx;
+  display: block;
+}
