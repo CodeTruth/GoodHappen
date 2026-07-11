@@ -257,83 +257,177 @@ $text-tertiary: #B8A99A;
 }
 
 // ===== 善行记录选择卡片 =====
-.kindnessCardsSection {
-  padding: 0 28rpx;
-  margin-bottom: 24rpx;
+// ===== 记录选择 Sheet =====
+
+.recordSheetOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 1000;
+  display: flex;
+  align-items: flex-end;
 }
 
-.kindnessCardsTitle {
-  font-size: 24rpx;
-  font-weight: 600;
-  color: $text-secondary;
-  display: block;
-  margin-bottom: 12rpx;
-  padding-left: 4rpx;
-}
-
-.kindnessCardsScroll {
+.recordSheet {
+  width: 100%;
+  max-height: 75vh;
+  background: #FAFAF8;
+  border-radius: 28rpx 28rpx 0 0;
   display: flex;
   flex-direction: column;
-  gap: 10rpx;
+  animation: slideUp 0.25s ease;
 }
 
-.kindnessCard {
-  background: rgba(255,255,255,0.85);
-  border-radius: 16rpx;
-  padding: 18rpx 22rpx;
-  border: 1.5rpx solid rgba(196,149,106,0.12);
-  box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.03);
-  transition: all 0.2s ease;
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+.recordSheetHeader {
+  display: flex;
+  align-items: center;
+  padding: 28rpx 32rpx 20rpx;
+  gap: 16rpx;
+  border-bottom: 1rpx solid rgba(0, 0, 0, 0.05);
+}
+
+.recordSheetTitle {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #1F2937;
+  flex: 1;
+}
+
+.recordSheetCount {
+  font-size: 24rpx;
+  color: #9CA3AF;
+}
+
+.recordSheetClose {
+  width: 56rpx;
+  height: 56rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.recordSheetCloseIcon {
+  font-size: 28rpx;
+  color: #6B7280;
+}
+
+.recordSearchWrap {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  margin: 20rpx 32rpx;
+  background: #FFFFFF;
+  border-radius: 20rpx;
+  padding: 16rpx 24rpx;
+  border: 1.5rpx solid rgba(196, 149, 106, 0.12);
+}
+
+.recordSearchIcon {
+  font-size: 28rpx;
+  flex-shrink: 0;
+}
+
+.recordSearchInput {
+  flex: 1;
+  font-size: 28rpx;
+  color: #1F2937;
+  border: none;
+  outline: none;
+  background: transparent;
+}
+
+.recordListScroll {
+  flex: 1;
+  padding: 0 32rpx;
+  overflow-y: auto;
+}
+
+.recordListItem {
+  background: #FFFFFF;
+  border-radius: 20rpx;
+  padding: 24rpx 28rpx;
+  margin-bottom: 16rpx;
+  border: 1.5rpx solid rgba(196, 149, 106, 0.08);
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.03);
+  transition: all 0.15s ease;
   cursor: pointer;
 
   &:active {
-    transform: scale(0.985);
-    background: rgba(196,149,106,0.05);
-    border-color: rgba(196,149,106,0.25);
+    transform: scale(0.98);
+    background: rgba(196, 149, 106, 0.04);
+    border-color: rgba(196, 149, 106, 0.25);
   }
 }
 
-.kindnessCardTop {
+.recordListItemTop {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 12rpx;
-  margin-bottom: 8rpx;
+  gap: 16rpx;
+  margin-bottom: 12rpx;
 }
 
-.kindnessCardContent {
-  font-size: 26rpx;
-  color: $text-primary;
+.recordListItemContent {
+  font-size: 28rpx;
+  color: #1F2937;
   line-height: 1.5;
   flex: 1;
   min-width: 0;
 }
 
-.kindnessCardTime {
-  font-size: 20rpx;
-  color: $text-tertiary;
+.recordListItemTime {
+  font-size: 22rpx;
+  color: #9CA3AF;
   flex-shrink: 0;
   white-space: nowrap;
 }
 
-.kindnessCardMeta {
+.recordListItemMeta {
   display: flex;
   align-items: center;
   gap: 12rpx;
   flex-wrap: wrap;
 }
 
-.kindnessCardLocation {
-  font-size: 20rpx;
-  color: $text-secondary;
+.recordListItemLocation {
+  font-size: 22rpx;
+  color: #6B7280;
 }
 
-.kindnessCardTag {
-  font-size: 20rpx;
-  color: $primary;
-  background: rgba(196,149,106,0.08);
-  padding: 2rpx 10rpx;
+.recordListItemBadge {
+  font-size: 22rpx;
+  padding: 4rpx 12rpx;
   border-radius: 8rpx;
+}
+
+.recordListItemTag {
+  font-size: 22rpx;
+  color: #C4956A;
+  background: rgba(196, 149, 106, 0.08);
+  padding: 4rpx 12rpx;
+  border-radius: 8rpx;
+}
+
+.recordListEmpty {
+  padding: 80rpx 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.recordListEmptyText {
+  font-size: 28rpx;
+  color: #9CA3AF;
 }
 
 // ===== 底部输入栏 =====

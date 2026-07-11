@@ -378,6 +378,7 @@ export default function KindnessGuardPage() {
   const [inputText, setInputText] = useState('');
   const [selectedKindness, setSelectedKindness] = useState<Kindness | null>(null);
   const [showKindnessCards, setShowKindnessCards] = useState(false);
+  const [recordSearchText, setRecordSearchText] = useState('');
   const [gpsInfo, setGpsInfo] = useState({ latitude: 39.9042, longitude: 116.4074, address: '北京市' });
   const [completedActions, setCompletedActions] = useState<Set<string>>(new Set());
 
@@ -444,7 +445,18 @@ export default function KindnessGuardPage() {
     );
   }, [publishedList, userInfo, evidencePackages]);
 
-  // ===== 欢迎消息 =====
+  // \u641C\u7D22\u8FC7\u6EE4\u540E\u7684\u8BB0\u5F55
+  const filteredRecords = useMemo(() => {
+    if (!recordSearchText.trim()) return allRecords;
+    const q = recordSearchText.trim().toLowerCase();
+    return allRecords.filter(r =>
+      r.content.toLowerCase().includes(q) ||
+      (r.location && r.location.toLowerCase().includes(q)) ||
+      r.tags.some(t => t.toLowerCase().includes(q))
+    );
+  }, [allRecords, recordSearchText]);
+
+  // ===== \u6B22\u8FCE\u6D88\u606F =====
   useEffect(() => {
     const intro = `🛡️ 别怕，平台永远站在善行者这边。\n\n` +
       `做了好事被讹？被误解？需要证据？——我全程帮你搞定。\n\n` +
@@ -899,6 +911,7 @@ export default function KindnessGuardPage() {
     setSelectedKindness(mockKindness);
     selectedKindnessRef.current = mockKindness;
     setShowKindnessCards(false);
+    setRecordSearchText('');
     accumulatedDescRef.current = item.content;
     setCompletedActions(new Set());
 
@@ -1001,31 +1014,55 @@ export default function KindnessGuardPage() {
         <View className={styles.chatList}>
           {messages.map(msg => renderMessage(msg))}
         </View>
-        {showKindnessCards && allRecords.length > 0 && agentMode === 'guard' && (
-          <View className={styles.kindnessCardsSection}>
-            <Text className={styles.kindnessCardsTitle}>📝 选择一条记录</Text>
-            <View className={styles.kindnessCardsScroll}>
-              {allRecords.slice(0, 10).map(item => (
-                <View key={item.id} className={styles.kindnessCard} onClick={() => handleSelectRecord(item)}>
-                  <View className={styles.kindnessCardTop}>
-                    <Text className={styles.kindnessCardContent}>{truncate(item.content, 35)}</Text>
-                    <Text className={styles.kindnessCardTime}>{formatTime(item.createdAt)}</Text>
+      </ScrollView>
+
+      {/* 记录选择 Sheet */}
+      {showKindnessCards && (
+        <View className={styles.recordSheetOverlay} onClick={() => setShowKindnessCards(false)}>
+          <View className={styles.recordSheet} onClick={(e) => e.stopPropagation()}>
+            <View className={styles.recordSheetHeader}>
+              <Text className={styles.recordSheetTitle}>{'\uD83D\uDCDD \u9009\u62E9\u4E00\u6761\u8BB0\u5F55'}</Text>
+              <Text className={styles.recordSheetCount}>{filteredRecords.length}/{allRecords.length} \u6761</Text>
+              <View className={styles.recordSheetClose} onClick={() => setShowKindnessCards(false)}>
+                <Text className={styles.recordSheetCloseIcon}>{'\u2715'}</Text>
+              </View>
+            </View>
+            <View className={styles.recordSearchWrap}>
+              <Text className={styles.recordSearchIcon}>{'\uD83D\uDD0D'}</Text>
+              <input
+                className={styles.recordSearchInput}
+                value={recordSearchText}
+                onChange={(e) => setRecordSearchText((e.target as HTMLInputElement).value)}
+                placeholder={'\u641C\u7D22\u5185\u5BB9\u3001\u5730\u70B9\u3001\u6807\u7B7E\u2026'}
+              />
+            </View>
+            <ScrollView className={styles.recordListScroll} scrollY enhanced showScrollbar={false}>
+              {filteredRecords.length > 0 ? filteredRecords.map(item => (
+                <View key={item.id} className={styles.recordListItem} onClick={() => handleSelectRecord(item)}>
+                  <View className={styles.recordListItemTop}>
+                    <Text className={styles.recordListItemContent}>{truncate(item.content, 40)}</Text>
+                    <Text className={styles.recordListItemTime}>{formatTime(item.createdAt)}</Text>
                   </View>
-                  <View className={styles.kindnessCardMeta}>
-                    {item.location && <Text className={styles.kindnessCardLocation}>📍 {item.location}</Text>}
+                  <View className={styles.recordListItemMeta}>
+                    {item.location && <Text className={styles.recordListItemLocation}>{'\uD83D\uDCCD '}{item.location}</Text>}
                     {item.sourceType === 'protection' && (
-                      <Text className={styles.kindnessCardTag} style={{ background: 'rgba(220,38,38,0.12)', color: '#DC2626' }}>🔒 已锁定证据</Text>
+                      <Text className={styles.recordListItemBadge} style={{ background: 'rgba(220,38,38,0.12)', color: '#DC2626' }}>{'\uD83D\uDD12 \u5DF2\u9501\u5B9A\u8BC1\u636E'}</Text>
                     )}
-                    {item.sourceType === 'kindness' && item.tags.slice(0, 2).map(tag => (
-                      <Text key={tag} className={styles.kindnessCardTag}>#{tag}</Text>
+                    {item.sourceType === 'kindness' && item.tags.slice(0, 3).map(tag => (
+                      <Text key={tag} className={styles.recordListItemTag}>#{tag}</Text>
                     ))}
                   </View>
                 </View>
-              ))}
-            </View>
+              )) : (
+                <View className={styles.recordListEmpty}>
+                  <Text className={styles.recordListEmptyText}>{'\u6CA1\u6709\u5339\u914D\u7684\u8BB0\u5F55'}</Text>
+                </View>
+              )}
+              <View style={{ height: 20 }} />
+            </ScrollView>
           </View>
-        )}
-      </ScrollView>
+        </View>
+      )}
 
       {/* 底部输入栏 */}
       <View className={styles.inputBar}>
