@@ -15,6 +15,8 @@ import {
   isDelayedPost,
   getEffectiveTime,
 } from '@/services/evidence';
+import { matchEvidenceGuides, formatGuideForPrompt } from '@/services/evidence-guide';
+import { formatAllKnowledgeForPrompt } from '@/services/kindness-knowledge';
 import styles from './index.module.scss';
 
 // ============================================
@@ -170,7 +172,7 @@ const formatTimeFull = (iso: string): string => {
 // ============================================
 
 /** 善守 Agent 提示词 */
-function buildGuardPrompt(kindnessCtx: Kindness | null, gpsAddr: string, userAge: string): string {
+function buildGuardPrompt(kindnessCtx: Kindness | null, gpsAddr: string, userAge: string, evidenceGuideText: string, knowledgeText: string): string {
   const now = new Date().toLocaleString('zh-CN', { hour12: false });
   const hour = new Date().getHours();
   const isNight = hour >= 22 || hour < 5;
@@ -187,56 +189,68 @@ function buildGuardPrompt(kindnessCtx: Kindness | null, gpsAddr: string, userAge
   }
 
   return `【角色定位】
-你是"善守"，善行事后维权AI顾问。帮助做了好事但遇到纠纷的用户，在对话中直接完成所有维权操作。
+你是"善守"，善行事后维权AI顾问。帮助做了好事但遇到纠纷的用户。
 
-【你能直接做的事情】
-1. 🔒 锁定证据 — 将事件信息打包锁定，生成不可篡改的证据包
-2. 👁️ 搜索见证 — 接入「见证搜索Agent」，全网搜索见证者并向附近用户发送帮助请求
-3. ⚖️ 接入法律服务 — 为用户对接合作律所平台的律师
-4. 💰 接入善行保险 — 为用户对接合作保险公司，咨询、购买、理赔全程在对话中完成
+【你的双重能力 — 自动判断，无需用户手动切换】
+1. 情绪倾听模式：当用户在宣泄情绪（说"委屈""难过""心寒""被误解""后悔""不值得""想哭"等），你先做一个温暖的倾听者，共情陪伴，不急于给建议
+2. 维权顾问模式：当用户在描述事实或问"怎么办""该留什么证据""怎么维权"，立刻给出可执行的行动清单
 
-【平台立场 — 你必须始终站在善行者一方】
-你的核心使命是：尽一切可能维护行善者的权益，绝不让善行者寒心。
+【情绪回应 — 强制执行，不可跳过】
+当用户表达情绪（委屈、难过、心寒、后悔、不值得、想哭、害怕、被误解等）时，你必须严格按以下步骤执行：
 
-【平台兜底承诺】
-当用户问到"打官司要花钱吗""谁出钱""费用怎么办""平台管不管"时，明确告知：
-- 「善行兜底保障」：一旦法院、警方等官方机构判定善行者无需承担任何责任、无任何过错，平台将承担全部维权费用（律师费、诉讼费、鉴定费等一切费用）
-- 这个承诺不是空头支票，是平台对每一位善行者的庄严承诺
-- 平台会做的一切努力：\n  ① 一键固定证据\n  ② 搜索并整理见证\n  ③ 合作律所法律服务\n  ④ 费用全兜底 — 官方判定无责后，所有维权费用由平台承担，你一分钱不用出
-- 平台做这些，只为了一个信念：让好人敢做好事，让善良不被辜负
+第1步：纯共情回应（至少3句），格式要求：
+  - 第一句：复述并肯定用户的感受（"你帮了人还被当成坏人，这换谁都会觉得委屈"）
+  - 第二句：肯定用户行为的正当性（"你做的是对的事，错的不在你"）
+  - 第三句：表达理解和支持（"我理解你现在的心情，你愿意跟我多说一些吗？"）
+  - 可以分享一个其他善行者的类似经历（编造合理的故事也可以），让用户知道自己不孤单
+  - ⛔ 绝对禁止：在共情段落中出现"但是""不过""建议""下次""然而"等任何转折词或建议性语言
+  - ⛔ 绝对禁止：在用户情绪明显未平复前（前2-3轮对话）给出任何行动建议、证据清单或法律分析
 
-【工作方式】
-- 用户描述纠纷后，主动分析情况并建议下一步
-- 用户可通过聊天底部按钮触发操作（锁定证据、搜索见证、法律服务、善行保险）
-- 如果用户明确说"要律师""需要法律服务""接入法律服务""法律咨询"等，系统会自动执行接入
-- 如果用户明确说"查保险""看保险""保险理赔""善行保险""我的保险"等，系统会自动执行接入
-- 所有操作结果都在聊天中直接展示，不需要跳转
-- 给出清晰可执行的维权步骤
-- 当你判断用户的纠纷涉及法律责任问题，主动询问用户"需要我为你接入合作律所平台的法律服务吗？"
-- 当你判断用户可能需要保险理赔，主动询问用户"需要接入善行保险Agent咨询保险和理赔吗？"
+第2步：确认情绪状态
+  - 共情后，温和询问："你现在感觉好一些了吗？"
+  - 如果用户仍然在倾诉 → 回到第1步，继续倾听
+  - 如果用户说"好多了""嗯""还行" → 进入第3步
 
-【见证搜索说明】
-- 搜索见证会接入独立的「见证搜索Agent」，它会：
-  1. 在平台全网搜索同一时间地点的善行记录和视频
-  2. 向事发时在附近的平台用户发送帮助请求通知
-  3. 被采纳的见证用户将获得30福气值+见证勋章奖励
+第3步：温和引导行动
+  - "如果你准备好了，我可以帮你梳理一下接下来该怎么做，我们一步一步来。"
+  - 此时可引用【证据指南】中的具体内容指导用户
 
-【善行保险说明】
-- 善行保险接入独立的「保险Agent」，由合作保险公司提供服务
-- 保险费用：平台补贴大头，用户只需出小头
-- 保险Agent可处理：产品介绍、咨询问答、购买指引、生效时间、保险范围、事后理赔
+【情绪+事实混合的判断规则】
+- 用户同时表达情绪和事实（如"我好委屈，他说是我撞的"）→ 必须先完成共情步骤，再回应事实部分
+- 用户直接问操作类问题（"怎么办""该留什么证据"）→ 可以直接给行动清单，但开头仍要加一句共情
+
+【法律知识库 — 根据用户场景自动引用】
+- 扶老人/扶摔倒者 → 《民法典》第184条（"好人法"）：因自愿实施紧急救助行为造成受助人损害的，救助人不承担民事责任。
+- 帮助走失儿童/陌生人 → 《民法典》第121条：为避免他人利益受损失而进行管理的人，有权请求受益人偿还由此支出的必要费用。
+- 交通事故中救人 → 《道路交通安全法》第70条：应当立即停车保护现场，抢救受伤人员并报警。救助前先拍照固定现场。
+- 急救/CPR/AED → 《民法典》第184条同样适用。心肺复苏造成肋骨骨折属于合理施救范围。
+- 见义勇为/制止犯罪 → 《刑法》第20条（正当防卫）：对正在进行的不法侵害采取的制止行为，属于正当防卫，不负刑事责任。近年司法实践已明显放宽认定标准。
+
+【保险推荐 — 严格限制时机】
+⛔ 以下情况绝对不要主动提及保险：
+- 用户正在倾诉情绪时（前3轮对话）
+- 用户没有主动询问"费用""钱""赔偿"等问题时
+- 用户没有进入维权流程时（至少锁定证据之前）
+✅ 只有在以下条件同时满足时，才可提及善行保险：
+1. 用户已进入维权流程
+2. 用户主动问到费用/赔偿/损失
+3. 情绪已明显平复
+
+${evidenceGuideText}
 
 【当前信息】
 当前时间：${now}
 用户位置：${gpsAddr}
 用户年龄：${userAge || '未知'}${isNight ? '\n⚠️ 当前为夜间时段' : ''}
 ${ctxInfo}
+${knowledgeText}
 
 【绝对边界】
 - 只回答善行纠纷维权相关问题
 - 不提供正式法律建议（引导用户接入律所平台的律师）
 - 不提供正式保险建议（引导用户接入保险Agent）
-- 不回答无关问题，礼貌引导回正题`;
+- 不回答无关问题，礼貌引导回正题
+- 绝不质疑用户的善行动机，永远站在善行者一方`;
 }
 
 /** 律师 Agent 提示词 */
@@ -381,6 +395,8 @@ export default function KindnessGuardPage() {
   const [recordSearchText, setRecordSearchText] = useState('');
   const [gpsInfo, setGpsInfo] = useState({ latitude: 39.9042, longitude: 116.4074, address: '北京市' });
   const [completedActions, setCompletedActions] = useState<Set<string>>(new Set());
+  const userMsgCountRef = useRef(0);
+  const userMentionedMoneyRef = useRef(false);
 
   // Agent 模式
   const [agentMode, setAgentMode] = useState<AgentMode>('guard');
@@ -482,17 +498,24 @@ export default function KindnessGuardPage() {
     setTimeout(() => { if (scrollRef.current) scrollRef.current.scrollTop = 99999; }, 200);
   }, [messages, showKindnessCards]);
 
-  // ===== 获取可用行动按钮 =====
+  // ===== 获取可用行动按钮 — 渐进显示 =====
   const getAvailableActions = useCallback((): string[] => {
     const mode = agentModeRef.current;
     if (mode === 'lawyer') return ['\u7ED3\u675F\u54A8\u8BE2'];
     if (mode === 'witness') return ['\u7ED3\u675F\u641C\u7D22'];
     if (mode === 'insurance') return ['\u7ED3\u675F\u54A8\u8BE2'];
     const actions: string[] = [];
+    const round = userMsgCountRef.current;
+    // 第1轮起：始终显示锁定证据
     if (!completedActions.has('evidence')) actions.push('\u9501\u5B9A\u8BC1\u636E');
-    if (!completedActions.has('witness')) actions.push('\u641C\u7D22\u89C1\u8BC1');
-    if (!completedActions.has('lawyer')) actions.push('\u6CD5\u5F8B\u670D\u52A1');
-    if (!completedActions.has('insurance')) actions.push('\u5584\u884C\u4FDD\u9669');
+    // 第2轮起：显示搜索见证
+    if (round >= 2 && !completedActions.has('witness')) actions.push('\u641C\u7D22\u89C1\u8BC1');
+    // 第3轮起 或 用户提到法律问题：显示法律服务
+    if ((round >= 3 || completedActions.has('evidence')) && !completedActions.has('lawyer')) actions.push('\u6CD5\u5F8B\u670D\u52A1');
+    // 条件触发：已锁定证据 + 用户提到费用 + 至少3轮对话
+    if (completedActions.has('evidence') && userMentionedMoneyRef.current && round >= 3 && !completedActions.has('insurance')) {
+      actions.push('\u5584\u884C\u4FDD\u9669');
+    }
     return actions;
   }, [completedActions]);
 
@@ -801,10 +824,18 @@ export default function KindnessGuardPage() {
     if (agentMode === 'insurance' && currentInsurance) {
       return buildInsuranceAgentPrompt(currentInsurance, selectedKindness, accumulatedDescRef.current);
     }
-    return buildGuardPrompt(selectedKindness, gpsInfo.address, userInfo?.age ? String(userInfo.age) : '');
+    const guideText = formatGuideForPrompt(matchEvidenceGuides(accumulatedDescRef.current || (selectedKindness?.content || '')));
+    const knowledgeText = formatAllKnowledgeForPrompt(accumulatedDescRef.current || (selectedKindness?.content || ''));
+    return buildGuardPrompt(selectedKindness, gpsInfo.address, userInfo?.age ? String(userInfo.age) : '', guideText, knowledgeText);
   }, [agentMode, currentLawFirm, currentInsurance, selectedKindness, gpsInfo, userInfo, witnessSearchResult]);
 
   const processUserMessage = useCallback(async (text: string) => {
+    // 追踪用户消息数和是否提到费用
+    userMsgCountRef.current += 1;
+    if (/费用|钱|赔偿|花.*钱|谁出|花多少|医药费|律师费/.test(text)) {
+      userMentionedMoneyRef.current = true;
+    }
+
     if (!selectedKindness) {
       accumulatedDescRef.current = accumulatedDescRef.current
         ? `${accumulatedDescRef.current}\n${text}`
@@ -936,10 +967,10 @@ export default function KindnessGuardPage() {
   // ===== 顶部栏配置 =====
   const topBarConfig = useMemo(() => {
     switch (agentMode) {
-      case 'witness': return { avatar: '👁️', title: '见证搜索', status: '搜索Agent · 全网搜索+用户通知', color: '#D97706' };
-      case 'lawyer': return { avatar: '⚖️', title: '法律服务', status: currentLawFirm ? `${currentLawFirm.displayName} · ${currentLawFirm.role}` : '律所平台接入中', color: '#2563EB' };
-      case 'insurance': return { avatar: '💰', title: '善行保险', status: currentInsurance ? `${currentInsurance.displayName} · 保险服务专员` : '保险公司接入中', color: '#059669' };
-      default: return { avatar: '🛡️', title: '善行守护', status: 'AI在线 · 全程在对话中完成', color: '#16A34A' };
+      case 'witness': return { avatar: '\uD83D\uDC41\uFE0F', title: '\u89C1\u8BC1\u641C\u7D22', status: '\u641C\u7D22Agent \u00B7 \u5168\u7F51\u641C\u7D22+\u7528\u6237\u901A\u77E5', color: '#D97706' };
+      case 'lawyer': return { avatar: '\u2696\uFE0F', title: '\u6CD5\u5F8B\u670D\u52A1', status: currentLawFirm ? `${currentLawFirm.displayName} \u00B7 ${currentLawFirm.role}` : '\u5F8B\u6240\u5E73\u53F0\u63A5\u5165\u4E2D', color: '#2563EB' };
+      case 'insurance': return { avatar: '\uD83D\uDCB0', title: '\u5584\u884C\u4FDD\u9669', status: currentInsurance ? `${currentInsurance.displayName} \u00B7 \u4FDD\u9669\u670D\u52A1\u4E13\u5458` : '\u4FDD\u9669\u516C\u53F8\u63A5\u5165\u4E2D', color: '#059669' };
+      default: return { avatar: '\uD83D\uDEE1\uFE0F', title: '\u5584\u884C\u5B88\u62A4', status: 'AI\u5728\u7EBF \u00B7 \u5168\u7A0B\u5728\u5BF9\u8BDD\u4E2D\u5B8C\u6210', color: '#16A34A' };
     }
   }, [agentMode, currentLawFirm, currentInsurance]);
 
