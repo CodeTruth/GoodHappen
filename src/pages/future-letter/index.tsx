@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, Textarea } from '@tarojs/components';
 import Taro from '@tarojs/taro';
+import { safeNavigateBack } from '@/utils/navigate-back';
 import styles from './index.module.scss';
 
 const LETTER_KEY = 'haoshi_future_letters';
@@ -70,7 +71,7 @@ export default function FutureLetterPage() {
   return (
     <View className={styles.page}>
       <View className={styles.header}>
-        <View className={styles.backBtn} onClick={() => Taro.navigateBack()}><Text>←</Text></View>
+        <View className={styles.backBtn} onClick={() => safeNavigateBack()}><Text>←</Text></View>
         <Text className={styles.headerTitle}>给未来的信</Text>
         <View style={{ width: 30 }} />
       </View>

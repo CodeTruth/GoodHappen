@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, Textarea, Input, ScrollView } from '@tarojs/components';
 import Taro from '@tarojs/taro';
+import { safeNavigateBack } from '@/utils/navigate-back';
 import styles from './index.module.scss';
 
 // 反馈类型选项
@@ -55,7 +56,7 @@ const FeedbackPage: React.FC = () => {
   const handleCloseModal = () => {
     setShowModal(false);
     // 返回上一页
-    Taro.navigateBack();
+    safeNavigateBack();
   };
 
   return (

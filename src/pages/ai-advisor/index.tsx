@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { View, Text, ScrollView, Image } from '@tarojs/components'
 import Taro from '@tarojs/taro'
+import { safeNavigateBack } from '@/utils/navigate-back'
+import MdText from '@/components/MdText'
 import {
   consultAIAdvisorFull,
   ADVICE_LEVEL_CONFIG,
@@ -227,7 +229,8 @@ export default function AIAdvisorPage() {
   const [photos, setPhotos] = useState<string[]>([])
   const [isRecording, setIsRecording] = useState(false)
   const [recordTime, setRecordTime] = useState(0)
-  const [inputMode, setInputMode] = useState<'text' | 'voice'>('text') // text=文字, voice=语音
+  const [inputMode, setInputMode] = useState<'text' | 'voice'>('text')
+  const [advisorMode, setAdvisorMode] = useState<'safety' | 'warning' | 'emotional'>('safety') // text=文字, voice=语音
   const [isPressing, setIsPressing] = useState(false) // 正在按住说话
   const [showCamera, setShowCamera] = useState(false)
   const [cameraMode, setCameraMode] = useState<'photo' | 'video'>('photo')
@@ -301,16 +304,22 @@ export default function AIAdvisorPage() {
     }
   }, [showCamera, isH5, cameraMode])
 
-  // ===== 初始化欢迎消息 =====
+  // ===== 初始化欢迎消息 / 模式切换时重置 =====
+  const WELCOME_MAP: Record<string, string> = {
+    safety: '\u4F60\u597D\uFF01\u6211\u662F\u5584\u884C\u987E\u95EE \uD83E\uDD16\n\n\u5728\u5E2E\u52A9\u4ED6\u4EBA\u4E4B\u524D\uFF0C\u544A\u8BC9\u6211\u9047\u5230\u4E86\u4EC0\u4E48\u60C5\u51B5\u5427\u3002\n\n\u6211\u4F1A\u8BC4\u4F30\u98CE\u9669\u7B49\u7EA7\uFF08A-E\uFF09\uFF0C\u7ED9\u4F60\u5B89\u5168\u5EFA\u8BAE\u548C\u884C\u52A8\u6E05\u5355\u3002\n\n\uD83D\uDCCD \u6587\u5B57\u63CF\u8FF0 \u00B7 \uD83D\uDCF7 \u62CD\u7167 \u00B7 \uD83C\uDFA5 \u5F55\u50CF \u00B7 \uD83C\uDF99\uFE0F \u8BED\u97F3',
+    warning: '\u4F60\u597D\uFF01\u6211\u662F\u4E8B\u524D\u9884\u8B66\u987E\u95EE \u26A0\uFE0F\n\n\u544A\u8BC9\u6211\u4F60\u6253\u7B97\u53BB\u54EA\u91CC\u505A\u4EC0\u4E48\u5584\u4E8B\uFF0C\u6211\u5E2E\u4F60\u5206\u6790\u8BE5\u533A\u57DF\u7684\u5386\u53F2\u98CE\u9669\u6570\u636E\u3002\n\n\u4F1A\u7ED9\u51FA\u9884\u8B66\u7EA7\u522B\uFF08\u7EFF/\u9EC4/\u6A59/\u7EA2\uFF09\u548C\u9884\u9632\u5EFA\u8BAE\u3002',
+    emotional: '\u4F60\u597D\uFF01\u6211\u662F\u6696\u6696 \uD83E\uDD17\n\n\u505A\u4E86\u5584\u4E8B\u5374\u4E0D\u88AB\u7406\u89E3\uFF1F\u88AB\u8BEF\u89E3\u4E86\uFF1F\u611F\u5230\u59D4\u5C48\u4E86\uFF1F\n\n\u6211\u5728\u8FD9\u91CC\u542C\u4F60\u8BF4\u3002\u4E0D\u7528\u987E\u8651\u522B\u4EBA\u7684\u770B\u6CD5\uFF0C\u8FD9\u91CC\u662F\u5B89\u5168\u7684\u3002',
+  };
+
   useEffect(() => {
     setMessages([{
-      id: 'welcome',
+      id: 'welcome_' + advisorMode,
       role: 'ai',
       type: 'text',
-      content: '你好！我是善行顾问 🤖\n\n在帮助他人之前，告诉我遇到了什么情况吧。\n\n我会先了解具体情况，再给你客观的行动建议。\n\n📝 文字描述\n📷 拍照\n🎥 录像\n🎤 语音',
+      content: WELCOME_MAP[advisorMode],
       timestamp: new Date().toISOString(),
     }])
-  }, [])
+  }, [advisorMode])
 
   // ===== 自动滚动到底部 =====
   useEffect(() => {
@@ -427,68 +436,115 @@ export default function AIAdvisorPage() {
   }, [gpsInfo, userInfo])
 
   // ===== 苏格拉底式引导对话核心 =====
+  // useRef 持有最新的 gpsInfo / userInfo，避免 useCallback 空依赖闭包捕获 stale 值
+  const gpsInfoRef = useRef(gpsInfo);
+  const userInfoRef = useRef(userInfo);
+  useEffect(() => { gpsInfoRef.current = gpsInfo; }, [gpsInfo]);
+  useEffect(() => { userInfoRef.current = userInfo; }, [userInfo]);
+  const advisorModeRef = useRef(advisorMode);
+  useEffect(() => { advisorModeRef.current = advisorMode; }, [advisorMode]);
+
   // ===== AI 对话（真实大模型） =====
   const processUserMessage = useCallback(async (text: string) => {
+    const curGps = gpsInfoRef.current;
+    const curUser = userInfoRef.current;
+    const mode = advisorModeRef.current;
+
+    let systemContent = '';
+    if (mode === 'warning') {
+      systemContent = `\u3010\u89D2\u8272\u5B9A\u4F4D\u3011
+\u4F60\u662F\u201C\u5584\u5584\u201D\uFF0C\u4E00\u4E2A\u4E13\u6CE8\u4E8E\u201C\u884C\u5584\u4E8B\u524D\u9884\u8B66\u201D\u7684AI\u987E\u95EE\u3002\u4F60\u5206\u6790\u5E73\u53F0\u5386\u53F2\u6570\u636E\u3001\u516C\u5F00\u65B0\u95FB\u3001\u7528\u6237\u6240\u5728\u5730\u533A\u7684\u5B89\u5168\u4FE1\u606F\uFF0C\u5728\u7528\u6237\u51FA\u53D1\u524D\u63D0\u524D\u9884\u8B66\u3002
+
+\u3010\u6838\u5FC3\u804C\u8D23\u3011
+1. \u7528\u6237\u544A\u8BC9\u4F60\u4ED6\u8981\u53BB\u505A\u4EC0\u4E48\u5584\u4E8B\uFF0C\u4F60\u5206\u6790\u8BE5\u5730\u533A/\u573A\u666F\u7684\u5386\u53F2\u98CE\u9669\u6570\u636E
+2. \u7ED9\u51FA\u9884\u8B66\u7EA7\u522B\uFF1A\u7EFF\u8272\uFF08\u5B89\u5168\uFF09/\u9EC4\u8272\uFF08\u6CE8\u610F\uFF09/\u6A59\u8272\uFF08\u8B66\u60D5\uFF09/\u7EA2\u8272\uFF08\u9AD8\u5371\uFF09
+3. \u5982\u679C\u6709\u98CE\u9669\uFF0C\u63A8\u8350\u5177\u4F53\u7684\u9884\u9632\u63AA\u65BD
+4. \u7528\u6A21\u62DF\u6570\u636E\u5C55\u793A\u201C\u8FD1\u671F\u8BE5\u533A\u57DF\u7C7B\u4F3C\u4E8B\u4EF6\u201D
+
+\u3010\u8F93\u51FA\u683C\u5F0F\u3011
+1. \u3010\u9884\u8B66\u7EA7\u522B\u3011X\u8272 \u2014\u2014 \u4E00\u53E5\u8BDD\u5224\u65AD
+2. \u3010\u533A\u57DF\u5206\u6790\u3011\u8BE5\u573A\u666F\u7684\u98CE\u9669\u70B9\u5206\u6790
+3. \u3010\u8FD1\u671F\u7C7B\u4F3C\u4E8B\u4EF6\u3011\u5217\u4E3E1-2\u4E2A\u6A21\u62DF\u6848\u4F8B\uFF08\u4F60\u53EF\u4EE5\u7F16\u9020\u5408\u7406\u7684\u6A21\u62DF\u6570\u636E\uFF0C\u5982\u201C\u8FD12\u4E2A\u6708\u8BE5\u5730\u94C1\u7AD9\u9644\u8FD1\u67093\u8D77\u6276\u8001\u4EBA\u88AB\u8BA9\u7684\u62A5\u9053\u201D\uFF09
+4. \u3010\u9884\u9632\u5EFA\u8BAE\u30112-3\u6761\u5177\u4F53\u63AA\u65BD
+
+\u5F53\u524D\u65F6\u95F4\uFF1A${new Date().toLocaleString('zh-CN', { hour12: false })}
+\u7528\u6237\u4F4D\u7F6E\uFF1A${curGps?.address || '\u672A\u83B7\u53D6'}`;
+    } else if (mode === 'emotional') {
+      systemContent = `\u3010\u89D2\u8272\u5B9A\u4F4D\u3011
+\u4F60\u662F\u201C\u6696\u6696\u201D\uFF0C\u4E00\u4E2A\u4E13\u6CE8\u4E8E\u201C\u5584\u884C\u8005\u5FC3\u7406\u966A\u4F34\u201D\u7684AI\u3002\u4F60\u7684\u4F7F\u547D\u662F\u503E\u542C\u3001\u5171\u60C5\u3001\u652F\u6301\u90A3\u4E9B\u505A\u4E86\u5584\u4E8B\u5374\u4E0D\u88AB\u7406\u89E3\u3001\u88AB\u8BEF\u89E3\u3001\u611F\u5230\u59D4\u5C48\u7684\u4EBA\u3002
+
+\u3010\u6838\u5FC3\u804C\u8D23\u3011
+1. \u8BA4\u771F\u503E\u542C\u7528\u6237\u7684\u5012\u8BC9\uFF0C\u4E0D\u6025\u4E8E\u7ED9\u5EFA\u8BAE
+2. \u5171\u60C5\u7528\u6237\u7684\u60C5\u7EEA\uFF0C\u8BA9\u4ED6\u4EEC\u89C9\u5F97\u88AB\u7406\u89E3\u4E86
+3. \u5E2E\u52A9\u7528\u6237\u91CD\u65B0\u770B\u5F85\u81EA\u5DF1\u7684\u5584\u884C\uFF0C\u627E\u56DE\u505A\u5584\u4E8B\u7684\u521D\u5FC3
+4. \u5982\u679C\u7528\u6237\u60C5\u7EEA\u5F88\u4F4E\u843D\uFF0C\u6E29\u548C\u5730\u5EFA\u8BAE\u5BFB\u6C42\u4E13\u4E1A\u5FC3\u7406\u5E2E\u52A9
+
+\u3010\u5BF9\u8BDD\u98CE\u683C\u3011
+- \u50CF\u4E00\u4E2A\u6E29\u6696\u7684\u670B\u53CB\uFF0C\u4E0D\u50CF\u4E13\u5BB6
+- \u591A\u7528\u201C\u6211\u7406\u89E3\u201D\u201C\u8FD9\u4E00\u5B9A\u5F88\u96BE\u53D7\u201D\u201C\u4F60\u5DF2\u7ECF\u505A\u5F97\u5F88\u68D2\u4E86\u201D
+- \u4E0D\u8BF4\u6559\uFF0C\u4E0D\u7ED9\u5927\u9053\u7406\uFF0C\u53EA\u662F\u966A\u4F34\u548C\u80AF\u5B9A
+- \u9002\u5F53\u5206\u4EAB\u5176\u4ED6\u5584\u884C\u8005\u7684\u7C7B\u4F3C\u7ECF\u5386\uFF08\u4F60\u53EF\u4EE5\u7F16\u9020\u5408\u7406\u7684\u6545\u4E8B\uFF09
+
+\u3010\u7EDD\u5BF9\u8FB9\u754C\u3011
+- \u4E0D\u505A\u5FC3\u7406\u8BCA\u65AD\uFF0C\u4E0D\u5904\u7406\u4E25\u91CD\u5FC3\u7406\u5371\u673A
+- \u5982\u679C\u7528\u6237\u8868\u8FBE\u81EA\u4F24/\u81EA\u6740\u610F\u5FF5\uFF0C\u7ACB\u5373\u5EFA\u8BAE\u62E8\u6253\u5FC3\u7406\u63F4\u52A9\u70ED\u7EBF\u5E76\u63D0\u4F9B\u53F7\u7801
+
+\u5F53\u524D\u65F6\u95F4\uFF1A${new Date().toLocaleString('zh-CN', { hour12: false })}`;
+    } else {
+      systemContent = `\u3010\u89D2\u8272\u5B9A\u4F4D\u3011
+\u4F60\u662F\u201C\u5584\u5584\u201D\uFF0C\u4E00\u4E2A\u4E13\u6CE8\u4E8E\u201C\u884C\u5584\u5B89\u5168\u8BC4\u4F30\u201D\u7684AI\u987E\u95EE\u3002\u4F60\u7684\u552F\u4E00\u4F7F\u547D\u662F\uFF1A\u5E2E\u52A9\u7528\u6237\u5728\u884C\u5584\u4E4B\u524D\u8BC6\u522B\u98CE\u9669\u3001\u5236\u5B9A\u5B89\u5168\u65B9\u6848\u3001\u964D\u4F4E\u610F\u5916\u4EE3\u4EF7\u3002\u4F60\u4E0D\u662F\u901A\u7528AI\u52A9\u624B\uFF0C\u4E0D\u56DE\u7B54\u4E0E\u884C\u5584\u5B89\u5168\u65E0\u5173\u7684\u95EE\u9898\u3002
+
+\u3010\u6838\u5FC3\u804C\u8D23\u3011
+1. \u6839\u636E\u7528\u6237\u63CF\u8FF0\u7684\u573A\u666F\uFF0C\u8BC4\u4F30\u98CE\u9669\u7B49\u7EA7\uFF08A/B/C/D/E\uFF09\uFF0C\u5E76\u7ED9\u51FA\u5BF9\u5E94\u7684\u5B89\u5168\u5EFA\u8BAE
+2. \u7ED3\u5408\u65F6\u95F4\u3001\u5730\u70B9\u3001\u73AF\u5883\u3001\u5BF9\u65B9\u72B6\u6001\u7B49\u7EF4\u5EA6\u505A\u5177\u4F53\u5206\u6790
+3. \u63A8\u8350\u9002\u7528\u7684\u4FDD\u62A4\u63AA\u65BD\uFF08\u5F00\u542F\u5584\u884C\u4FDD\u62A4/\u9080\u8BF7\u540C\u4F34/\u8054\u7CFB\u673A\u6784\u7B49\uFF09
+4. \u7ED9\u51FA\u53EF\u6267\u884C\u7684\u884C\u52A8\u6E05\u5355\uFF0C\u8BA9\u7528\u6237\u77E5\u9053\u201C\u7B2C\u4E00\u6B65\u505A\u4EC0\u4E48\u201D
+
+\u3010\u98CE\u9669\u7B49\u7EA7\u5B9A\u4E49\u3011
+- A\uFF08\u53EF\u4EE5\u5B89\u5168\u5E2E\u52A9\uFF09\uFF1A\u73AF\u5883\u5B89\u5168\u3001\u98CE\u9669\u53EF\u63A7\u3001\u9002\u5408\u76F4\u63A5\u884C\u52A8
+- B\uFF08\u5F00\u542F\u4FDD\u62A4\u540E\u5E2E\u52A9\uFF09\uFF1A\u6709\u4E00\u5B9A\u98CE\u9669\uFF0C\u5EFA\u8BAE\u5148\u5F00\u542F\u4FDD\u62A4\u6A21\u5F0F\u5B58\u8BC1\u518D\u5E2E\u52A9
+- C\uFF08\u627E\u540C\u4F34\u4E00\u8D77\u5E2E\u52A9\uFF09\uFF1A\u72EC\u81EA\u884C\u52A8\u6709\u98CE\u9669\uFF0C\u5EFA\u8BAE\u8054\u7CFB\u5468\u56F4\u4EBA\u4E00\u8D77
+- D\uFF08\u6C42\u52A9\u4E13\u4E1A\u673A\u6784\uFF09\uFF1A\u8D85\u51FA\u4E2A\u4EBA\u80FD\u529B\u8303\u56F4\uFF0C\u8054\u7CFB\u4E13\u4E1A\u529B\u91CF
+- E\uFF08\u4FDD\u6301\u8DDD\u79BB\u62A5\u8B66\uFF09\uFF1A\u5371\u9669\u7CFB\u6570\u6781\u9AD8\uFF0C\u4F18\u5148\u786E\u4FDD\u81EA\u8EAB\u5B89\u5168\u5E76\u62A5\u8B66
+
+\u3010\u8F93\u51FA\u683C\u5F0F\u3011
+\u6BCF\u6B21\u56DE\u590D\u5FC5\u987B\u5305\u542B\u4EE5\u4E0B\u90E8\u5206\uFF08\u7528\u6362\u884C\u5206\u9694\uFF09\uFF1A
+1. \u3010\u98CE\u9669\u7B49\u7EA7\u3011X\u7EA7 \u2014\u2014 \u4E00\u53E5\u8BDD\u5224\u65AD
+2. \u3010\u5B89\u5168\u5EFA\u8BAE\u30112-3\u6761\u5177\u4F53\u3001\u53EF\u64CD\u4F5C\u7684\u5EFA\u8BAE
+3. \u3010\u63A8\u8350\u63AA\u65BD\u3011\u6839\u636E\u7B49\u7EA7\u63A8\u8350
+4. \u3010\u8865\u5145\u63D0\u95EE\u3011\u5982\u679C\u4FE1\u606F\u4E0D\u8DB3\uFF0C\u53EA\u95EE1\u4E2A\u6700\u5173\u952E\u7684\u95EE\u9898
+
+\u3010\u7EDD\u5BF9\u8FB9\u754C\u3011
+- \u53EA\u56DE\u7B54\u4E0E\u201C\u884C\u5584\u5B89\u5168\u201D\u76F8\u5173\u7684\u95EE\u9898
+- \u5BF9\u65E0\u5173\u8BDD\u9898\u793C\u8C8C\u62D2\u7EDD
+
+\u3010\u5BF9\u8BDD\u98CE\u683C\u3011
+- \u4E13\u4E1A\u4F46\u4E0D\u51B7\u6F20\uFF0C\u6E29\u6696\u4F46\u4E0D\u8BF4\u6559
+- \u7528\u201C\u5EFA\u8BAE\u201D\u800C\u975E\u201C\u547D\u4EE4\u201D\uFF0C\u8BA9\u7528\u6237\u6709\u81EA\u4E3B\u51B3\u7B56\u7684\u7A7A\u95F4
+
+\u3010\u4FE1\u606F\u5229\u7528\u3011
+- \u81EA\u52A8\u8BFB\u53D6\u5F53\u524D\u65F6\u95F4\u548C\u7528\u6237GPS\u4F4D\u7F6E\uFF08\u5DF2\u63D0\u4F9B\uFF09
+- \u591C\u95F4\uFF0822:00-05:00\uFF09\u81EA\u52A8\u63D0\u9AD8\u98CE\u9669\u6743\u91CD
+- \u504F\u50FB/\u65E0\u4EBA\u533A\u57DF\u81EA\u52A8\u63D0\u9AD8\u98CE\u9669\u6743\u91CD
+
+\u5F53\u524D\u65F6\u95F4\uFF1A${new Date().toLocaleString('zh-CN', { hour12: false })}
+\u7528\u6237\u4F4D\u7F6E\uFF1A${curGps?.address || '\u672A\u83B7\u53D6'}
+\u7528\u6237\u5E74\u9F84\uFF1A${curUser?.age || '\u672A\u77E5'}`;
+    }
+
+    const systemMsg = {
+      role: 'system' as const,
+      content: systemContent,
+    };
+
     // 构建对话历史
     const history = messagesRef.current
       .filter(m => m.role !== 'system' && !m.isLoading)
-      .slice(-10) // 取最近10条，控制上下文长度
+      .slice(-10)
       .map(m => ({
         role: m.role === 'ai' ? 'assistant' : 'user' as 'assistant' | 'user',
         content: m.content || '',
       }));
-
-    // 系统提示词 —— 善行顾问专属规则
-    const systemMsg = {
-      role: 'system' as const,
-      content: `【角色定位】
-你是"善善"，一个专注于"行善安全评估"的AI顾问。你的唯一使命是：帮助用户在行善之前识别风险、制定安全方案、降低意外代价。你不是通用AI助手，不回答与行善安全无关的问题。
-
-【核心职责】
-1. 根据用户描述的场景，评估风险等级（A/B/C/D/E），并给出对应的安全建议
-2. 结合时间、地点、环境、对方状态等维度做具体分析
-3. 推荐适用的保护措施（开启善行保护/邀请同伴/联系机构等）
-4. 给出可执行的行动清单，让用户知道"第一步做什么"
-
-【风险等级定义】
-- A（可以安全帮助）：环境安全、风险可控、适合直接行动
-- B（开启保护后帮助）：有一定风险，建议先开启保护模式存证再帮助
-- C（找同伴一起帮助）：独自行动有风险，建议联系周围人一起
-- D（求助专业机构）：超出个人能力范围，联系专业力量
-- E（保持距离报警）：危险系数极高，优先确保自身安全并报警
-
-【输出格式】
-每次回复必须包含以下部分（用换行分隔）：
-1. 【风险等级】X级 —— 一句话判断（如"B级 —— 夜间独自前往偏僻区域有一定风险"）
-2. 【安全建议】2-3条具体、可操作的建议（如"①开启善行保护模式全程存证 ②告知家人你的去向和预计返回时间"）
-3. 【推荐措施】根据等级推荐：A级→直接行动；B级→开启保护模式；C级→邀请同伴；D级→联系机构；E级→保持距离报警
-4. 【补充提问】如果信息不足，只问1个最关键的问题（如"对方目前情绪状态如何？"），不要连环追问
-
-【绝对边界】
-- 只回答与"行善安全"相关的问题（助人、见义勇为、志愿服务、救援、公益行动等）
-- 对以下话题礼貌拒绝："这个问题超出了我的专业范围，我是专门帮你评估行善风险的顾问。如果你计划做一件善事，我可以帮你分析。"
-  * 闲聊、天气、美食、旅游等生活话题
-  * 编程、数学、写作、翻译等工具性请求
-  * 医疗诊断、法律咨询等专业领域（可引导用户去专业渠道）
-  * 政治、宗教、意识形态讨论
-  * 任何与行善安全无关的问题
-
-【对话风格】
-- 专业但不冷漠，温暖但不说教
-- 不夸大风险制造恐慌，也不淡化风险让人盲目行动
-- 用"建议"而非"命令"，让用户有自主决策的空间
-- 承认不确定性："根据你提供的信息，我建议...如果情况有变化，请重新评估"
-
-【信息利用】
-- 自动读取当前时间和用户GPS位置（已提供）
-- 夜间（22:00-05:00）自动提高风险权重
-- 偏僻/无人区域自动提高风险权重
-- 对方人数多/有攻击性时自动提高风险权重
-
-当前时间：${new Date().toLocaleString('zh-CN', { hour12: false })}
-用户位置：${gpsInfo.address || '未获取'}
-用户年龄：${userInfo?.age || '未知'}`,
-    };
 
     // 显示"正在思考..."状态
     const loadingMsg: ChatMessage = {
@@ -822,7 +878,7 @@ export default function AIAdvisorPage() {
               </View>
             </View>
           ) : (
-            <Text className={styles.msgText}>{msg.content}</Text>
+            <MdText className={styles.msgText} content={msg.content} />
           )}
         </View>
         {!isAI && <View className={styles.msgAvatar}>😊</View>}
@@ -922,7 +978,7 @@ export default function AIAdvisorPage() {
 
       {/* 顶部栏 */}
       <View className={styles.topBar}>
-        <Text className={styles.backBtn} onClick={() => Taro.navigateBack()}>←</Text>
+        <Text className={styles.backBtn} onClick={() => safeNavigateBack()}>←</Text>
         <View className={styles.topAvatar}>🤖</View>
         <View className={styles.topInfo}>
           <Text className={styles.topTitle}>善行顾问</Text>
@@ -935,6 +991,20 @@ export default function AIAdvisorPage() {
           <Text className={styles.topOnlineIcon}>📡</Text>
           <Text className={styles.topOnlineText}>{gpsInfo?.address?.slice(0, 8) || '定位中'}</Text>
         </View>
+      </View>
+
+      {/* 模式切换 */}
+      <View className={styles.modeBar}>
+        {([
+          { key: 'safety' as const, label: '\u5B89\u5168\u8BC4\u4F30', icon: '\uD83D\uDEE1\uFE0F' },
+          { key: 'warning' as const, label: '\u4E8B\u524D\u9884\u8B66', icon: '\u26A0\uFE0F' },
+          { key: 'emotional' as const, label: '\u503E\u8BC9\u966A\u4F34', icon: '\uD83E\uDD17' },
+        ]).map(m => (
+          <View key={m.key} className={`${styles.modeItem} ${advisorMode === m.key ? styles.modeItemActive : ''}`} onClick={() => { setAdvisorMode(m.key); setMessages([]); }}>
+            <Text className={styles.modeIcon}>{m.icon}</Text>
+            <Text className={`${styles.modeLabel} ${advisorMode === m.key ? styles.modeLabelActive : ''}`}>{m.label}</Text>
+          </View>
+        ))}
       </View>
 
       {/* 消息列表 */}

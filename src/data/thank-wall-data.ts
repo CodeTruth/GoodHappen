@@ -6,6 +6,12 @@ export interface ThankNote {
   location?: string;
   likes: number;
   replied: boolean;
+  kindnessId?: string;
+  authorAvatar?: string;
+  /** AI\u5339\u914D\u72B6\u6001: undefined=\u672A\u5339\u914D, 'matched'=\u5DF2\u5339\u914D\u5F85\u786E\u8BA4, 'linked'=\u5DF2\u5173\u8054, 'skipped'=\u5DF7\u5F03 */
+  matchStatus?: 'matched' | 'linked' | 'skipped';
+  /** \u5339\u914D\u5230\u7684\u5584\u884C\u8BB0\u5F55\u6458\u8981 */
+  matchedKindness?: { id: string; author: string; content: string; date: string; matchScore: number };
 }
 
 export const THANK_NOTES: ThankNote[] = [

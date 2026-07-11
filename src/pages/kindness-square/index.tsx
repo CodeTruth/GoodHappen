@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { View, Text, ScrollView } from '@tarojs/components';
 import Taro from '@tarojs/taro';
+import { safeNavigateBack } from '@/utils/navigate-back';
 import KindnessCard from '@/components/KindnessCard';
 import { getKindnessList } from '@/data/kindness';
 import { useKindnessStore } from '@/store/kindness';
@@ -68,7 +69,7 @@ const KindnessSquarePage: React.FC = () => {
     <View className={styles.page}>
       {/* 顶部 */}
       <View className={styles.header}>
-        <View className={styles.headerLeft} onClick={() => Taro.navigateBack()}>
+        <View className={styles.headerLeft} onClick={() => safeNavigateBack()}>
           <Text className={styles.backArrow}>←</Text>
         </View>
         <Text className={styles.headerTitle}>🌟 善行广场</Text>

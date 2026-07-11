@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, Textarea, Input, ScrollView } from '@tarojs/components';
 import Taro from '@tarojs/taro';
+import { safeNavigateBack } from '@/utils/navigate-back';
 import { useCharityStore } from '@/store/charity';
 import { useFortuneStore } from '@/store/fortune';
 import { useUserStore } from '@/store/user';
@@ -105,7 +106,7 @@ const CharityPublishPage: React.FC = () => {
     if (result.success) {
       Taro.showToast({ title: '发布成功', icon: 'success' });
       setTimeout(() => {
-        Taro.navigateBack();
+        safeNavigateBack();
       }, 1500);
     } else {
       Taro.showToast({ title: result.message, icon: 'none' });

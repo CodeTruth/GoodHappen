@@ -58,13 +58,23 @@ export default defineAppConfig({
     'pages/kindness-square/index',
     'pages/thank-wall/index',
     'pages/warmth-report/index',
-    'pages/future-letter/index'
+    'pages/future-letter/index',
+    'pages/credit-score/index'
   ],
   window: {
     backgroundTextStyle: 'light',
     navigationBarBackgroundColor: '#C4956A',
     navigationBarTitleText: '好事发生',
     navigationBarTextStyle: 'white'
+  },
+  h5: {
+    router: {
+      mode: 'browser',
+      basename: '/',
+    },
+    navigationBar: {
+      titleText: '\u597D\u4E8B\u53D1\u751F',
+    },
   },
   tabBar: {
     custom: true,

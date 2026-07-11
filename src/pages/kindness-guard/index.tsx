@@ -1,6 +1,8 @@
 import React, { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { View, Text, ScrollView, Textarea } from '@tarojs/components';
 import Taro from '@tarojs/taro';
+import { safeNavigateBack } from '@/utils/navigate-back';
+import MdText from '@/components/MdText';
 import { useProtectionStore } from '@/store/protection';
 import { useUserStore } from '@/store/user';
 import { useKindnessStore } from '@/store/kindness';
@@ -205,13 +207,13 @@ function buildGuardPrompt(kindnessCtx: Kindness | null, gpsAddr: string, userAge
 
 【工作方式】
 - 用户描述纠纷后，主动分析情况并建议下一步
-- 如果用户说"帮我搜见证""有没有人看到""找找证据"等，告诉用户你正在接入见证搜索，系统会自动执行
+- 用户可通过聊天底部按钮触发操作（锁定证据、搜索见证、法律服务、善行保险）
+- 如果用户明确说"要律师""需要法律服务""接入法律服务""法律咨询"等，系统会自动执行接入
+- 如果用户明确说"查保险""看保险""保险理赔""善行保险""我的保险"等，系统会自动执行接入
 - 所有操作结果都在聊天中直接展示，不需要跳转
 - 给出清晰可执行的维权步骤
 - 当你判断用户的纠纷涉及法律责任问题，主动询问用户"需要我为你接入合作律所平台的法律服务吗？"
-- 如果用户明确说"要律师""需要法律服务""接入法律服务""法律咨询"等，系统会自动执行接入
 - 当你判断用户可能需要保险理赔，主动询问用户"需要接入善行保险Agent咨询保险和理赔吗？"
-- 如果用户明确说"查保险""看保险""保险理赔""善行保险""我的保险"等，系统会自动执行接入
 
 【见证搜索说明】
 - 搜索见证会接入独立的「见证搜索Agent」，它会：
@@ -381,6 +383,8 @@ export default function KindnessGuardPage() {
 
   // Agent 模式
   const [agentMode, setAgentMode] = useState<AgentMode>('guard');
+  const agentModeRef = useRef(agentMode);
+  useEffect(() => { agentModeRef.current = agentMode; }, [agentMode]);
   const [currentLawFirm, setCurrentLawFirm] = useState<LawFirm | null>(null);
   const [currentInsurance, setCurrentInsurance] = useState<InsuranceCompany | null>(null);
   const [witnessSearchResult, setWitnessSearchResult] = useState('');
@@ -468,16 +472,17 @@ export default function KindnessGuardPage() {
 
   // ===== 获取可用行动按钮 =====
   const getAvailableActions = useCallback((): string[] => {
-    if (agentMode === 'lawyer') return ['结束咨询'];
-    if (agentMode === 'witness') return ['结束搜索'];
-    if (agentMode === 'insurance') return ['结束咨询'];
+    const mode = agentModeRef.current;
+    if (mode === 'lawyer') return ['\u7ED3\u675F\u54A8\u8BE2'];
+    if (mode === 'witness') return ['\u7ED3\u675F\u641C\u7D22'];
+    if (mode === 'insurance') return ['\u7ED3\u675F\u54A8\u8BE2'];
     const actions: string[] = [];
-    if (!completedActions.has('evidence')) actions.push('锁定证据');
-    if (!completedActions.has('witness')) actions.push('搜索见证');
-    if (!completedActions.has('lawyer')) actions.push('法律服务');
-    if (!completedActions.has('insurance')) actions.push('善行保险');
+    if (!completedActions.has('evidence')) actions.push('\u9501\u5B9A\u8BC1\u636E');
+    if (!completedActions.has('witness')) actions.push('\u641C\u7D22\u89C1\u8BC1');
+    if (!completedActions.has('lawyer')) actions.push('\u6CD5\u5F8B\u670D\u52A1');
+    if (!completedActions.has('insurance')) actions.push('\u5584\u884C\u4FDD\u9669');
     return actions;
-  }, [completedActions, agentMode]);
+  }, [completedActions]);
 
   // ===== 消息辅助函数 =====
   const addAIMessage = useCallback((content: string, actions?: string[]) => {
@@ -576,8 +581,17 @@ export default function KindnessGuardPage() {
     addAIMessage(searchReport);
     setWitnessSearchResult(searchReport);
 
-    await new Promise(r => setTimeout(r, 1000));
-    addLoadingMessage('📡 正在向事发时附近的平台用户发送帮助请求…');
+    if (matched.length === 0) {
+      addAIMessage('暂未在平台找到已有见证记录。是否要向事发时附近的平台用户发送求助通知，请他们提供证据？', ['向附近用户求助', '暂时不']);
+      return;
+    }
+
+    addAIMessage(`已找到 ${matched.length} 条见证记录。是否还要向事发时附近的平台用户发送求助通知，寻找更多见证者？`, ['继续搜索更多见证', '这些就够了']);
+  }, [selectedKindness, gpsInfo, publishedList, addAIMessage, addLoadingMessage, removeLoadingMessages]);
+
+  // ===== 见证搜索第二阶段：向附近用户发求助 =====
+  const doSearchWitnessPhase2 = useCallback(async () => {
+    addLoadingMessage('正在向事发时附近的平台用户发送帮助请求...');
 
     await new Promise(r => setTimeout(r, 2000));
     removeLoadingMessages();
@@ -586,8 +600,8 @@ export default function KindnessGuardPage() {
     const nearbyNotified = NEARBY_USERS.filter(u => u.distance <= notifyRadius);
     const responded = nearbyNotified.filter(u => u.responded);
 
-    let notifyReport = `📡 【见证搜索Agent · 第二阶段】帮助请求已发送\n\n` +
-      `向事发时 ${notifyRadius}米 内的 ${nearbyNotified.length} 位平台用户发送了求助通知：\n\n`;
+    let notifyReport = '**见证搜索 · 第二阶段** 帮助请求已发送\n\n';
+    notifyReport += `向事发时 ${notifyRadius}米 内的 ${nearbyNotified.length} 位平台用户发送了求助通知：\n\n`;
 
     nearbyNotified.forEach((u, i) => {
       const status = u.responded ? '✅ 已回应' : '⏳ 等待回应';
@@ -597,19 +611,22 @@ export default function KindnessGuardPage() {
     notifyReport += `\n已收到 ${responded.length} 位用户的回应。`;
 
     if (responded.length > 0) {
-      notifyReport += `\n\n🎁 见证奖励：被采纳的见证用户将获得 30福气值 + 见证勋章，鼓励更多人站出来为善行者作证。`;
+      notifyReport += `\n\n🎁 见证奖励：被采纳的见证用户将获得 30福气值 + 见证勋章。`;
     }
 
-    const totalWitness = matched.length + responded.length;
+    const prevMatched = (witnessSearchResult || '').match(/找到 (\d+) 条/);
+    const prevCount = prevMatched ? parseInt(prevMatched[1]) : 0;
+    const totalWitness = prevCount + responded.length;
     const chainFormed = totalWitness >= WITNESS_MATCH_CONFIG.MIN_WITNESS_FOR_CHAIN;
-    notifyReport += `\n\n📋 综合证据链评估：\n`;
-    notifyReport += `   平台记录：${matched.length} 条\n`;
-    notifyReport += `   用户回应：${responded.length} 人\n`;
-    notifyReport += `   合计见证：${totalWitness} 位独立见证\n`;
+
+    notifyReport += `\n\n**综合证据链评估：**\n`;
+    notifyReport += `· 平台记录：${prevCount} 条\n`;
+    notifyReport += `· 用户回应：${responded.length} 人\n`;
+    notifyReport += `· 合计见证：${totalWitness} 位\n`;
     if (chainFormed) {
-      notifyReport += `   ✅ 已满足证据链形成条件（≥2人），证据链完整。`;
+      notifyReport += `· ✅ 已满足证据链形成条件（≥2人），证据链完整。`;
     } else {
-      notifyReport += `   ⏳ 还需 ${WITNESS_MATCH_CONFIG.MIN_WITNESS_FOR_CHAIN - totalWitness} 位见证者即可形成证据链。`;
+      notifyReport += `· ⏳ 还需 ${WITNESS_MATCH_CONFIG.MIN_WITNESS_FOR_CHAIN - totalWitness} 位见证者即可形成证据链。`;
     }
 
     setAgentMode('witness');
@@ -618,10 +635,11 @@ export default function KindnessGuardPage() {
     lastAskedForInsuranceRef.current = false;
 
     addAIMessage(notifyReport, ['结束搜索']);
-  }, [selectedKindness, gpsInfo, publishedList, addAIMessage, addLoadingMessage, removeLoadingMessages]);
+  }, [addAIMessage, addLoadingMessage, removeLoadingMessages, witnessSearchResult]);
 
   // ===== 退出见证搜索 Agent =====
   const exitWitnessMode = useCallback(() => {
+    agentModeRef.current = 'guard';
     setAgentMode('guard');
     setWitnessSearchResult('');
     addAIMessage(
@@ -690,6 +708,7 @@ export default function KindnessGuardPage() {
 
   // ===== 退出律师模式 =====
   const exitLawyerMode = useCallback(() => {
+    agentModeRef.current = 'guard';
     setAgentMode('guard');
     setCurrentLawFirm(null);
     lastAskedForLawyerRef.current = false;
@@ -730,6 +749,7 @@ export default function KindnessGuardPage() {
 
   // ===== 退出保险模式 =====
   const exitInsuranceMode = useCallback(() => {
+    agentModeRef.current = 'guard';
     setAgentMode('guard');
     setCurrentInsurance(null);
     lastAskedForLawyerRef.current = false;
@@ -743,17 +763,20 @@ export default function KindnessGuardPage() {
   // ===== 行动按钮分发 =====
   const handleAction = useCallback((label: string) => {
     switch (label) {
-      case '锁定证据': doLockEvidence(); break;
-      case '搜索见证': doSearchWitness(); break;
-      case '法律服务': doConnectLawyer(); break;
-      case '善行保险': doConnectInsurance(); break;
-      case '结束咨询':
+      case '\u9501\u5B9A\u8BC1\u636E': doLockEvidence(); break;
+      case '\u641C\u7D22\u89C1\u8BC1': doSearchWitness(); break;
+      case '\u6CD5\u5F8B\u670D\u52A1': doConnectLawyer(); break;
+      case '\u5584\u884C\u4FDD\u9669': doConnectInsurance(); break;
+      case '\u7ED3\u675F\u54A8\u8BE2':
         if (agentMode === 'lawyer') exitLawyerMode();
         else if (agentMode === 'insurance') exitInsuranceMode();
         break;
-      case '结束搜索': exitWitnessMode(); break;
+      case '\u7ED3\u675F\u641C\u7D22': exitWitnessMode(); break;
+      case '\u7EE7\u7EED\u641C\u7D22\u66F4\u591A\u89C1\u8BC1':
+      case '\u5411\u9644\u8FD1\u7528\u6237\u6C42\u52A9':
+        doSearchWitnessPhase2(); break;
     }
-  }, [doLockEvidence, doSearchWitness, doConnectLawyer, doConnectInsurance, exitLawyerMode, exitInsuranceMode, exitWitnessMode, agentMode]);
+  }, [doLockEvidence, doSearchWitness, doConnectLawyer, doConnectInsurance, exitLawyerMode, exitInsuranceMode, exitWitnessMode, agentMode, doSearchWitnessPhase2]);
 
   // ===== AI对话（多Agent路由）=====
   const getSystemPrompt = useCallback(() => {
@@ -788,7 +811,7 @@ export default function KindnessGuardPage() {
       }
 
       const wantsInsurance = /查保险|看保险|保险理赔|善行保险|我的保险|保险状态|理赔|保额/.test(text);
-      const isConfirmInsurance = lastAskedForInsuranceRef.current && text.trim().length <= 12 && /^(好的|好|行|可以|同意|嗯|要|需要|查|看|是的)/.test(text.trim());
+      const isConfirmInsurance = lastAskedForInsuranceRef.current && text.trim().length <= 12 && /^(好的|好|行|可以|同意|嗯|要|需要|是的)/.test(text.trim());
       if (wantsInsurance || isConfirmInsurance) {
         lastAskedForLawyerRef.current = false;
         lastAskedForInsuranceRef.current = false;
@@ -822,12 +845,7 @@ export default function KindnessGuardPage() {
         const askedForInsurance = /是否需要.*查询保险|要不要.*查.*保险|需要.*保险理赔|查询.*保险状态|善行保险.*查询/.test(reply);
         lastAskedForInsuranceRef.current = askedForInsurance;
 
-        const wantsSearch = /帮你搜|搜索见证|找见证|有没有人看到|帮你找找|我来搜索|正在搜索|帮你查/.test(reply);
         addAIMessage(reply, getAvailableActions());
-
-        if (wantsSearch && !completedActions.has('witness')) {
-          setTimeout(() => doSearchWitness(), 600);
-        }
       } else {
         addAIMessage(reply, getAvailableActions());
       }
@@ -939,7 +957,7 @@ export default function KindnessGuardPage() {
         <View className={`${styles.msgRow} ${isAI ? styles.msgLeft : styles.msgRight}`}>
           {isAI && <View className={styles.msgAvatar}>{topBarConfig.avatar}</View>}
           <View className={`${styles.msgBubble} ${isAI ? styles.bubbleAI : styles.bubbleUser}`}>
-            <Text className={styles.msgText} userSelect>{msg.content}</Text>
+            <MdText className={styles.msgText} content={msg.content} />
           </View>
           {!isAI && <View className={styles.msgAvatar}>😊</View>}
         </View>
@@ -960,7 +978,7 @@ export default function KindnessGuardPage() {
     <View className={styles.page}>
       {/* 顶部栏 */}
       <View className={styles.topBar}>
-        <View className={styles.backBtn} onClick={() => Taro.navigateBack()}>
+        <View className={styles.backBtn} onClick={() => safeNavigateBack()}>
           <Text>←</Text>
         </View>
         <View className={styles.topAvatar}>{topBarConfig.avatar}</View>

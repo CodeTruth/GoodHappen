@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView, Textarea } from '@tarojs/components';
 import Taro from '@tarojs/taro';
+import { safeNavigateBack } from '@/utils/navigate-back';
 import { THANK_NOTES, type ThankNote } from '@/data/thank-wall-data';
 import styles from './index.module.scss';
 
@@ -63,7 +64,7 @@ export default function ThankWallPage() {
   return (
     <View className={styles.page}>
       <View className={styles.header}>
-        <View className={styles.backBtn} onClick={() => Taro.navigateBack()}><Text>{'\u2190'}</Text></View>
+        <View className={styles.backBtn} onClick={() => safeNavigateBack()}><Text>{'\u2190'}</Text></View>
         <Text className={styles.headerTitle}>{TXT_TITLE}</Text>
         <View style={{ width: 30 }} />
       </View>

@@ -2,39 +2,39 @@
 
 .header {
   display: flex; flex-direction: row; align-items: center; justify-content: space-between;
-  padding: 12px 16px; background: #FFFCF8; border-bottom: 1px solid #F3E8D8;
+  padding: 24rpx 36rpx; background: #FFFCF8; border-bottom: 1px solid #F3E8D8;
 }
-.backBtn { width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-size: 18px; color: #78716C; }
-.headerTitle { font-size: 17px; font-weight: 600; color: #1F2937; }
+.backBtn { width: 60rpx; height: 60rpx; display: flex; align-items: center; justify-content: center; font-size: 36rpx; color: #78716C; }
+.headerTitle { font-size: 34rpx; font-weight: 600; color: #1F2937; }
 
-.intro { padding: 16px; }
-.introText { font-size: 14px; color: #78716C; line-height: 1.6; }
+.intro { padding: 32rpx 36rpx; }
+.introText { font-size: 28rpx; color: #78716C; line-height: 1.6; }
 
-.writeSection { padding: 0 16px 12px; }
-.writeBtn { background: #FFF7ED; border: 1.5px dashed #C4956A; border-radius: 12px; padding: 14px; text-align: center; cursor: pointer; }
+.writeSection { padding: 0 36rpx 24rpx; }
+.writeBtn { background: #FFF7ED; border: 3rpx dashed #C4956A; border-radius: 24rpx; padding: 28rpx; text-align: center; cursor: pointer; }
 .writeBtn:active { opacity: 0.8; }
-.writeBtnText { font-size: 15px; font-weight: 500; color: #C4956A; }
+.writeBtnText { font-size: 30rpx; font-weight: 500; color: #C4956A; }
 
-.writeBox { background: #FFFFFF; border-radius: 12px; padding: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
-.writeInput { width: 100%; min-height: 80px; font-size: 14px; color: #1F2937; line-height: 1.6; }
-.writeActions { display: flex; flex-direction: row; justify-content: flex-end; gap: 10px; margin-top: 10px; }
-.writeCancel { padding: 6px 16px; border-radius: 16px; background: #F3F4F6; }
-.writeCancelText { font-size: 14px; color: #78716C; }
-.writeSubmit { padding: 6px 16px; border-radius: 16px; background: #C4956A; }
-.writeSubmitText { font-size: 14px; color: #FFFFFF; font-weight: 500; }
+.writeBox { background: #FFFFFF; border-radius: 24rpx; padding: 28rpx; box-shadow: 0 2rpx 6rpx rgba(0,0,0,0.06); }
+.writeInput { width: 100%; min-height: 160rpx; font-size: 28rpx; color: #1F2937; line-height: 1.6; }
+.writeActions { display: flex; flex-direction: row; justify-content: flex-end; gap: 20rpx; margin-top: 20rpx; }
+.writeCancel { padding: 14rpx 32rpx; border-radius: 32rpx; background: #F3F4F6; }
+.writeCancelText { font-size: 28rpx; color: #78716C; }
+.writeSubmit { padding: 14rpx 32rpx; border-radius: 32rpx; background: #C4956A; }
+.writeSubmitText { font-size: 28rpx; color: #FFFFFF; font-weight: 500; }
 
-.list { height: calc(100vh - 260px); padding: 0 16px; }
+.list { height: calc(100vh - 520rpx); padding: 0 36rpx; }
 
-.card { background: #FFFFFF; border-radius: 12px; padding: 16px; margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
-.cardContent { font-size: 15px; color: #1F2937; line-height: 1.6; display: block; margin-bottom: 10px; }
+.card { background: #FFFFFF; border-radius: 24rpx; padding: 32rpx; margin-bottom: 20rpx; box-shadow: 0 2rpx 6rpx rgba(0,0,0,0.04); }
+.cardContent { font-size: 30rpx; color: #1F2937; line-height: 1.7; display: block; margin-bottom: 20rpx; }
 .cardFooter { display: flex; flex-direction: row; align-items: center; justify-content: space-between; }
-.cardMeta { display: flex; flex-direction: row; align-items: center; gap: 10px; flex: 1; }
-.cardFrom { font-size: 12px; color: #9CA3AF; }
-.cardLoc { font-size: 11px; color: #9CA3AF; }
-.cardTime { font-size: 11px; color: #D1D5DB; }
-.cardLike { display: flex; flex-direction: row; align-items: center; gap: 4px; cursor: pointer; padding: 4px 8px; }
-.cardLikeIcon { font-size: 16px; }
-.cardLikeCount { font-size: 12px; color: #9CA3AF; }
+.cardMeta { display: flex; flex-direction: row; align-items: center; gap: 16rpx; flex: 1; flex-wrap: wrap; }
+.cardFrom { font-size: 24rpx; color: #9CA3AF; }
+.cardLoc { font-size: 24rpx; color: #9CA3AF; }
+.cardTime { font-size: 24rpx; color: #D1D5DB; }
+.cardLike { display: flex; flex-direction: row; align-items: center; gap: 8rpx; cursor: pointer; padding: 8rpx 16rpx; }
+.cardLikeIcon { font-size: 32rpx; }
+.cardLikeCount { font-size: 24rpx; color: #9CA3AF; }
 
-.cardReplied { margin-top: 8px; background: #F0FDF4; border-radius: 8px; padding: 8px 12px; }
-.cardRepliedText { font-size: 12px; color: #059669; }
+.cardReplied { margin-top: 16rpx; background: #F0FDF4; border-radius: 16rpx; padding: 16rpx 24rpx; }
+.cardRepliedText { font-size: 26rpx; color: #059669; }

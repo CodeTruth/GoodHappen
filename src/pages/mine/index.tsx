@@ -7,6 +7,7 @@ import { useUserStore, checkIsMinor } from '@/store/user';
 import { useBadgeStore } from '@/store/badge';
 import { useCircleStore } from '@/store/circle';
 import { useInteractionStore } from '@/store/interaction';
+import { calculateCreditScore, CREDIT_LEVELS } from '@/utils/credit-score';
 import { getLevelProgress } from '@/data/fortune-levels';
 import { BADGE_DEFINITIONS, BadgeDefinition, getCategoryName } from '@/data/badges';
 import type { BadgeCategory } from '@/data/badges';
@@ -499,6 +500,42 @@ const MinePage: React.FC = () => {
             <Text className={styles.streakBestText}>历史最长: {streak.highestStreak}天</Text>
           </View>
         </View>
+
+        {/* 善行信用分入口卡片 */}
+        {(() => {
+          const allTags = new Set<string>();
+          publishedList.forEach((k) => { if (k.tags) k.tags.forEach((t) => allTags.add(t)); });
+          const credit = calculateCreditScore({
+            totalFortune,
+            currentStreak: streak.currentStreak,
+            uniqueTagCount: allTags.size,
+            witnessCount: publishedList.reduce((s, k) => s + (k.likes || 0), 0),
+            challengeCount: 0,
+            socialCount: circles.length * 3,
+          });
+          const lvlCfg = CREDIT_LEVELS.find((l) => l.level === credit.level) || CREDIT_LEVELS[4];
+          return (
+            <View
+              className={styles.creditScoreCard}
+              onClick={() => Taro.navigateTo({ url: '/pages/credit-score/index' })}
+            >
+              <View className={styles.creditScoreLeft}>
+                <Text className={styles.creditScoreIcon}>{lvlCfg.icon}</Text>
+                <View className={styles.creditScoreInfo}>
+                  <Text className={styles.creditScoreLabel}>{'\u5584\u884c\u4fe1\u7528\u5206'}</Text>
+                  <Text className={styles.creditScoreLevelText}>
+                    {credit.levelName} \u00b7 {lvlCfg.title}
+                  </Text>
+                </View>
+              </View>
+              <View className={styles.creditScoreRight}>
+                <Text className={styles.creditScoreValue}>{credit.total}</Text>
+                <Text className={styles.creditScoreMax}>{'/1000'}</Text>
+                <Text className={styles.creditScoreArrow}>{'\u203a'}</Text>
+              </View>
+            </View>
+          );
+        })()}
 
         {/* ===== 新徽章墙 ===== */}
         <View className={styles.badgeWall}>

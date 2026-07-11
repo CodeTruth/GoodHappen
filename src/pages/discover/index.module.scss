@@ -5,6 +5,8 @@
 
 .scrollView {
   height: 100vh;
+  padding-bottom: calc(120rpx + env(safe-area-inset-bottom));
+  box-sizing: border-box;
 }
 
 // ============================================
@@ -82,6 +84,50 @@
   font-size: 28rpx;
   color: #EA580C;
   text-align: center;
+}
+
+// ============================================
+// Tab 栏
+// ============================================
+
+.tabBar {
+  display: flex;
+  flex-direction: row;
+  padding: 0 36rpx;
+  background: #FFFFFF;
+  border-bottom: 1px solid #F3F4F6;
+  gap: 0;
+}
+
+.tabItem {
+  flex: 1;
+  text-align: center;
+  padding: 24rpx 0 20rpx;
+  position: relative;
+  cursor: pointer;
+}
+
+.tabItemActive::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 56rpx;
+  height: 6rpx;
+  border-radius: 3rpx;
+  background: #C4956A;
+}
+
+.tabText {
+  font-size: 30rpx;
+  color: #9CA3AF;
+  font-weight: 500;
+}
+
+.tabTextActive {
+  color: #1F2937;
+  font-weight: 600;
 }
 
 // ============================================
@@ -659,4 +705,233 @@
   font-size: 30rpx;
   font-weight: 500;
   color: #1F2937;
+}
+
+// ============================================
+// 感谢墙卡片（内嵌在发现页）
+// ============================================
+
+.thankCard {
+  background: #FFFFFF;
+  border-radius: 24rpx;
+  padding: 32rpx;
+  margin-bottom: 20rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.06);
+}
+
+.thankHeader {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 20rpx;
+  margin-bottom: 16rpx;
+}
+
+.thankAvatar {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #C4956A, #E8C9A0);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.thankAvatar Text {
+  font-size: 30rpx;
+  color: #FFFFFF;
+  font-weight: 600;
+}
+
+.thankMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+}
+
+.thankName {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #1F2937;
+}
+
+.thankTime {
+  font-size: 24rpx;
+  color: #9CA3AF;
+}
+
+.thankContent {
+  font-size: 28rpx;
+  color: #4B5563;
+  line-height: 1.6;
+  display: block;
+  margin-bottom: 16rpx;
+}
+
+.thankTags {
+  display: flex;
+  flex-direction: row;
+  gap: 12rpx;
+  margin-bottom: 16rpx;
+}
+
+.thankTag {
+  font-size: 22rpx;
+  color: #C4956A;
+  background: #FFF7ED;
+  padding: 4rpx 14rpx;
+  border-radius: 8rpx;
+}
+
+.thankFooter {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.thankLikes {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8rpx;
+}
+
+.thankLikeIcon {
+  font-size: 30rpx;
+}
+
+.thankLikeCount {
+  font-size: 24rpx;
+  color: #9CA3AF;
+}
+
+.thankReplyBtn {
+  background: #FFF7ED;
+  border-radius: 24rpx;
+  padding: 10rpx 24rpx;
+}
+
+.thankReplyText {
+  font-size: 26rpx;
+  color: #C4956A;
+  font-weight: 500;
+}
+
+// ============================================
+// AI 感谢→善行 匹配
+// ============================================
+
+.aiMatchBar {
+  background: linear-gradient(135deg, #FFF7ED, #FEF3C7);
+  border: 2rpx solid #F59E0B;
+  border-radius: 20rpx;
+  padding: 24rpx 28rpx;
+  margin-bottom: 24rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx;
+  cursor: pointer;
+}
+
+.aiMatchBar:active {
+  opacity: 0.85;
+}
+
+.aiMatchIcon {
+  font-size: 32rpx;
+}
+
+.aiMatchText {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #92400E;
+}
+
+.aiMatchHint {
+  font-size: 24rpx;
+  color: #B45309;
+}
+
+.matchBanner {
+  background: #FFFBEB;
+  border: 2rpx solid #F59E0B;
+  border-radius: 16rpx;
+  padding: 20rpx 24rpx;
+  margin-bottom: 16rpx;
+}
+
+.matchBannerLinked {
+  background: #F0FDF4;
+  border: 2rpx solid #10B981;
+  border-radius: 16rpx;
+  padding: 20rpx 24rpx;
+  margin-bottom: 16rpx;
+  cursor: pointer;
+}
+
+.matchBannerSkipped {
+  background: #F9FAFB;
+  border: 2rpx solid #E5E7EB;
+  border-radius: 16rpx;
+  padding: 16rpx 24rpx;
+  margin-bottom: 16rpx;
+}
+
+.matchLabel {
+  font-size: 24rpx;
+  font-weight: 600;
+  color: #D97706;
+  display: block;
+  margin-bottom: 8rpx;
+}
+
+.matchLabelSkipped {
+  font-size: 24rpx;
+  color: #9CA3AF;
+}
+
+.matchDesc {
+  font-size: 26rpx;
+  color: #78716C;
+  line-height: 1.5;
+  display: block;
+  margin-bottom: 8rpx;
+}
+
+.matchMeta {
+  font-size: 22rpx;
+  color: #B45309;
+  display: block;
+  margin-bottom: 16rpx;
+}
+
+.matchActions {
+  display: flex;
+  flex-direction: row;
+  gap: 16rpx;
+}
+
+.matchBtnConfirm {
+  background: #059669;
+  border-radius: 28rpx;
+  padding: 12rpx 28rpx;
+}
+
+.matchBtnConfirmText {
+  font-size: 26rpx;
+  color: #FFFFFF;
+  font-weight: 600;
+}
+
+.matchBtnSkip {
+  background: #F3F4F6;
+  border-radius: 28rpx;
+  padding: 12rpx 28rpx;
+}
+
+.matchBtnSkipText {
+  font-size: 26rpx;
+  color: #6B7280;
+  font-weight: 500;
 }

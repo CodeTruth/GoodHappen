@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, Input, Textarea, Image, Picker, Button } from '@tarojs/components';
 import Taro from '@tarojs/taro';
+import { safeNavigateBack } from '@/utils/navigate-back';
 import { useUserStore, checkIsMinor } from '@/store/user';
 import { requireLogin } from '@/services/auth';
 import { regions, getProvinceNames, getCitiesByProvinceIndex } from '@/data/regions';
@@ -137,7 +138,7 @@ const ProfileEditPage: React.FC = () => {
       }
 
       setTimeout(() => {
-        Taro.navigateBack();
+        safeNavigateBack();
       }, 1500);
     } catch (error) {
       console.error('[ProfileEdit] Save failed:', error);

@@ -32,6 +32,54 @@ $text-tertiary: #B8A99A;
   box-shadow: 0 2rpx 12rpx rgba(139,92,246,0.06);
 }
 
+.modeBar {
+  display: flex;
+  flex-direction: row;
+  padding: 0 28rpx;
+  background: #FFFFFF;
+  border-bottom: 1px solid #F3F4F6;
+  gap: 0;
+}
+
+.modeItem {
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 8rpx;
+  padding: 20rpx 0;
+  position: relative;
+  cursor: pointer;
+}
+
+.modeItemActive::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 48rpx;
+  height: 6rpx;
+  border-radius: 3rpx;
+  background: #C4956A;
+}
+
+.modeIcon {
+  font-size: 28rpx;
+}
+
+.modeLabel {
+  font-size: 26rpx;
+  color: #9CA3AF;
+  font-weight: 500;
+}
+
+.modeLabelActive {
+  color: #1F2937;
+  font-weight: 600;
+}
+
 .backBtn {
   font-size: 36rpx;
   color: $text-primary;

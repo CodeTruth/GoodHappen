@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, Textarea, Image } from '@tarojs/components';
 import Taro, { useRouter } from '@tarojs/taro';
+import { safeNavigateBack } from '@/utils/navigate-back';
 import {
   useCheckinStore,
   CheckinCategory,
@@ -183,7 +184,7 @@ const CheckinPage: React.FC = () => {
       setContentType('text');
 
       navigateBackTimerRef.current = setTimeout(() => {
-        Taro.navigateBack();
+        safeNavigateBack();
       }, 1000);
     } catch (e) {
       console.error('[Checkin] Submit failed:', e);

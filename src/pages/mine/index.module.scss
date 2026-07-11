@@ -7,7 +7,7 @@
 .container {
   min-height: 100vh;
   background: $color-bg-page;
-  padding-bottom: calc(120px + env(safe-area-inset-bottom));
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
 .header {
@@ -493,6 +493,84 @@
   color: $color-text-primary;
   text-align: center;
   white-space: nowrap;
+}
+
+// ============================================
+// \u5584\u884c\u4fe1\u7528\u5206\u5165\u53e3\u5361\u7247
+// ============================================
+.creditScoreCard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(135deg, #FFF9F0 0%, #FFF3E0 100%);
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  margin: 0 $page-padding $spacing-md;
+  box-shadow: $shadow-card;
+  border: 1rpx solid rgba(196, 149, 106, 0.2);
+  transition: all $transition-base;
+
+  &:active {
+    transform: scale(0.98);
+    box-shadow: $shadow-card-hover;
+  }
+}
+
+.creditScoreLeft {
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+  flex: 1;
+  min-width: 0;
+}
+
+.creditScoreIcon {
+  font-size: 56rpx;
+  line-height: 1;
+}
+
+.creditScoreInfo {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.creditScoreLabel {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: #5D4E37;
+  margin-bottom: 4rpx;
+}
+
+.creditScoreLevelText {
+  font-size: $font-size-xs;
+  color: #8B7355;
+  @include text-ellipsis;
+}
+
+.creditScoreRight {
+  display: flex;
+  align-items: baseline;
+  gap: 4rpx;
+  flex-shrink: 0;
+}
+
+.creditScoreValue {
+  font-size: $font-size-xxl;
+  font-weight: $font-weight-bold;
+  color: #C4956A;
+  font-variant-numeric: tabular-nums;
+}
+
+.creditScoreMax {
+  font-size: $font-size-xs;
+  color: #B0A090;
+}
+
+.creditScoreArrow {
+  font-size: $font-size-xl;
+  color: #B0A090;
+  margin-left: 8rpx;
 }
 
 // ============================================

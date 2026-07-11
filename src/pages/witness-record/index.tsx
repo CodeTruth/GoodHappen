@@ -1,6 +1,7 @@
 ﻿import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { View, Text, Image, Textarea, Camera, ScrollView } from '@tarojs/components';
 import Taro from '@tarojs/taro';
+import { safeNavigateBack } from '@/utils/navigate-back';
 import { useKindnessStore } from '@/store/kindness';
 import { useUserStore } from '@/store/user';
 import { useFortuneStore } from '@/store/fortune';
@@ -375,7 +376,7 @@ export default function WitnessRecordPage() {
 
   // ===== 返回 =====
   const handleBack = () => {
-    Taro.navigateBack();
+    safeNavigateBack();
   };
 
   return (

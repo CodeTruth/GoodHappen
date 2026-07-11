@@ -77,12 +77,22 @@ function App(props: { children: React.ReactNode }) {
     updateRoute();
     if (typeof window !== 'undefined') {
       const onHashChange = () => updateRoute();
-      const onPopState = () => updateRoute();
+      const onPopState = (e: PopStateEvent) => {
+        // H5\u7AEF\u62E6\u622A\u539F\u751F\u8FD4\u56DE\uFF1A\u5982\u679C\u9875\u9762\u6808\u53EA\u5269\u5F53\u524D\u9875\uFF0C\u4E0D\u8BA9\u5B83\u9000\u51FA\u7CFB\u7EDF
+        const pages = Taro.getCurrentPages();
+        if (pages.length <= 1) {
+          // pushState\u586B\u5145\u5386\u53F2\uFF0C\u9632\u6B62\u9000\u51FA
+          window.history.pushState(null, '', window.location.href);
+        }
+        updateRoute();
+      };
+      // \u521D\u59CB\u5316\u65F6push\u4E00\u4E2A\u72B6\u6001\uFF0C\u4FDD\u8BC1\u7B2C\u4E00\u6B21\u8FD4\u56DE\u4E0D\u4F1A\u9000\u51FA
+      window.history.pushState(null, '', window.location.href);
       window.addEventListener('hashchange', onHashChange);
       window.addEventListener('popstate', onPopState);
-      // Taro H5 用 pushState 也会触发 DOM 变化，用 MutationObserver 监听 hash 变化
+      // Taro H5 \u7528 pushState \u4E5F\u4F1A\u89E6\u53D1 DOM \u53D8\u5316\uFF0C\u7528 MutationObserver \u76D1\u542C hash \u53D8\u5316
       const observer = new MutationObserver(onHashChange);
-      // 直接轮询检测：Taro H5 的 navigateTo 不一定触发 popstate/hashchange
+      // \u76F4\u63A5\u8F6E\u8BE2\u68C0\u6D4B\uFF1ATaro H5 \u7684 navigateTo \u4E0D\u4E00\u5B9A\u89E6\u53D1 popstate/hashchange
       const pollId = setInterval(updateRoute, 300);
       return () => {
         window.removeEventListener('hashchange', onHashChange);

@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { View, Text, ScrollView } from '@tarojs/components';
 import Taro from '@tarojs/taro';
+import { safeNavigateBack } from '@/utils/navigate-back';
 import { useUserStore } from '@/store/user';
 import { useKindnessStore } from '@/store/kindness';
 import styles from './index.module.scss';
@@ -43,7 +44,7 @@ export default function WarmthReportPage() {
   return (
     <View className={styles.page}>
       <View className={styles.header}>
-        <View className={styles.backBtn} onClick={() => Taro.navigateBack()}><Text>←</Text></View>
+        <View className={styles.backBtn} onClick={() => safeNavigateBack()}><Text>←</Text></View>
         <Text className={styles.headerTitle}>温暖报告</Text>
         <View style={{ width: 30 }} />
       </View>
