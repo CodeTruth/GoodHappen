@@ -66,6 +66,8 @@ export interface EvidenceRecord {
     accuracy?: number;
     source?: 'exif' | 'system' | 'manual';
   };
+  /** GPS 轨迹点 */
+  gpsTrail?: Array<{ lat: number; lng: number; accuracy: number; time: string }>;
   files: EvidenceFile[];
   /** 保护过程中的统计数据（即使文件不可用，也能看到录了多久） */
   evidenceStats?: {
@@ -431,16 +433,21 @@ export const blobToDataUrl = (blob: Blob): Promise<string> => {
 };
 
 /**
- * 将 base64 Data URL 还原为 Blob（用于播放超大视频，避免直接 src 赋值导致内存溢出）
+ * 将 base64 Data URL 还原为 Blob（用于播放视频，支持大文件分批处理）
  */
 export const dataUrlToBlob = (dataUrl: string): Blob => {
   const [meta, base64] = dataUrl.split(',');
   const mimeMatch = meta.match(/data:([^;]+);/);
   const mime = mimeMatch ? mimeMatch[1] : 'video/webm';
   const binary = atob(base64);
+  // 分批构建 Uint8Array，避免单次过大
   const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) {
-    bytes[i] = binary.charCodeAt(i);
+  const chunkSize = 65536; // 64KB per chunk
+  for (let i = 0; i < binary.length; i += chunkSize) {
+    const end = Math.min(i + chunkSize, binary.length);
+    for (let j = i; j < end; j++) {
+      bytes[j] = binary.charCodeAt(j);
+    }
   }
   return new Blob([bytes], { type: mime });
 };
@@ -479,3 +486,117 @@ export const generateVideoThumbnail = (videoDataUrl: string): Promise<string> =>
 
 // 导出 shortHash 供 UI 使用
 export { shortHash };
+
+// ============================================
+// IndexedDB Blob 存储（用于大文件：视频、音频）
+// localStorage 只能存小文件，视频 base64 URL 浏览器拒绝播放
+// ============================================
+
+const IDB_NAME = 'haoshi_blobs';
+const IDB_VERSION = 1;
+
+function openIDB(): Promise<IDBDatabase> {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(IDB_NAME, IDB_VERSION);
+    req.onupgradeneeded = () => {
+      const db = req.result;
+      if (!db.objectStoreNames.contains('blobs')) {
+        db.createObjectStore('blobs', { keyPath: 'id' });
+      }
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+/** 将 Blob 存入 IndexedDB，返回唯一ID */
+export async function saveBlobToIDB(blob: Blob): Promise<string> {
+  const id = `blob_${Date.now()}_${Math.random().toString(36).slice(2,8)}`;
+  const db = await openIDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('blobs', 'readwrite');
+    const store = tx.objectStore('blobs');
+    const req = store.put({ id, blob, mimeType: blob.type, size: blob.size, createdAt: Date.now() });
+    req.onsuccess = () => resolve(id);
+    req.onerror = () => reject(req.error);
+    tx.oncomplete = () => db.close();
+  });
+}
+
+/** 从 IndexedDB 取出 Blob */
+export async function getBlobFromIDB(id: string): Promise<Blob | null> {
+  const db = await openIDB();
+  return new Promise((resolve) => {
+    const tx = db.transaction('blobs', 'readonly');
+    const store = tx.objectStore('blobs');
+    const req = store.get(id);
+    req.onsuccess = () => {
+      const record = req.result;
+      resolve(record?.blob || null);
+    };
+    req.onerror = () => resolve(null);
+    tx.oncomplete = () => db.close();
+  });
+}
+
+/** 删除 IndexedDB 中的 Blob */
+export async function deleteBlobFromIDB(id: string): Promise<void> {
+  const db = await openIDB();
+  return new Promise((resolve) => {
+    const tx = db.transaction('blobs', 'readwrite');
+    const store = tx.objectStore('blobs');
+    store.delete(id);
+    tx.oncomplete = () => { db.close(); resolve(); };
+  });
+}
+
+/**
+ * 核心修复：将 video/audio 的 data URL 转为可播放的 Blob URL
+ *
+ * 三种来源：
+ *   idb:xxx → IndexedDB 引用 → getBlobFromIDB → blob URL
+ *   data:xxx → base64 → atob 解码 → Blob → blob URL
+ *   blob:/http: → 直接返回
+ *
+ * atob 解码大数据时可能阻塞 UI，放在 setTimeout 中执行。
+ */
+export async function createVideoBlobUrl(dataUrl: string): Promise<string | null> {
+  if (!dataUrl) return null;
+  if (dataUrl.startsWith('blob:') || dataUrl.startsWith('http')) return dataUrl;
+
+  // IndexedDB 引用
+  if (dataUrl.startsWith('idb:')) {
+    try {
+      const blob = await getBlobFromIDB(dataUrl.replace('idb:', ''));
+      if (blob && blob.size > 0) return URL.createObjectURL(blob);
+      console.warn('[createVideoBlobUrl] IDB blob not found or empty');
+    } catch (e) {
+      console.warn('[createVideoBlobUrl] IDB lookup error:', e);
+    }
+    return null;
+  }
+
+  // base64 data URL → atob 解码 → Blob → blob URL
+  if (dataUrl.startsWith('data:')) {
+    return new Promise((resolve) => {
+      // setTimeout 避免大数据 atob 阻塞 UI
+      setTimeout(() => {
+        try {
+          const blob = dataUrlToBlob(dataUrl);
+          if (blob.size > 0) {
+            console.log('[createVideoBlobUrl] dataUrl decoded, size:', blob.size, 'type:', blob.type);
+            resolve(URL.createObjectURL(blob));
+          } else {
+            console.warn('[createVideoBlobUrl] dataUrl decoded to empty blob');
+            resolve(null);
+          }
+        } catch (e) {
+          console.warn('[createVideoBlobUrl] dataUrlToBlob error:', e);
+          resolve(null);
+        }
+      }, 50);
+    });
+  }
+
+  return null;
+}

@@ -176,6 +176,8 @@ export const createSession = (
   emergencyContacts: EmergencyContact[] = []
 ): ProtectionSession => {
   const now = new Date().toISOString();
+  // 重置 GPS 轨迹
+  _gpsTrail = [];
   const session: ProtectionSession = {
     id: `pm_${Date.now()}`,
     status: 'starting',
@@ -281,13 +283,30 @@ async function _initGPS(sessionId: string): Promise<void> {
 
 let _h5AudioRecorder: MediaRecorder | null = null;
 let _h5AudioChunks: Blob[] = [];
+/** GPS 轨迹点数组 */
+let _gpsTrail: Array<{ lat: number; lng: number; accuracy: number; time: string }> = [];
+/** 获取 GPS 轨迹快照（函数形式，确保拿到最新值） */
+export function getGpsTrail(): Array<{ lat: number; lng: number; accuracy: number; time: string }> {
+  return [..._gpsTrail];
+}
 /** 暴露 H5 录音的 blob 供页面层收集（base64 Data URL） */
 export let lastH5AudioBlob: Blob | null = null;
+/** 视频流已包含音频时，跳过独立录音 */
+let _skipStandaloneAudio = false;
+/** 供页面层调用：告知服务层视频流已包含音频轨道 */
+export function setVideoHasAudio(has: boolean) {
+  _skipStandaloneAudio = has;
+}
 
 /**
  * 初始化录音
  */
 async function _initAudioRecording(_sessionId: string): Promise<void> {
+  // 如果视频流已包含音频轨道，无需独立录音
+  if (_skipStandaloneAudio) {
+    console.log('[ProtectionMode] Video stream has audio track, skipping standalone audio recording');
+    return;
+  }
   return new Promise((resolve) => {
     if (typeof window !== 'undefined' && navigator.mediaDevices) {
       _h5AudioChunks = [];
@@ -408,6 +427,7 @@ export const closeSession = (): ProtectionSession | null => {
   if (!_currentSession) return null;
   _stopTracking();
   _stopAudioRecording();
+  _skipStandaloneAudio = false; // 重置，下次保护模式重新检测
   const closed = {
     ..._currentSession,
     status: 'closed' as ProtectionModeStatus,
@@ -535,6 +555,8 @@ function _startTracking() {
         type: coordType,
         success: (res) => {
           if (_currentSession && (_currentSession.status === 'active' || _currentSession.status === 'sos')) {
+            const point = { lat: res.latitude, lng: res.longitude, accuracy: res.accuracy || 10, time: new Date().toISOString() };
+            _gpsTrail.push(point);
             _currentSession = {
               ..._currentSession,
               gpsTrackPoints: _currentSession.gpsTrackPoints + 1,

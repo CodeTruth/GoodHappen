@@ -17,6 +17,7 @@ import {
   type ProtectionSession,
   type EmergencyContact,
   PROTECTION_MODE_CONFIG,
+  getGpsTrail,
 } from '@/services/protection-mode';
 import {
   SOS_CONFIG,
@@ -254,6 +255,14 @@ export default function ProtectionModePage() {
           video: { facingMode: 'environment' },
           audio: true,
         });
+        // 检测视频流是否包含音频轨道 — 有则通知服务层跳过独立录音
+        const hasAudioTrack = stream.getAudioTracks().length > 0;
+        if (hasAudioTrack) {
+          try {
+            const { setVideoHasAudio } = await import('@/services/protection-mode');
+            setVideoHasAudio(true);
+          } catch {}
+        }
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
           videoRef.current.play();
@@ -275,7 +284,7 @@ export default function ProtectionModePage() {
     };
   }, [session?.status]);
 
-  // 启动/停止录像
+  // 启动/停止录像 — 依赖 cameraReady 确保摄像头就绪后再录制
   useEffect(() => {
     if (!isH5) {
       if (!cameraCtxRef.current) cameraCtxRef.current = Taro.createCameraContext();
@@ -294,28 +303,56 @@ export default function ProtectionModePage() {
         });
       }
     } else {
-      if (session?.status === 'active') {
+      // H5 端：只在 active 状态且摄像头已就绪时启动录制
+      if (session?.status === 'active' && cameraReady) {
         const video = videoRef.current;
-        if (video && video.srcObject) {
+        if (video && video.srcObject && !mediaRecorderRef.current) {
           try {
             recordedChunksRef.current = [];
-            // 优先 mp4（移动端兼容性好），回退 webm
+            // 尽可能尝试所有 MP4 编码变体（iOS Safari 支持），最后才回退 WebM
             const videoMime = (typeof MediaRecorder !== 'undefined')
-              ? (['video/mp4', 'video/webm;codecs=vp8,opus', 'video/webm'] as const).find(f => MediaRecorder.isTypeSupported(f)) || 'video/webm'
+              ? ([
+                  'video/mp4;codecs=avc1.42E01E,mp4a.40.2',
+                  'video/mp4;codecs=avc1',
+                  'video/mp4',
+                  'video/mpeg',
+                  'video/webm;codecs=vp9,opus',
+                  'video/webm;codecs=vp8,opus',
+                  'video/webm;codecs=vp9',
+                  'video/webm;codecs=vp8',
+                  'video/webm',
+                ] as const).find(f => MediaRecorder.isTypeSupported(f)) || 'video/webm'
               : 'video/webm';
+
+            // 记录实际使用的格式，用于后续 UI 提示
+            console.log('[ProtectionMode] MediaRecorder mimeType:', videoMime,
+              'isMP4:', videoMime.startsWith('video/mp4') || videoMime.startsWith('video/mpeg'));
+
             const mediaRecorder = new MediaRecorder(video.srcObject as MediaStream, { mimeType: videoMime });
             mediaRecorderRef.current = mediaRecorder;
+
+            // 用局部数组收集 chunks，避免 ref 被意外清空
+            const localChunks: Blob[] = [];
+            recordedChunksRef.current = localChunks;
+
             mediaRecorder.ondataavailable = (e) => {
-              if (e.data.size > 0) recordedChunksRef.current.push(e.data);
+              if (e.data && e.data.size > 0) {
+                localChunks.push(e.data);
+                recordedChunksRef.current = localChunks; // 保持 ref 同步
+                console.log('[ProtectionMode] dataavailable:', e.data.size, 'total chunks:', localChunks.length);
+              }
             };
             mediaRecorder.onstart = () => console.log('[ProtectionMode] H5 Video started, mime:', videoMime);
             mediaRecorder.onstop = () => {
-              const blob = new Blob(recordedChunksRef.current, { type: videoMime });
-              console.log('[ProtectionMode] H5 Video stopped:', blob.size, 'mime:', videoMime);
+              const blob = new Blob(localChunks, { type: videoMime });
+              console.log('[ProtectionMode] H5 Video stopped:', blob.size, 'chunks:', localChunks.length, 'mime:', videoMime);
               capturedVideoRef.current = blob;
             };
-            mediaRecorder.onerror = () => console.warn('[ProtectionMode] H5 Video error');
-            mediaRecorder.start(1000);
+            mediaRecorder.onerror = (e: any) => console.warn('[ProtectionMode] H5 Video error:', e?.error || e);
+
+            // 不用 timeslice — 让浏览器在 stop 时一次性返回所有数据
+            // 某些浏览器（OPPO）在 timeslice 模式下不触发 ondataavailable
+            mediaRecorder.start();
           } catch (err) {
             console.warn('[ProtectionMode] H5 MediaRecorder not supported:', err);
           }
@@ -327,7 +364,7 @@ export default function ProtectionModePage() {
         }
       }
     }
-  }, [session?.status]);
+  }, [session?.status, cameraReady]);
 
   // SOS 倒计时
   useEffect(() => {
@@ -526,6 +563,9 @@ export default function ProtectionModePage() {
         const currentStartedAt = session?.startedAt;
         const currentDuration = session?.duration;
 
+        // 获取 GPS 轨迹
+        const gpsTrail = getGpsTrail();
+
         // ===== 收集所有录制的文件（Promise 包装确保 blob 就绪） =====
         const collectAllFiles = async (): Promise<any[]> => {
           const files: any[] = [];
@@ -628,18 +668,52 @@ export default function ProtectionModePage() {
                   videoBlob = await new Promise<Blob | null>((resolve) => {
                     const mr = mediaRecorderRef.current!;
                     const chunks = recordedChunksRef.current;
+                    let resolved = false;
                     mr.onstop = () => {
+                      if (resolved) return;
+                      resolved = true;
                       try {
                         if (chunks.length > 0) {
                           const blob = new Blob(chunks, { type: mr.mimeType || 'video/webm' });
-                          console.log('[collectAllFiles] onstop blob:', blob.size);
+                          console.log('[collectAllFiles] onstop blob:', blob.size, 'chunks:', chunks.length);
+                          capturedVideoRef.current = blob;
                           resolve(blob.size > 0 ? blob : null);
-                        } else { resolve(null); }
-                      } catch { resolve(null); }
+                        } else {
+                          console.warn('[collectAllFiles] onstop: no chunks collected');
+                          resolve(null);
+                        }
+                      } catch (e) {
+                        console.warn('[collectAllFiles] onstop error:', e);
+                        resolve(null);
+                      }
                     };
-                    try { mr.stop(); } catch { resolve(null); }
-                    // 超时保底
-                    setTimeout(() => { console.log('[collectAllFiles] stop timeout'); resolve(null); }, 3000);
+                    try {
+                      // 强制请求已录制的数据（OPPO/部分浏览器需要手动 requestData）
+                      mr.requestData();
+                      // 短暂等待 requestData 触发 ondataavailable
+                      setTimeout(() => {
+                        try { mr.stop(); } catch (e) { console.warn('[collectAllFiles] stop error:', e); }
+                      }, 200);
+                    } catch (e) {
+                      console.warn('[collectAllFiles] requestData error:', e);
+                      try { mr.stop(); } catch {}
+                    }
+                    // 超时保底 — 给足够时间让 onstop 执行
+                    setTimeout(() => {
+                      if (!resolved) {
+                        resolved = true;
+                        console.warn('[collectAllFiles] stop timeout, chunks:', chunks.length);
+                        // 超时也尝试用已收集的 chunks 创建 blob
+                        if (chunks.length > 0) {
+                          try {
+                            const blob = new Blob(chunks, { type: mr.mimeType || 'video/webm' });
+                            resolve(blob.size > 0 ? blob : null);
+                          } catch { resolve(null); }
+                        } else {
+                          resolve(null);
+                        }
+                      }
+                    }, 5000);
                   });
                 } else {
                   // recorder 已经是 inactive，直接用已收集的 chunks
@@ -648,6 +722,8 @@ export default function ProtectionModePage() {
                     const mr = mediaRecorderRef.current;
                     videoBlob = new Blob(chunks, { type: mr.mimeType || 'video/webm' });
                     console.log('[collectAllFiles] inactive blob from chunks:', videoBlob.size);
+                  } else {
+                    console.warn('[collectAllFiles] recorder inactive but no chunks');
                   }
                 }
               }
@@ -661,19 +737,35 @@ export default function ProtectionModePage() {
               mediaRecorderRef.current = null;
               if (videoBlob && videoBlob.size > 0) {
                 try {
-                  const { blobToDataUrl } = await import('@/store/evidence-history');
-                  const dataUrl = await blobToDataUrl(videoBlob);
+                  // 视频存入 IndexedDB，localStorage 只存引用 ID
+                  const { saveBlobToIDB } = await import('@/store/evidence-history');
+                  const blobId = await saveBlobToIDB(videoBlob);
                   files.push({
                     id: `pv_${Date.now()}`,
                     type: 'video' as const,
-                    dataUrl,
+                    dataUrl: `idb:${blobId}`,  // IndexedDB 引用
                     size: videoBlob.size,
                     mimeType: videoBlob.type,
                     createdAt: new Date().toISOString(),
                   });
-                  console.log('[ handleClose ] Video blob converted, size:', videoBlob.size, 'mime:', videoBlob.type);
+                  console.log('[ handleClose ] Video saved to IDB, id:', blobId, 'size:', videoBlob.size);
                 } catch (e) {
-                  console.warn('[ handleClose ] Video blobToDataUrl failed:', e);
+                  // IDB 不可用时降级为 base64
+                  console.warn('[ handleClose ] IDB save failed, fallback to base64:', e);
+                  try {
+                    const { blobToDataUrl } = await import('@/store/evidence-history');
+                    const dataUrl = await blobToDataUrl(videoBlob);
+                    files.push({
+                      id: `pv_${Date.now()}`,
+                      type: 'video' as const,
+                      dataUrl,
+                      size: videoBlob.size,
+                      mimeType: videoBlob.type,
+                      createdAt: new Date().toISOString(),
+                    });
+                  } catch (e2) {
+                    console.warn('[ handleClose ] Video base64 fallback also failed:', e2);
+                  }
                 }
               } else {
                 console.warn('[ handleClose ] No video blob available');
@@ -689,16 +781,29 @@ export default function ProtectionModePage() {
               const { lastH5AudioBlob } = await import('@/services/protection-mode');
               const audioBlob = lastH5AudioBlob;
               if (audioBlob && audioBlob.size > 0) {
-                const { blobToDataUrl } = await import('@/store/evidence-history');
-                const dataUrl = await blobToDataUrl(audioBlob);
-                files.push({
-                  id: `pa_${Date.now()}`,
-                  type: 'audio' as const,
-                  dataUrl,
-                  size: audioBlob.size,
-                  createdAt: new Date().toISOString(),
-                });
-                console.log('[ handleClose ] Audio blob converted, size:', audioBlob.size);
+                // 音频也存 IndexedDB
+                try {
+                  const { saveBlobToIDB } = await import('@/store/evidence-history');
+                  const blobId = await saveBlobToIDB(audioBlob);
+                  files.push({
+                    id: `pa_${Date.now()}`,
+                    type: 'audio' as const,
+                    dataUrl: `idb:${blobId}`,
+                    size: audioBlob.size,
+                    createdAt: new Date().toISOString(),
+                  });
+                  console.log('[ handleClose ] Audio saved to IDB, id:', blobId);
+                } catch {
+                  const { blobToDataUrl } = await import('@/store/evidence-history');
+                  const dataUrl = await blobToDataUrl(audioBlob);
+                  files.push({
+                    id: `pa_${Date.now()}`,
+                    type: 'audio' as const,
+                    dataUrl,
+                    size: audioBlob.size,
+                    createdAt: new Date().toISOString(),
+                  });
+                }
               }
             } catch (e) {
               console.warn('[ handleClose ] Audio collect error:', e);
@@ -731,6 +836,7 @@ export default function ProtectionModePage() {
                   longitude: currentGps.longitude,
                   address: currentGps.address,
                 } : undefined,
+                gpsTrail: gpsTrail.length > 0 ? [...gpsTrail] : undefined,
                 files,
                 evidenceStats: {
                   videoDuration: session?.evidenceCollected?.videoDuration || Math.floor((currentDuration || 0)),
