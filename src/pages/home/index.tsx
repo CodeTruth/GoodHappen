@@ -5,14 +5,8 @@ import { useUserStore } from '@/store/user';
 import { useKindnessStore } from '@/store/kindness';
 import { useNotificationStore } from '@/store/notification';
 import { useAnalyticsStore } from '@/store/analytics';
-import { useFortuneStore } from '@/store/fortune';
 import WelcomeGuide from '@/components/WelcomeGuide';
 import styles from './index.module.scss';
-
-const formatNumber = (num: number): string => {
-  if (num >= 10000) return (num / 10000).toFixed(1) + '万';
-  return num.toLocaleString('zh-CN');
-};
 
 const WHEEL_ITEMS = [
   { icon: '🤖', title: '善行顾问', desc: 'AI研判风险', url: '/pages/ai-advisor/index', gradient: 'linear-gradient(160deg, #8B5CF6 0%, #7C3AED 30%, #6D28D9 70%, #5B21B6 100%)' },
@@ -34,11 +28,6 @@ const HomePage: React.FC = () => {
 
   const [showWelcome, setShowWelcome] = useState(false);
   const [realtimeCount, setRealtimeCount] = useState(0);
-  const [displayedStats, setDisplayedStats] = useState({
-    total: 128643,
-    today: 12,
-    fortune: 280,
-  });
 
   const userInfo = useUserStore((s) => s.userInfo);
   const { loadFromStorage: loadUser } = useUserStore();
@@ -46,8 +35,6 @@ const HomePage: React.FC = () => {
   const { loadFromStorage: loadNotification, loadMockData: loadMockNotification, cleanupExpired } = useNotificationStore();
   const {
     loadFromStorage: loadAnalytics,
-    getTotalKindnessCount,
-    getTodayKindnessCount,
     getRealtimeActiveCount,
   } = useAnalyticsStore();
 
@@ -69,11 +56,6 @@ const HomePage: React.FC = () => {
 
     // 初始化统计数据
     setRealtimeCount(getRealtimeActiveCount());
-    setDisplayedStats({
-      total: getTotalKindnessCount() || 128643,
-      today: getTodayKindnessCount() || 12,
-      fortune: useFortuneStore.getState().availableFortune || 280,
-    });
 
     const welcomeShown = Taro.getStorageSync('haoshi_welcome_shown');
     if (!welcomeShown) setShowWelcome(true);
@@ -88,95 +70,6 @@ const HomePage: React.FC = () => {
     }, 30000); // 从10秒改为30秒
     return () => clearInterval(timer);
   }, [getRealtimeActiveCount]);
-
-  // 数字增长动画 — 改用合并更新，减少渲染次数
-  const growthTimersRef = useRef<ReturnType<typeof setInterval>[]>([]);
-  useEffect(() => {
-    // 改为每次整体更新，减少单属性setState次数
-    const interval = setInterval(() => {
-      setDisplayedStats((prev) => ({
-        total: prev.total + (Math.floor(Math.random() * 3) + 1),
-        today: prev.today + (Math.random() > 0.6 ? 1 : 0),
-        fortune: prev.fortune + (Math.floor(Math.random() * 2) + 1),
-      }));
-    }, 8000);
-    growthTimersRef.current.push(interval as any);
-    return () => {
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-      growthTimersRef.current.forEach((t: any) => clearInterval(t));
-      growthTimersRef.current = [];
-    };
-  }, []);
-
-  // ===== SOS 操作 =====
-  const handleSOS = (action: string) => {
-    switch (action) {
-      case 'police':
-        Taro.makePhoneCall({ phoneNumber: '110' });
-        break;
-      case 'ambulance':
-        Taro.makePhoneCall({ phoneNumber: '120' });
-        break;
-      case 'contact':
-        handleEmergencyContact();
-        break;
-      case 'nearby':
-        handleNearbyHelp();
-        break;
-    }
-  };
-
-  const handleEmergencyContact = () => {
-    const contacts = userInfo?.emergencyContacts;
-    if (contacts && contacts.length > 0) {
-      Taro.showActionSheet({
-        itemList: contacts.map((c) => `${c.name || '联系人'} ${c.phone}`),
-        success: (res) => {
-          Taro.makePhoneCall({ phoneNumber: contacts[res.tapIndex]?.phone || '' });
-        },
-      });
-    } else {
-      Taro.showModal({
-        title: '暂无紧急联系人',
-        content: '快去「我的」页面设置紧急联系人吧',
-        confirmText: '去设置',
-        success: ({ confirm }) => {
-          if (confirm) Taro.switchTab({ url: '/pages/mine/index' });
-        },
-      });
-    }
-  };
-
-  const handleNearbyHelp = () => {
-    Taro.showModal({
-      title: '向附近用户求助',
-      content: '系统将向您附近的好事发生用户发送求助通知，需要获取您的位置信息',
-      confirmText: '发送求助',
-      success: ({ confirm }) => {
-        if (confirm) {
-          // H5环境使用 wgs84（浏览器原生坐标系），小程序环境用 gcj02
-          const coordType = process.env.TARO_ENV === 'h5' ? 'wgs84' as const : 'gcj02' as const;
-          Taro.getLocation({ type: coordType })
-            .then(() => {
-              Taro.showToast({ title: '求助已发送，请保持手机畅通', icon: 'success', duration: 3000 });
-            })
-            .catch((err) => {
-              const msg = String(err?.errMsg || err?.message || '');
-              if (msg.includes('auth deny') || msg.includes('denied') || msg.includes('permission')) {
-                Taro.showModal({
-                  title: '需要定位权限',
-                  content: '请在手机「设置」中允许本应用获取位置信息',
-                  showCancel: false,
-                  confirmText: '知道了',
-                });
-              } else {
-                Taro.showToast({ title: '定位失败，请确认已开启GPS并授权定位', icon: 'none', duration: 3000 });
-              }
-            });
-        }
-      },
-    });
-  };
 
   // ===== 善行守护转盘 =====
   const [rotation, setRotation] = useState(0);
@@ -195,10 +88,10 @@ const HomePage: React.FC = () => {
 
   // 用 translateX/Y 定位（不用 rotate），保证卡片内容始终正向
   const CARD_POSITIONS = [
-    'translateY(-100px)',   // i=0 上方
-    'translateX(100px)',    // i=1 右方
-    'translateY(100px)',    // i=2 下方
-    'translateX(-100px)',   // i=3 左方
+    'translateY(-130px)',   // i=0 上方
+    'translateX(130px)',    // i=1 右方
+    'translateY(130px)',    // i=2 下方
+    'translateX(-130px)',   // i=3 左方
   ];
 
   // 统一更新转盘 transform — 用 ref 替代 querySelector
@@ -444,35 +337,13 @@ const HomePage: React.FC = () => {
         <View className={styles.page}>
           <WelcomeGuide visible={showWelcome} onClose={() => setShowWelcome(false)} />
 
-          {/* 顶部信息区：Slogan + 实时人数 + 统计数据 */}
+          {/* 顶部信息区：Slogan + 保护状态 */}
           <View className={styles.headerBar}>
             <View className={styles.headerTop}>
               <Text className={styles.headerSlogan}>放心行善，身后有光</Text>
               <View className={styles.headerLive}>
                 <View className={styles.liveDot} />
                 <Text className={styles.liveText}>当前 {realtimeCount} 人正在行善</Text>
-              </View>
-            </View>
-            <View className={styles.headerStats}>
-              <View className={styles.headerStatItem}>
-                <Text className={styles.headerStatIcon}>🌍</Text>
-                <Text className={styles.headerStatValue}>{formatNumber(displayedStats.total)}</Text>
-                <Text className={styles.headerStatLabel}>全网善行</Text>
-                <Text className={styles.headerStatSub}>次温暖传递</Text>
-              </View>
-              <View className={styles.headerStatDivider} />
-              <View className={styles.headerStatItem}>
-                <Text className={styles.headerStatIcon}>📅</Text>
-                <Text className={styles.headerStatValue}>{formatNumber(displayedStats.today)}</Text>
-                <Text className={styles.headerStatLabel}>本日行善</Text>
-                <Text className={styles.headerStatSub}>次善行记录</Text>
-              </View>
-              <View className={styles.headerStatDivider} />
-              <View className={styles.headerStatItem}>
-                <Text className={styles.headerStatIcon}>✨</Text>
-                <Text className={styles.headerStatValue}>{formatNumber(displayedStats.fortune)}</Text>
-                <Text className={styles.headerStatLabel}>福气值</Text>
-                <Text className={styles.headerStatSub}>Lv.{Math.floor(displayedStats.fortune / 100) + 1}</Text>
               </View>
             </View>
           </View>

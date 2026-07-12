@@ -223,6 +223,21 @@ async function _initDeviceResources(sessionId: string, deviceType: DeviceType) {
       isAudioRecording: true,
     };
     _startTracking();
+    // 启动传感器采集 + AI 自动 SOS 监测 + 语音求救检测
+    try {
+      const { sensorMonitor } = require('./sensor-monitor');
+      const { autoSOSAssessor } = require('./ai-auto-sos');
+      const { voiceDetector } = require('./voice-detector');
+      sensorMonitor.start().then(() => {
+        autoSOSAssessor.start(_currentSession!.duration);
+      });
+      // 语音检测复用视频流的音频轨道
+      if (_h5VideoStream) {
+        voiceDetector.start(_h5VideoStream);
+      } else {
+        voiceDetector.start();
+      }
+    } catch {}
     _notifyListeners();
   }
 }
@@ -428,6 +443,15 @@ export const closeSession = (): ProtectionSession | null => {
   _stopTracking();
   _stopAudioRecording();
   _skipStandaloneAudio = false; // 重置，下次保护模式重新检测
+  // 停止传感器和 AI 监测
+  try {
+    const { sensorMonitor } = require('./sensor-monitor');
+    const { autoSOSAssessor } = require('./ai-auto-sos');
+    const { voiceDetector } = require('./voice-detector');
+    sensorMonitor.stop();
+    autoSOSAssessor.stop();
+    voiceDetector.stop();
+  } catch {}
   const closed = {
     ..._currentSession,
     status: 'closed' as ProtectionModeStatus,
@@ -557,6 +581,11 @@ function _startTracking() {
           if (_currentSession && (_currentSession.status === 'active' || _currentSession.status === 'sos')) {
             const point = { lat: res.latitude, lng: res.longitude, accuracy: res.accuracy || 10, time: new Date().toISOString() };
             _gpsTrail.push(point);
+            // 同步 GPS 到传感器监控器（供 AI 自动 SOS 使用）
+            try {
+              const { sensorMonitor } = require('./sensor-monitor');
+              sensorMonitor.updateGps(res.latitude, res.longitude, _currentSession.currentGps?.address || '当前位置', res.accuracy || 10);
+            } catch {}
             _currentSession = {
               ..._currentSession,
               gpsTrackPoints: _currentSession.gpsTrackPoints + 1,

@@ -15,19 +15,17 @@ function getTabIndexFromPath(): number {
   if (pages.length > 0) {
     const route = pages[pages.length - 1].route || '';
     if (route.includes('pages/home/index')) return 0;
-    if (route.includes('pages/discover/index')) return 1;
-    if (route.includes('pages/record/index')) return 2;
-    if (route.includes('pages/circle-dashboard/index')) return 3;
-    if (route.includes('pages/mine/index')) return 4;
+    if (route.includes('pages/record/index')) return 1;
+    if (route.includes('pages/evidence-history/index')) return 1; // 善行档案内容页映射到善行档案Tab
+    if (route.includes('pages/mine/index')) return 2;
   }
   // fallback：从 URL hash 判断（H5 端）
   if (typeof window !== 'undefined') {
     const hash = window.location.hash;
     if (hash.includes('pages/home/index')) return 0;
-    if (hash.includes('pages/discover/index')) return 1;
-    if (hash.includes('pages/record/index')) return 2;
-    if (hash.includes('pages/circle-dashboard/index')) return 3;
-    if (hash.includes('pages/mine/index')) return 4;
+    if (hash.includes('pages/record/index')) return 1;
+    if (hash.includes('pages/evidence-history/index')) return 1;
+    if (hash.includes('pages/mine/index')) return 2;
   }
   return -1;  // 非 tab 页面不高亮任何 tab
 }

@@ -26,6 +26,7 @@ import {
   type SOSProtectionEvidence,
 } from '@/services/sos-guard';
 import { useUserStore } from '@/store/user';
+import { quickAssess } from '@/services/ai-kindness-advisor';
 import styles from './index.module.scss';
 
 /** starting 阶段初始化进度项 */
@@ -46,7 +47,8 @@ export default function ProtectionModePage() {
 
   // AI风险提示（基于当前时间+GPS自动计算）
   const [aiRiskTip, setAiRiskTip] = useState('');
-  const [aiRiskLevel, setAiRiskLevel] = useState('');
+  const [aiRiskLevel, setAiRiskLevel] = useState<'safe' | 'watch' | 'danger' | 'critical' | ''>('');
+  const [aiSuggestion, setAiSuggestion] = useState('AI 监测中');
 
   // 从 userStore 读取紧急联系人
   const { userInfo } = useUserStore();
@@ -284,6 +286,40 @@ export default function ProtectionModePage() {
     };
   }, [session?.status]);
 
+  // AI 自动 SOS 监听 — 实时更新风险等级
+  useEffect(() => {
+    if (session?.status !== 'active') return;
+    let cancelled = false;
+
+    const setupAiMonitor = async () => {
+      try {
+        const { autoSOSAssessor } = await import('@/services/ai-auto-sos');
+        autoSOSAssessor.onTrigger((result) => {
+          if (cancelled) return;
+          setAiRiskLevel(result.riskLevel);
+          setAiSuggestion(result.suggestion);
+          // 自动触发 SOS
+          if (result.shouldTriggerSOS) {
+            handleSOS(result.reason, result.envSummary);
+          }
+        });
+
+        // 定时读取最新评估结果更新 UI
+        const timer = setInterval(async () => {
+          if (cancelled) return;
+          const { sensorMonitor } = await import('@/services/sensor-monitor');
+          const envSummary = await (await import('@/services/ai-auto-sos')).autoSOSAssessor.getEnvSummary();
+          if (envSummary) setAiSuggestion(`🤖 ${envSummary}`);
+        }, 10000);
+
+        return () => clearInterval(timer);
+      } catch {}
+    };
+    setupAiMonitor();
+
+    return () => { cancelled = true; };
+  }, [session?.status]);
+
   // 启动/停止录像 — 依赖 cameraReady 确保摄像头就绪后再录制
   useEffect(() => {
     if (!isH5) {
@@ -464,8 +500,62 @@ export default function ProtectionModePage() {
     resumeSession();
   }, []);
 
+  /** 实际触发 SOS */
+  const doTriggerSOS = useCallback((reason: string, envSummary?: string) => {
+    const protectionEvidence: SOSProtectionEvidence | undefined = session ? {
+      sessionId: session.id,
+      duration: session.duration,
+      videoDuration: session.evidenceCollected.videoDuration,
+      audioDuration: session.evidenceCollected.audioDuration,
+      gpsPoints: session.evidenceCollected.gpsPoints,
+      photos: session.evidenceCollected.photos,
+      lastKnownLocation: session.currentGps,
+      isRecording: session.isRecording,
+      isAudioRecording: session.isAudioRecording,
+      emergencyContactCount: session.emergencyContacts.length,
+    } : undefined;
+
+    const inferSubjectCount = (): number => {
+      const actionsText = advisorActions.join(' ');
+      const sceneText = sourceScene;
+      const combinedText = `${actionsText} ${sceneText}`;
+      if (/上前|靠近|接触|搀扶|扶|拉|抱|推/.test(combinedText)) return 2;
+      return 1;
+    };
+
+    const sceneContext: SOSSceneContext | undefined = sourceScene ? {
+      adviceLevel: advisorLevel || undefined,
+      dangerScore: advisorDangerScore || undefined,
+      sceneDescription: sourceScene,
+      subjectCount: inferSubjectCount(),
+      actionType: sourceScene.includes('老人') ? 'elder_help' : sourceScene.includes('车') ? 'traffic' : 'general',
+      recommendedActions: advisorActions.length > 0 ? advisorActions : undefined,
+      assessedAt: new Date(session?.startedAt || Date.now()).toISOString(),
+    } : undefined;
+
+    const result = triggerSOSWithGuard(
+      'protection_mode',
+      'current_user',
+      '善行者',
+      session?.currentGps ? { latitude: session.currentGps.latitude, longitude: session.currentGps.longitude, address: session.currentGps.address } : undefined,
+      emergencyContacts.map(c => ({ id: c.id, name: c.name })),
+      [],
+      sceneContext,
+      protectionEvidence
+    );
+    triggerSOS(envSummary ? `${reason}\n${envSummary}` : reason);
+    setAiRiskLevel('critical');
+    setAiSuggestion(`🤖 AI已自动求助：${reason}`);
+  }, [session, sourceScene, advisorLevel, advisorDangerScore, advisorActions, emergencyContacts]);
+
   /** 紧急求助（带押金防滥用 + 自动携带保护证据） */
-  const handleSOS = useCallback(() => {
+  const handleSOS = useCallback((autoReason?: string, autoEnvSummary?: string) => {
+    // AI 自动触发时直接执行，不弹确认窗
+    if (autoReason) {
+      doTriggerSOS(`AI自动触发：${autoReason}`, autoEnvSummary);
+      return;
+    }
+
     Taro.showModal({
       title: '🆘 紧急求助',
       content: `将立即通知所有紧急联系人并发送您的位置信息。\n\n⚠️ 防滥用机制：将预扣押金 ¥${SOS_CONFIG.DEPOSIT_AMOUNT}，请在${SOS_CONFIG.CONFIRM_WINDOW_HOURS}小时内提交确认证据（照片/视频/报警回执），确认真实后全额退还。`,
@@ -473,65 +563,11 @@ export default function ProtectionModePage() {
       confirmColor: '#F44336',
       success: (res) => {
         if (res.confirm) {
-          // 从保护模式session中提取证据摘要
-          const protectionEvidence: SOSProtectionEvidence | undefined = session ? {
-            sessionId: session.id,
-            duration: session.duration,
-            videoDuration: session.evidenceCollected.videoDuration,
-            audioDuration: session.evidenceCollected.audioDuration,
-            gpsPoints: session.evidenceCollected.gpsPoints,
-            photos: session.evidenceCollected.photos,
-            lastKnownLocation: session.currentGps,
-            isRecording: session.isRecording,
-            isAudioRecording: session.isAudioRecording,
-            emergencyContactCount: session.emergencyContacts.length,
-          } : undefined;
-
-          // 从URL来源构建场景上下文（AI顾问评估结果 + 场景描述）
-          // 智能推断 subjectCount：根据 advisorActions 或 sourceScene 判断涉及人数
-          const inferSubjectCount = (): number => {
-            const actionsText = advisorActions.join(' ');
-            const sceneText = sourceScene;
-            const combinedText = `${actionsText} ${sceneText}`;
-            if (/上前|靠近|接触|搀扶|扶|拉|抱|推/.test(combinedText)) {
-              return 2; // 有直接接触行为，涉及至少2人
-            }
-            return 1; // 默认：避让/远离/绕行或其他场景，保持1
-          };
-
-          const sceneContext: SOSSceneContext | undefined = sourceScene ? {
-            adviceLevel: advisorLevel || undefined,
-            dangerScore: advisorDangerScore || undefined,
-            sceneDescription: sourceScene,
-            subjectCount: inferSubjectCount(),
-            actionType: sourceScene.includes('老人') ? 'elder_help' : sourceScene.includes('车') ? 'traffic' : 'general',
-            recommendedActions: advisorActions.length > 0 ? advisorActions : undefined,
-            assessedAt: new Date(session?.startedAt || Date.now()).toISOString(),
-          } : undefined;
-
-          // 使用带押金防滥用的SOS
-          const result = triggerSOSWithGuard(
-            'protection_mode',
-            'current_user',
-            '善行者',
-            session?.currentGps
-              ? {
-                  latitude: session.currentGps.latitude,
-                  longitude: session.currentGps.longitude,
-                  address: session.currentGps.address,
-                }
-              : undefined,
-            emergencyContacts.map(c => ({ id: c.id, name: c.name })),
-            [],
-            sceneContext,
-            protectionEvidence
-          );
-          // 先触发保护模式的SOS状态
-          triggerSOS(result.message);
+          doTriggerSOS('善行者手动触发紧急求助');
         }
       },
     });
-  }, [session, sourceScene, advisorLevel, advisorDangerScore, advisorActions]);
+  }, [doTriggerSOS]);
 
   /** 跳转记录善行（带上保护模式的证据信息） */
   const handleGoRecord = useCallback((targetSession?: ProtectionSession) => {
@@ -906,7 +942,7 @@ export default function ProtectionModePage() {
 
         <Text className={styles.shieldIcon}>{'\u{1F6E1}\uFE0F'}</Text>
         <Text className={styles.mainTitle}>善行保护模式</Text>
-        <Text className={styles.subtitle}>全程录像录音，GPS实时追踪，一键SOS求助</Text>
+        <Text className={styles.subtitle}>全程录像录音，GPS追踪，AI智能感知自动求助</Text>
 
         {sourceScene && (
           <View className={styles.sceneHintCard}>
@@ -953,6 +989,33 @@ export default function ProtectionModePage() {
               <Text className={styles.safetyCheckDesc}>设置预计完成时间，超时自动SOS</Text>
             </View>
             <Text className={styles.safetyCheckArrow}>→</Text>
+          </View>
+        )}
+
+        {/* AI 自动 SOS 功能说明 */}
+        {!isDemo && (
+          <View className={styles.aiSosFeatureCard}>
+            <View className={styles.aiSosFeatureTitle}>
+              <Text>🤖 AI 自动紧急求助</Text>
+            </View>
+            <View className={styles.aiSosFeatureList}>
+              <View className={styles.aiSosFeatureItem}>
+                <Text className={styles.aiSosFeatureDot}>📋</Text>
+                <Text className={styles.aiSosFeatureItemText}>实时监测摔倒、运动异常、长时间静止</Text>
+              </View>
+              <View className={styles.aiSosFeatureItem}>
+                <Text className={styles.aiSosFeatureDot}>🎙️</Text>
+                <Text className={styles.aiSosFeatureItemText}>语音识别求救关键词 + 尖叫检测</Text>
+              </View>
+              <View className={styles.aiSosFeatureItem}>
+                <Text className={styles.aiSosFeatureDot}>🌧️</Text>
+                <Text className={styles.aiSosFeatureItemText}>综合时间、天气、保护时长等多维评估</Text>
+              </View>
+              <View className={styles.aiSosFeatureItem}>
+                <Text className={styles.aiSosFeatureDot}>🆘</Text>
+                <Text className={styles.aiSosFeatureItemText}>危险时自动通知紧急联系人 + 附近用户</Text>
+              </View>
+            </View>
           </View>
         )}
       </View>
@@ -1079,40 +1142,23 @@ export default function ProtectionModePage() {
 
         <View className={styles.dataGrid}>
           <View className={styles.dataCard}>
-            <Text className={styles.dataIcon}>{'\u{1F4F9}'}</Text>
-            <Text className={styles.dataValue}>{formatDuration(session.evidenceCollected.videoDuration)}</Text>
-            <Text className={styles.dataLabel}>录像</Text>
-          </View>
-          <View className={styles.dataCard}>
-            <Text className={styles.dataIcon}>{'\u{1F399}\uFE0F'}</Text>
-            <Text className={styles.dataValue}>{formatDuration(session.evidenceCollected.audioDuration)}</Text>
-            <Text className={styles.dataLabel}>录音</Text>
-          </View>
-          <View className={styles.dataCard}>
             <Text className={styles.dataIcon}>{'\u{1F4CD}'}</Text>
             <Text className={styles.dataValue}>{session.evidenceCollected.gpsPoints}个点</Text>
             <Text className={styles.dataLabel}>GPS</Text>
           </View>
-          <View className={styles.dataCard}>
+          <View className={styles.dataCard} onClick={handlePhoto}>
             <Text className={styles.dataIcon}>{'\u{1F4F8}'}</Text>
             <Text className={styles.dataValue}>{session.evidenceCollected.photos}张</Text>
-            <Text className={styles.dataLabel}>拍照</Text>
+            <Text className={styles.dataLabel}>点击拍照</Text>
           </View>
         </View>
 
-        <View className={styles.actionBar}>
-          <View className={`${styles.actionBtn} ${styles.actionBtnPhoto}`} onClick={handlePhoto}>
-            <Text className={styles.actionBtnIcon}>{'\u{1F4F8}'}</Text>
-            <Text className={styles.actionBtnText}>拍照取证</Text>
-          </View>
-          <View className={`${styles.actionBtn} ${styles.actionBtnPause}`} onClick={handlePause}>
-            <Text className={styles.actionBtnIcon}>{'\u23F8\uFE0F'}</Text>
-            <Text className={styles.actionBtnText}>暂停</Text>
-          </View>
-          <View className={`${styles.actionBtn} ${styles.actionBtnClose}`} onClick={handleClose}>
-            <Text className={styles.actionBtnIcon}>{'\u{1F6D1}'}</Text>
-            <Text className={styles.actionBtnText}>结束保护</Text>
-          </View>
+        {/* AI 监测状态 */}
+        <View className={`${styles.aiMonitorBar} ${styles[`aiMonitor_${aiRiskLevel}`]}`}>
+          <Text className={styles.aiMonitorIcon}>
+            {aiRiskLevel === 'critical' ? '🚨' : aiRiskLevel === 'danger' ? '⚠️' : aiRiskLevel === 'watch' ? '👁️' : '🤖'}
+          </Text>
+          <Text className={styles.aiMonitorText}>{aiSuggestion}</Text>
         </View>
 
         {isDemo && (

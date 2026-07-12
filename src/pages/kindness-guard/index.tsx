@@ -510,6 +510,8 @@ export default function KindnessGuardPage() {
     if (!completedActions.has('evidence')) actions.push('\u9501\u5B9A\u8BC1\u636E');
     // 第2轮起：显示搜索见证
     if (round >= 2 && !completedActions.has('witness')) actions.push('\u641C\u7D22\u89C1\u8BC1');
+    // 第2轮起：向事发时附近的平台用户发送求助（独立按钮，不依赖搜索流程）
+    if (round >= 2 && !completedActions.has('nearby_help')) actions.push('\u5411\u9644\u8FD1\u6C42\u52A9');
     // 第3轮起 或 用户提到法律问题：显示法律服务
     if ((round >= 3 || completedActions.has('evidence')) && !completedActions.has('lawyer')) actions.push('\u6CD5\u5F8B\u670D\u52A1');
     // 条件触发：已锁定证据 + 用户提到费用 + 至少3轮对话
@@ -800,6 +802,10 @@ export default function KindnessGuardPage() {
     switch (label) {
       case '\u9501\u5B9A\u8BC1\u636E': doLockEvidence(); break;
       case '\u641C\u7D22\u89C1\u8BC1': doSearchWitness(); break;
+      case '\u5411\u9644\u8FD1\u6C42\u52A9':
+        // 独立按钮：直接向附近用户发送求助，触发后标记完成避免重复显示
+        setCompletedActions(prev => new Set(prev).add('nearby_help'));
+        doSearchWitnessPhase2(); break;
       case '\u6CD5\u5F8B\u670D\u52A1': doConnectLawyer(); break;
       case '\u5584\u884C\u4FDD\u9669': doConnectInsurance(); break;
       case '\u7ED3\u675F\u54A8\u8BE2':

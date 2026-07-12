@@ -19,23 +19,10 @@ const TAB_LIST: TabItem[] = [
     selectedIcon: '\u{1F3E0}'
   },
   {
-    pagePath: 'pages/discover/index',
-    text: '发现',
-    icon: '\u{1F50D}',
-    selectedIcon: '\u{1F50D}'
-  },
-  {
     pagePath: 'pages/record/index',
-    text: '记录',
-    icon: '\u{2795}',
-    selectedIcon: '\u{2795}',
-    center: true
-  },
-  {
-    pagePath: 'pages/circle-dashboard/index',
-    text: '善行圈',
-    icon: '\u{1F4CA}',
-    selectedIcon: '\u{1F4CA}'
+    text: '善行档案',
+    icon: '\u{1F6E1}',
+    selectedIcon: '\u{1F6E1}'
   },
   {
     pagePath: 'pages/mine/index',
@@ -77,10 +64,11 @@ class CustomTabBar extends Component<CustomTabBarProps, CustomTabBarState> {
     const curPages = Taro.getCurrentPages()
     if (curPages.length > 0) {
       const route = (curPages[curPages.length - 1].route || '').replace(/^\//, '')
-      const isHome = route === 'pages/home/index'
-      if (!isHome && !this.state.hidden) {
+      const tabRoutes = ['pages/home/index', 'pages/record/index', 'pages/mine/index', 'pages/evidence-history/index']
+      const isTab = tabRoutes.includes(route)
+      if (!isTab && !this.state.hidden) {
         this.setState({ hidden: true })
-      } else if (isHome && this.state.hidden) {
+      } else if (isTab && this.state.hidden) {
         this.setState({ hidden: false })
       }
     }

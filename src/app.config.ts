@@ -88,16 +88,8 @@ export default defineAppConfig({
         text: '首页'
       },
       {
-        pagePath: 'pages/discover/index',
-        text: '发现'
-      },
-      {
         pagePath: 'pages/record/index',
-        text: '记录'
-      },
-      {
-        pagePath: 'pages/circle-dashboard/index',
-        text: '善行圈'
+        text: '善行档案'
       },
       {
         pagePath: 'pages/mine/index',

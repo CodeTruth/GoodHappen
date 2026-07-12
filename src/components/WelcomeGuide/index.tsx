@@ -13,7 +13,7 @@ const GUIDE_STEPS = [
     // ===== 第1页：Slogan =====
     icon: '🌟',
     headline: '好事发生',
-    slogan: '让每一件善行，\n被看见、被记录、被奖励。',
+    slogan: '让每一份善意，\n有保障、有底气、有回响。',
     sub: '降低行善门槛，消除善行顾虑，给每一份善意正反馈。',
     bg: 'linear-gradient(135deg, #C4956A 0%, #E8C9A0 100%)',
   },
@@ -27,7 +27,7 @@ const GUIDE_STEPS = [
       { icon: '🛡️', label: '善行保护', desc: '一键SOS紧急求助' },
       { icon: '⚖️', label: '法律援助', desc: '专业律师兜底' },
       { icon: '🏥', label: '善行保险', desc: '赔付保障无后顾' },
-      { icon: '✨', label: '福气回报', desc: '善行兑换商品折扣' },
+      { icon: '📁', label: '善行档案', desc: '自动累积保护记录' },
     ],
     bg: 'linear-gradient(135deg, #34A853 0%, #5BBF7A 100%)',
   },
