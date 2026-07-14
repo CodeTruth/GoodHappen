@@ -1,10 +1,8 @@
 ﻿import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { View, Text, Image, Textarea, Camera, ScrollView } from '@tarojs/components';
+import { View, Text, Image, Camera, ScrollView } from '@tarojs/components';
 import Taro from '@tarojs/taro';
 import { safeNavigateBack } from '@/utils/navigate-back';
-import { useKindnessStore } from '@/store/kindness';
 import { useUserStore } from '@/store/user';
-import { useFortuneStore } from '@/store/fortune';
 import { useEvidenceHistoryStore, blobToDataUrl } from '@/store/evidence-history';
 
 import styles from './index.module.scss';
@@ -27,19 +25,15 @@ export default function WitnessRecordPage() {
 
   // 拍摄内容
   const [photos, setPhotos] = useState<string[]>([]);
+  const photosRef = useRef<string[]>([]);
+  useEffect(() => { photosRef.current = photos; }, [photos]);
+
   const [videoUrl, setVideoUrl] = useState('');
   const [isRecording, setIsRecording] = useState(false);
   const [recordTime, setRecordTime] = useState(0);
   const recordTimerRef = useRef<any>(null);
 
-  // 发布
-  const [showPublish, setShowPublish] = useState(false);
-  const [description, setDescription] = useState('');
-  const [publishing, setPublishing] = useState(false);
-
   const { userInfo } = useUserStore();
-  const { addPublished } = useKindnessStore();
-  const { addFortune } = useFortuneStore();
 
   // ===== 初始化摄像头（H5） =====
   useEffect(() => {
@@ -77,8 +71,6 @@ export default function WitnessRecordPage() {
     setVideoUrl('');
     setIsRecording(false);
     setRecordTime(0);
-    setShowPublish(false);
-    setDescription('');
     setCameraError('');
     setLocation(null);
     setLocationError('');
@@ -135,6 +127,10 @@ export default function WitnessRecordPage() {
     setPhotos(prev => [...prev, dataUrl]);
 
     Taro.showToast({ title: '已拍照', icon: 'success' });
+    // 拍照后自动保存到善行档案
+    setTimeout(() => {
+      saveWitnessToHistory({ toast: false });
+    }, 100);
   }, []);
 
   // ===== 拍照（小程序） =====
@@ -145,6 +141,10 @@ export default function WitnessRecordPage() {
       success: (res) => {
         setPhotos(prev => [...prev, res.tempImagePath]);
         Taro.showToast({ title: '已拍照', icon: 'success' });
+        // 拍照后自动保存到善行档案
+        setTimeout(() => {
+          saveWitnessToHistory({ toast: false });
+        }, 100);
       },
       fail: () => {
         Taro.showToast({ title: '拍照失败', icon: 'none' });
@@ -191,6 +191,8 @@ export default function WitnessRecordPage() {
           const url = URL.createObjectURL(blob);
           setVideoUrl(url);
           Taro.showToast({ title: '录像已保存', icon: 'success' });
+          // 自动保存到善行档案
+          saveWitnessToHistory({ videoBlob: blob, toast: true });
         } else {
           videoBlobRef.current = null;
           Taro.showToast({ title: '录像内容为空', icon: 'none' });
@@ -264,67 +266,21 @@ export default function WitnessRecordPage() {
     videoBlobRef.current = null;
   };
 
-  // ===== 打开发布面板 =====
-  const openPublish = () => {
-    if (photos.length === 0 && !videoUrl) {
-      Taro.showToast({ title: '请先拍照或录像', icon: 'none' });
+  // ===== 自动保存见证证据到档案 =====
+  const saveWitnessToHistory = async (opts?: { videoBlob?: Blob | null; toast?: boolean }) => {
+    const videoBlob = opts?.videoBlob ?? videoBlobRef.current;
+    const showToast = opts?.toast ?? true;
+
+    const currentPhotos = photosRef.current;
+    // 如果没有照片也没有视频，不保存
+    if (currentPhotos.length === 0 && !videoBlob) {
       return;
     }
-    setShowPublish(true);
-  };
 
-  // ===== 发布见证 =====
-  const handlePublish = async () => {
-    if (publishing) return;
-    setPublishing(true);
+    const recordId = `witness_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 
-    // 先把视频 blob 引用保存下来（延迟转 dataUrl，避免阻塞发布流程）
-    const videoBlob = videoBlobRef.current;
-
-    const newKindness = {
-      id: `witness_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
-      userId: userInfo?.id || 'guest',
-      userName: userInfo?.nickname || '热心见证人',
-      userAvatar: userInfo?.avatar || '',
-      type: 'witness' as const,
-      content: description || '我见证了一件温暖的事',
-      images: photos,
-      video: videoUrl,
-      location: location?.address,
-      lat: location?.lat,
-      lng: location?.lng,
-      tags: ['见证'],
-      visibleScope: 'public' as const,
-      likes: 0,
-      comments: 0,
-      fortune: 15,
-      createdAt: new Date().toISOString(),
-      isMock: false,
-    };
-
-    // 先发布（不阻塞），证据异步保存
-    addPublished(newKindness);
-    addFortune(15, 'witness');
-
-    // 异步保存到证据历史（视频转换放在后台，不阻塞返回）
-    saveToHistoryAsync(newKindness, videoBlob);
-
-    Taro.showToast({
-      title: '见证发布成功！+15福气',
-      icon: 'success',
-      duration: 1500,
-    });
-
-    // 快速返回首页
-    setTimeout(() => {
-      Taro.switchTab({ url: '/pages/home/index' });
-    }, 1500);
-  };
-
-  // 异步保存证据（视频转换在后台进行，超时兜底）
-  const saveToHistoryAsync = (kindness: any, videoBlob: Blob | null) => {
     const files: any[] = [];
-    photos.forEach((p, i) => {
+    currentPhotos.forEach((p, i) => {
       files.push({
         id: `witness_photo_${i}_${Date.now()}`,
         type: 'photo' as const,
@@ -334,11 +290,27 @@ export default function WitnessRecordPage() {
       });
     });
 
-    useEvidenceHistoryStore.getState().addRecord({
-      id: kindness.id,
+    // 如果有视频，立即转换并包含在初始记录中
+    if (videoBlob && videoBlob.size > 0) {
+      try {
+        const videoDataUrl = await blobToDataUrl(videoBlob);
+        files.push({
+          id: `witness_video_${Date.now()}`,
+          type: 'video' as const,
+          dataUrl: videoDataUrl,
+          size: videoDataUrl.length,
+          createdAt: new Date().toISOString(),
+        });
+      } catch (e) {
+        console.warn('[WitnessRecord] Video conversion failed:', e);
+      }
+    }
+
+    await useEvidenceHistoryStore.getState().addRecord({
+      id: recordId,
       source: 'witness',
       title: `善行见证 · ${new Date().toLocaleString('zh-CN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}`,
-      description: kindness.content || location?.address || '见证记录',
+      description: location?.address || '见证记录',
       startedAt: new Date().toISOString(),
       closedAt: new Date().toISOString(),
       duration: recordTime,
@@ -350,27 +322,8 @@ export default function WitnessRecordPage() {
       files,
     });
 
-    // 视频转换异步进行，超时 15 秒兜底
-    if (videoBlob && videoBlob.size > 0) {
-      const timeout = new Promise<string>((_, reject) =>
-        setTimeout(() => reject(new Error('timeout')), 15000)
-      );
-      Promise.race([blobToDataUrl(videoBlob), timeout])
-        .then((videoDataUrl) => {
-          useEvidenceHistoryStore.getState().updateRecord(kindness.id, {
-            files: [...files, {
-              id: `witness_video_${Date.now()}`,
-              type: 'video' as const,
-              dataUrl: videoDataUrl,
-              size: videoDataUrl.length,
-              createdAt: new Date().toISOString(),
-            }],
-          });
-        })
-        .catch(() => {
-          // 视频转换失败或超时，静默处理，不影响已发布的见证
-          console.warn('[WitnessRecord] Video conversion failed or timed out, video not saved to evidence history');
-        });
+    if (showToast) {
+      Taro.showToast({ title: '已保存到善行档案', icon: 'success' });
     }
   };
 
@@ -456,103 +409,35 @@ export default function WitnessRecordPage() {
       )}
 
       {/* ===== 底部操作区 ===== */}
-      {!showPublish ? (
-        <View className={styles.bottomBar}>
-          <View className={styles.controlRow}>
-            {/* 拍照按钮 */}
-            <View
-              className={styles.shootBtn}
-              onClick={isH5 ? takePhoto : handleCameraPhoto}
-            >
-              <Text className={styles.shootBtnIcon}>📸</Text>
-              <Text className={styles.shootBtnText}>拍照</Text>
-            </View>
-
-            {/* 录像按钮 */}
-            {isH5 && (
-              <View
-                className={`${styles.recordBtn} ${isRecording ? styles.recordBtnActive : ''}`}
-                onClick={toggleRecord}
-              >
-                <View className={isRecording ? styles.recordStop : styles.recordCircle} />
-                <Text className={styles.shootBtnText}>
-                  {isRecording ? '停止' : '录像'}
-                </Text>
-              </View>
-            )}
-
-            {/* 发布按钮 */}
-            <View
-              className={`${styles.finishBtn} ${(photos.length > 0 || videoUrl) ? styles.finishBtnActive : ''}`}
-              onClick={openPublish}
-            >
-              <Text className={styles.finishBtnText}>
-                发布{photos.length > 0 || videoUrl ? `(${photos.length + (videoUrl ? 1 : 0)})` : ''}
-              </Text>
-            </View>
+      <View className={styles.bottomBar}>
+        <View className={styles.controlRow}>
+          {/* 拍照按钮 */}
+          <View
+            className={styles.shootBtn}
+            onClick={isH5 ? takePhoto : handleCameraPhoto}
+          >
+            <Text className={styles.shootBtnIcon}>📸</Text>
+            <Text className={styles.shootBtnText}>拍照</Text>
           </View>
 
-          <Text className={styles.bottomHint}>
-            📍 {location?.address || '定位中...'} · 照片/视频将自动附带位置信息
-          </Text>
-        </View>
-      ) : (
-        /* ===== 发布界面 ===== */
-        <View className={styles.publishPanel}>
-          {/* 已拍摄的内容 */}
-          {(photos.length > 0 || videoUrl) && (
-            <ScrollView className={styles.publishMedia} scrollX>
-              {photos.map((photo, idx) => (
-                <View key={idx} className={styles.publishMediaItem}>
-                  <Image className={styles.publishMediaImg} src={photo} mode="aspectFill" />
-                  <Text className={styles.publishMediaRemove} onClick={() => removePhoto(idx)}>×</Text>
-                </View>
-              ))}
-              {videoUrl && (
-                <View className={styles.publishMediaItem}>
-                  <View className={styles.publishMediaVideo}>
-                    <Text className={styles.publishMediaVideoIcon}>▶</Text>
-                    <Text className={styles.publishMediaVideoTime}>{formatRecordTime(recordTime)}</Text>
-                  </View>
-                  <Text className={styles.publishMediaRemove} onClick={removeVideo}>×</Text>
-                </View>
-              )}
-            </ScrollView>
+          {/* 录像按钮 */}
+          {isH5 && (
+            <View
+              className={`${styles.recordBtn} ${isRecording ? styles.recordBtnActive : ''}`}
+              onClick={toggleRecord}
+            >
+              <View className={isRecording ? styles.recordStop : styles.recordCircle} />
+              <Text className={styles.shootBtnText}>
+                {isRecording ? '停止' : '录像'}
+              </Text>
+            </View>
           )}
-
-          {/* 描述输入 */}
-          <Textarea
-            className={styles.publishInput}
-            placeholder="描述你看到的好事，让温暖被更多人知道..."
-            value={description}
-            onInput={(e) => setDescription(e.detail.value)}
-            maxlength={200}
-          />
-
-          {/* 位置信息 */}
-          <View className={styles.publishLocation}>
-            <Text className={styles.publishLocationIcon}>📍</Text>
-            <Text className={styles.publishLocationText}>
-              {location?.address || '正在获取位置...'}
-            </Text>
-          </View>
-
-          {/* 操作按钮 */}
-          <View className={styles.publishActions}>
-            <View className={styles.publishCancel} onClick={() => setShowPublish(false)}>
-              <Text className={styles.publishCancelText}>继续拍摄</Text>
-            </View>
-            <View
-              className={`${styles.publishSubmitBtn} ${publishing ? styles.publishing : ''}`}
-              onClick={handlePublish}
-            >
-              <Text className={styles.publishSubmitText}>
-                {publishing ? '发布中...' : '发布见证'}
-              </Text>
-            </View>
-          </View>
         </View>
-      )}
+
+        <Text className={styles.bottomHint}>
+          📍 {location?.address || '定位中...'} · 拍摄内容将自动保存到善行档案
+        </Text>
+      </View>
     </View>
   );
 }
